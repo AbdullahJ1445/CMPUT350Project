@@ -30,7 +30,7 @@ void BotAgent::initVariables() {
 void BotAgent::OnGameStart() {
 	BotAgent::initVariables();
 	start_location = Observation()->GetStartLocation();
-	StrategyOrder build_pylon_with_500_minerals(this, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, sc2::Point2D(0, 0), sc2::Point2D(0, 0));
+	StrategyOrder build_pylon_with_500_minerals(this, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, start_location, start_location);
 	build_pylon_with_500_minerals.addTriggerCondition(MIN_MINERALS, 500);
 	strategies.push_back(build_pylon_with_500_minerals);
 }
