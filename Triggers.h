@@ -21,6 +21,8 @@ enum COND {
 	MAX_FOOD_CAP = 9
 };
 
+class BotAgent;
+
 class TriggerCondition {
 public:
 	TriggerCondition(COND cond_type_, int cond_value_);

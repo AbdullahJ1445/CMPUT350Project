@@ -8,6 +8,7 @@
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
 
+class StrategyOrder;
 
 class Human : public sc2::Agent {
 public:
@@ -24,11 +25,6 @@ public:
 	virtual void OnGameStart() final;
 	virtual void OnStep() final;
 	virtual void OnUnitIdle(const sc2::Unit* unit) final;
-
-	/*
-	virtual void OnUnitIdle(const sc2::Unit* unit) final {
-		OnBotUnitIdle();
-	}*/
 
 private:
 	sc2::Point2D start_location;
