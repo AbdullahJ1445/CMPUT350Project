@@ -50,7 +50,7 @@ bool Trigger::check_conditions(const sc2::ObservationInterface* obs) {
 }
 
 
-StrategyOrder::StrategyOrder(Bot* agent_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D unit_location_, sc2::Point2D target_location_) {
+StrategyOrder::StrategyOrder(BotAgent* agent_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D unit_location_, sc2::Point2D target_location_) {
 	agent = agent_;
 	unit_type = unit_type_;
 	ability = ability_;

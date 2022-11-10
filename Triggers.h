@@ -43,14 +43,14 @@ private:
 
 class StrategyOrder {
 public:
-	StrategyOrder(Bot* agent_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D unit_location_, sc2::Point2D target_location_);
+	StrategyOrder(BotAgent* agent_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D unit_location_, sc2::Point2D target_location_);
 	bool execute(const sc2::ObservationInterface* obs);
 	bool checkTriggerConditions(const sc2::ObservationInterface* obs);
 	void addTriggerCondition(COND cond_type_, int cond_value_);
 	Trigger getTrigger();
 
 private:
-	Bot* agent;
+	BotAgent* agent;
 	sc2::UNIT_TYPEID unit_type;
 	sc2::ABILITY_ID ability;
 	sc2::Point2D unit_location;
