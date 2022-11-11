@@ -7,7 +7,10 @@
 #include "sc2utils/sc2_arg_parser.h"
 #include "Agents.h"
 
-enum COND {
+class BotAgent;
+class Directive;
+
+enum class COND {
 	// The types of trigger conditions
 	MIN_MINERALS = 0,
 	MIN_GAS = 1,
@@ -21,12 +24,11 @@ enum COND {
 	MAX_FOOD_CAP = 9
 };
 
-class BotAgent;
-
 class TriggerCondition {
 public:
 	TriggerCondition(COND cond_type_, int cond_value_);
 	bool is_met(const sc2::ObservationInterface* obs);
+
 
 private:
 	COND cond_type;
@@ -45,17 +47,16 @@ private:
 
 class StrategyOrder {
 public:
-	StrategyOrder(BotAgent* agent_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D unit_location_, sc2::Point2D target_location_);
+	StrategyOrder(BotAgent* agent_);
 	bool execute(const sc2::ObservationInterface* obs);
 	bool checkTriggerConditions(const sc2::ObservationInterface* obs);
 	void addTriggerCondition(COND cond_type_, int cond_value_);
+	void setDirective(Directive directive_);
 	Trigger getTrigger();
 
 private:
 	BotAgent* agent;
-	sc2::UNIT_TYPEID unit_type;
-	sc2::ABILITY_ID ability;
-	sc2::Point2D unit_location;
-	sc2::Point2D target_location;
 	Trigger trigger;
+	Directive* directive;
+	bool has_directive;
 };

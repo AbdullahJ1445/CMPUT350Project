@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Directive.h"
 #include "Triggers.h"
 #include "sc2api/sc2_api.h"
 #include "sc2api/sc2_args.h"
@@ -15,7 +16,6 @@ public:
 	virtual void OnGameStart() final {
 		Debug()->DebugTextOut("Testing with Human");
 		Debug()->SendDebug();
-
 	}
 };
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Directive.h"
 #include "Triggers.h"
 #include "sc2api/sc2_api.h"
 
@@ -10,31 +11,32 @@ TriggerCondition::TriggerCondition(COND cond_type_, int cond_value_) {
 
 bool TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	switch (cond_type) {
-	case MIN_MINERALS:
+	case COND::MIN_MINERALS:
 		return obs->GetMinerals() >= cond_value;
-	case MIN_GAS:
+	case COND::MIN_GAS:
 		return obs->GetVespene() >= cond_value;
-	case MIN_TIME:
+	case COND::MIN_TIME:
 		return obs->GetGameLoop() >= cond_value;
-	case MIN_FOOD:
+	case COND::MIN_FOOD:
 		return obs->GetFoodUsed() >= cond_value;
-	case MIN_FOOD_CAP:
+	case COND::MIN_FOOD_CAP:
 		return obs->GetFoodCap() >= cond_value;
-	case MAX_MINERALS:
+	case COND::MAX_MINERALS:
 		return obs->GetMinerals() <= cond_value;
-	case MAX_GAS:
+	case COND::MAX_GAS:
 		return obs->GetVespene() <= cond_value;
-	case MAX_TIME:
+	case COND::MAX_TIME:
 		break;
-	case MAX_FOOD:
+	case COND::MAX_FOOD:
 		break;
-	case MAX_FOOD_CAP:
+	case COND::MAX_FOOD_CAP:
 		break;
 	}
 	return false;
 }
 
-Trigger::Trigger() {};
+Trigger::Trigger() {
+};
 
 void Trigger::add_condition(TriggerCondition tc_) {
 	conditions.push_back(tc_);
@@ -49,38 +51,21 @@ bool Trigger::check_conditions(const sc2::ObservationInterface* obs) {
 	return true;
 }
 
-
-StrategyOrder::StrategyOrder(BotAgent* agent_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D unit_location_, sc2::Point2D target_location_) {
+StrategyOrder::StrategyOrder(BotAgent* agent_) {
 	agent = agent_;
-	unit_type = unit_type_;
-	ability = ability_;
-	unit_location = unit_location_;
-	target_location = target_location_;
+	has_directive = false;
 }
 
 bool StrategyOrder::execute(const sc2::ObservationInterface* obs) {
-	static const sc2::Unit* unit;
-	sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+	if (has_directive)
+		return directive->execute(agent, obs);
+}
 
-	// pick valid unit to execute order
-	for (const sc2::Unit* u : units) {
-		float lowest_distance = 99999.0f;
-		for (const auto& order : u->orders) {
-			if (order.ability_id == ability) {
-				return false;
-			}
-		}
-		if (u->unit_type == unit_type) {
-			float dist = sc2::DistanceSquared2D(u->pos, unit_location);
-			if (dist < lowest_distance) {
-				unit = u;
-				lowest_distance = dist;
-			}
-		}
-	}
-	std::cout << "attempting to build pylon at " << target_location.x << "," << target_location.y << std::endl;
-	agent->Actions()->UnitCommand(unit, ability, target_location);
-	return true;
+void StrategyOrder::setDirective(Directive directive_) {
+	if (has_directive)
+		delete directive;
+	directive = new Directive(directive_);
+	has_directive = true;
 }
 
 void StrategyOrder::addTriggerCondition(COND cond_type_, int cond_value_) {
