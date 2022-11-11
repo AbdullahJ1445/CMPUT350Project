@@ -1,5 +1,5 @@
 #include "Agents.h"
-#include "Triggers.h"
+#include "Directive.h"
 #include "sc2api/sc2_api.h"
 #include "sc2api/sc2_args.h"
 #include "sc2api/sc2_client.h"
@@ -7,6 +7,8 @@
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
 
+class TriggerCondition;
+enum class DIR_TYPE;
 
 void BotAgent::initVariables() {
 	const sc2::ObservationInterface* observation = Observation();
@@ -30,8 +32,13 @@ void BotAgent::initVariables() {
 void BotAgent::OnGameStart() {
 	BotAgent::initVariables();
 	start_location = Observation()->GetStartLocation();
-	StrategyOrder build_pylon_with_500_minerals(this, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, start_location, start_location);
-	build_pylon_with_500_minerals.addTriggerCondition(MIN_MINERALS, 500);
+
+	// How to add a new StrategyOrder to the bot's portfolio:
+	// Create a StrategyOrder, Create a Directive, set the StrategyOrder directive, add TriggerCondition(s), push_back into strategies vector
+	StrategyOrder build_pylon_with_500_minerals(this);
+	Directive directive_build_pylon_at_base(Directive::UNIT_TYPE_TO_NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, start_location);
+	build_pylon_with_500_minerals.setDirective(directive_build_pylon_at_base);
+	build_pylon_with_500_minerals.addTriggerCondition(COND::MIN_MINERALS, 500);
 	strategies.push_back(build_pylon_with_500_minerals);
 }
 
@@ -41,6 +48,8 @@ void BotAgent::OnStep() {
 	if (observation->GetGameLoop() % 1000 == 0) {
 		std::cout << ".";
 	}
+
+	// iterate through strategies in strategies vector, check their triggers and execute accordingly
 	for (StrategyOrder s : strategies) {
 		if (s.checkTriggerConditions(observation))
 			s.execute(observation);

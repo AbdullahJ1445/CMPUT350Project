@@ -21,32 +21,9 @@ private:
     int value; // the cost to build the unit (minerals + vespene)
     ActionRaw currentAction;
 };
+
 class GameStatus { // rough pseudocode
 private:
     int value_lost; // sum of the value of all units/structures lost
     int enemy_value_lost; // sum of the value of all enemy units/structures lost
-};
-
-class Strategy { // rough pseudocode
-    int max_amount;
-    int priority_constant;
-    int min_minerals;
-    int min_gas;
-    int min_food;
-    int min_food_cap;
-    int min_time;
-    bool soft_triggers_per_unit;
-    Unit unit_type;
-    int each_minerals;
-    int each_gas;
-    int each_food;
-    int each_food_cap;
-    int each_time;
-    int min_minerals;
-    int min_gas;
-    int min_food;
-    int min_food_cap;
-    int min_time;
-    bool attacked;
-    bool attacking;
 };
