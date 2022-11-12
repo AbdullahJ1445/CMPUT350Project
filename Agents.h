@@ -3,6 +3,7 @@
 #include "Directive.h"
 #include "Triggers.h"
 #include "Squad.h"
+#include "Base.h"
 #include "sc2api/sc2_api.h"
 #include "sc2api/sc2_args.h"
 #include "sc2lib/sc2_lib.h"
@@ -12,6 +13,7 @@
 
 class StrategyOrder;
 class SquadMember;
+class Base;
 
 class Human : public sc2::Agent {
 public:
@@ -39,6 +41,8 @@ public:
 	const sc2::Unit* FindNearestGasStructure(const sc2::Point2D location);
 	std::vector<SquadMember*> BotAgent::filter_by_flag(std::vector<SquadMember*> squad_vector, FLAGS flag);
 	std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> squad_vector, std::vector<FLAGS> flag_list);
+
+	std::vector<Base> bases;
 
 private:
 	sc2::Point2D start_location;

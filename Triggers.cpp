@@ -16,13 +16,13 @@ TriggerCondition::TriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_T
 	unit_of_type = unit_of_type_;
 }
 
-TriggerCondition::TriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float sq_distance_) {
+TriggerCondition::TriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
 	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION);
 	cond_type = cond_type_;
 	cond_value = cond_value_;
 	unit_of_type = unit_of_type_;
 	location_for_counting_units = location_;
-	distance_squared = sq_distance_;
+	distance_squared = pow(radius_, 2);
 }
 
 bool TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
@@ -85,6 +85,23 @@ Trigger::Trigger() {
 void Trigger::add_condition(TriggerCondition tc_) {
 	conditions.push_back(tc_);
 }
+
+void Trigger::add_condition(COND cond_type_, int cond_value_) {
+	TriggerCondition tc_(cond_type_, cond_value_);
+	conditions.push_back(tc_);
+}
+
+void Trigger::add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
+	TriggerCondition tc_(cond_type_, cond_value_, unit_of_type_);
+	conditions.push_back(tc_);
+}
+
+void Trigger::add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
+	TriggerCondition tc_(cond_type_, cond_value_, unit_of_type_, location_, radius_);
+	conditions.push_back(tc_);
+}
+
+
 bool Trigger::check_conditions(const sc2::ObservationInterface* obs) {
 	// Iterate through all conditions and return false if any are not met.
 	// Otherwise return true.
@@ -122,6 +139,10 @@ void StrategyOrder::addDirective(Directive directive_) {
 	directives.push_back(directive);
 }
 
+void StrategyOrder::setTrigger(Trigger trigger_) {
+	trigger = trigger_;
+}
+
 void StrategyOrder::addTriggerCondition(COND cond_type_, int cond_value_) {
 	TriggerCondition tc(cond_type_, cond_value_);
 	trigger.add_condition(tc);
@@ -132,8 +153,8 @@ void StrategyOrder::addTriggerCondition(COND cond_type_, int cond_value_, sc2::U
 	trigger.add_condition(tc);
 }
 
-void StrategyOrder::addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float sq_distance_) {
-	TriggerCondition tc(cond_type_, cond_value_, unit_of_type_, location_, sq_distance_);
+void StrategyOrder::addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
+	TriggerCondition tc(cond_type_, cond_value_, unit_of_type_, location_, radius_);
 	trigger.add_condition(tc);
 }
 
