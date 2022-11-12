@@ -32,7 +32,7 @@ class TriggerCondition {
 public:
 	TriggerCondition(COND cond_type_, int cond_value_);
 	TriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
-	TriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float sq_distance_=200.0f);
+	TriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
 	bool is_met(const sc2::ObservationInterface* obs);
 
 
@@ -48,6 +48,9 @@ class Trigger {
 public:
 	Trigger();
 	void add_condition(TriggerCondition tc_);
+	void add_condition(COND cond_type_, int cond_value_);
+	void add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
+	void add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
 	bool check_conditions(const sc2::ObservationInterface* obs);
 
 private:
@@ -60,9 +63,10 @@ public:
 	~StrategyOrder();
 	bool execute(const sc2::ObservationInterface* obs);
 	bool checkTriggerConditions(const sc2::ObservationInterface* obs);
+	void setTrigger(Trigger trigger_);
 	void addTriggerCondition(COND cond_type_, int cond_value_);
 	void addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
-	void addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float sq_distance_=200.0f);
+	void addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
 	void setDirective(Directive directive_);
 	void addDirective(Directive directive_);
 	Trigger getTrigger();

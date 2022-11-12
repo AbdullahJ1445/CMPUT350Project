@@ -6,6 +6,9 @@
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
 
+# define M_PI           3.14159265358979323846
+# define DEFAULT_RADIUS 12.0f // should be equal to the square root of DEFAULT_SQ_DISTANCE in Triggers.h for best functionality
+
 class BotAgent;
 
 class Directive {
@@ -30,9 +33,9 @@ public:
 	};
 
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_);
-	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_);
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_= DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit target_);
-	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D location_);
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D location_, float proximity_ = DEFAULT_RADIUS);
 
 	Directive(const Directive& rhs);
 
@@ -40,6 +43,7 @@ public:
 
 	bool execute(BotAgent* agent, const sc2::ObservationInterface* obs);
 	bool executeForUnit(BotAgent* agent, const sc2::ObservationInterface* obs, const sc2::Unit& unit);
+	static sc2::Point2D uniform_random_point_in_circle(sc2::Point2D center, float radius);
 	void setDefault();
 
 private:
@@ -49,4 +53,5 @@ private:
 	sc2::ABILITY_ID ability;
 	sc2::Point2D target_location;
 	sc2::Unit target_unit;
+	float proximity;
 };

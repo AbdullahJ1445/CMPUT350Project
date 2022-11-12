@@ -95,95 +95,143 @@ void BotAgent::OnGameStart() {
 	// How to add a new StrategyOrder to the bot's portfolio:
 	// Create a StrategyOrder, Create a Directive, set the StrategyOrder directive, add TriggerCondition(s), push_back into strategies vector
 	
-	StrategyOrder build_pylon_at_choke(this);
-	Directive directive_build_pylon_at_choke(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, choke_point_1);
-	build_pylon_at_choke.setDirective(directive_build_pylon_at_choke);
-	build_pylon_at_choke.addTriggerCondition(COND::MIN_MINERALS, 100);
-	build_pylon_at_choke.addTriggerCondition(COND::MAX_FOOD, 6);
-	build_pylon_at_choke.addTriggerCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, start_location);
-	build_pylon_at_choke.addTriggerCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, choke_point_1);
-	strategies.push_back(build_pylon_at_choke);
+	StrategyOrder choke_pylon(this);
+	Directive d_choke_pylon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bases[0].get_defend_point(0), 7.0f);
+	Trigger t_choke_pylon;
+	t_choke_pylon.add_condition(COND::MIN_MINERALS, 100);
+	t_choke_pylon.add_condition(COND::MAX_FOOD, 6);
+	t_choke_pylon.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
+	t_choke_pylon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_defend_point(0), 7.0f);
+	choke_pylon.setDirective(d_choke_pylon);
+	choke_pylon.setTrigger(t_choke_pylon);
+	strategies.push_back(choke_pylon);
 
-	StrategyOrder build_pylon_with_100_minerals(this);
-	Directive directive_build_pylon_at_base(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, start_location);
-	build_pylon_with_100_minerals.setDirective(directive_build_pylon_at_base);
-	build_pylon_with_100_minerals.addTriggerCondition(COND::MIN_MINERALS, 100);
-	build_pylon_with_100_minerals.addTriggerCondition(COND::MAX_FOOD, 4);
-	strategies.push_back(build_pylon_with_100_minerals);
+	StrategyOrder base_pylon(this);
+	Directive d_base_pylon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bases[0].get_build_area(0));
+	Trigger t_base_pylon;
+	t_base_pylon.add_condition(COND::MIN_MINERALS, 100);
+	t_base_pylon.add_condition(COND::MAX_FOOD, 4);
+	t_base_pylon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
+	base_pylon.setDirective(d_base_pylon);
+	base_pylon.setTrigger(t_base_pylon);
+	strategies.push_back(base_pylon);
 
-	StrategyOrder train_probe_with_50_minerals(this);
-	Directive train_probe(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_NEXUS, sc2::ABILITY_ID::TRAIN_PROBE);
-	train_probe_with_50_minerals.setDirective(train_probe);
-	train_probe_with_50_minerals.addTriggerCondition(COND::MIN_MINERALS, 50);
-	train_probe_with_50_minerals.addTriggerCondition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_PROBE);
-	strategies.push_back(train_probe_with_50_minerals);
+	StrategyOrder base_pylon_2(this);
+	Directive d_base_pylon_2(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bases[0].get_build_area(1));
+	Trigger t_base_pylon_2;
+	t_base_pylon_2.add_condition(COND::MIN_MINERALS, 100);
+	t_base_pylon_2.add_condition(COND::MAX_FOOD, 4);
+	t_base_pylon_2.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
+	t_base_pylon_2.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 7, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(1));
+	base_pylon_2.setDirective(d_base_pylon_2);
+	base_pylon_2.setTrigger(t_base_pylon_2);
+	strategies.push_back(base_pylon_2);
 
-	StrategyOrder build_forge_with_150_minerals(this);
-	Directive directive_build_forge_at_base(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_FORGE, start_location);
-	build_forge_with_150_minerals.setDirective(directive_build_forge_at_base);
-	build_forge_with_150_minerals.addTriggerCondition(COND::MIN_MINERALS, 150);
-	build_forge_with_150_minerals.addTriggerCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-	strategies.push_back(build_forge_with_150_minerals);
+	StrategyOrder base_probe(this);
+	Directive d_base_probe(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_NEXUS, sc2::ABILITY_ID::TRAIN_PROBE);
+	Trigger t_base_probe;
+	t_base_probe.add_condition(COND::MIN_MINERALS, 50);
+	t_base_probe.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 15, sc2::UNIT_TYPEID::PROTOSS_PROBE, start_location, 18.0f);
+	base_probe.setDirective(d_base_probe);
+	base_probe.setTrigger(t_base_probe);
+	strategies.push_back(base_probe);
 
-	StrategyOrder build_cannon_with_150_minerals(this);
-	Directive directive_build_photon_cannon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, start_location);
-	build_cannon_with_150_minerals.setDirective(directive_build_photon_cannon);
-	build_cannon_with_150_minerals.addTriggerCondition(COND::MIN_MINERALS, 150);
-	build_cannon_with_150_minerals.addTriggerCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-	build_cannon_with_150_minerals.addTriggerCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, start_location);
-	strategies.push_back(build_cannon_with_150_minerals);
+	StrategyOrder build_forge(this);
+	Directive d_build_forge(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_FORGE, bases[0].get_build_area(0));
+	Trigger t_build_forge;
+	t_build_forge.add_condition(COND::MIN_MINERALS, 150);
+	t_build_forge.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+	build_forge.setDirective(d_build_forge);
+	build_forge.setTrigger(t_build_forge);
+	strategies.push_back(build_forge);
 
-	StrategyOrder build_cannon_at_choke(this);
-	Directive directive_build_cannon_at_choke(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, choke_point_1);
-	build_cannon_at_choke.setDirective(directive_build_cannon_at_choke);
-	build_cannon_at_choke.addTriggerCondition(COND::MIN_MINERALS, 150);
-	build_cannon_at_choke.addTriggerCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-	build_cannon_at_choke.addTriggerCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, choke_point_1);
-	strategies.push_back(build_cannon_at_choke);
+
+	StrategyOrder base_cannon(this);
+	Directive d_base_cannon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, bases[0].get_build_area(0));
+	Trigger t_base_cannon;
+	t_base_cannon.add_condition(COND::MIN_MINERALS, 150);
+	t_base_cannon.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+	t_base_cannon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, start_location);
+	base_cannon.setDirective(d_base_cannon);
+	base_cannon.setTrigger(t_base_cannon);
+	strategies.push_back(base_cannon);
+
+	StrategyOrder base_cannon_2(this);
+	Directive d_base_cannon_2(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, bases[0].get_build_area(1));
+	Trigger t_base_cannon_2;
+	t_base_cannon_2.add_condition(COND::MIN_MINERALS, 150);
+	t_base_cannon_2.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+	t_base_cannon_2.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(1));
+	t_base_cannon_2.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bases[0].get_build_area(1));
+	base_cannon_2.setDirective(d_base_cannon_2);
+	base_cannon_2.setTrigger(t_base_cannon_2);
+	strategies.push_back(base_cannon_2);
 	
-	StrategyOrder build_assimilator_with_75_minerals(this);
-	Directive directive_build_assimilator(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_ASSIMILATOR, start_location);
-	build_assimilator_with_75_minerals.setDirective(directive_build_assimilator);
-	build_assimilator_with_75_minerals.addTriggerCondition(COND::MIN_MINERALS, 75);
-	build_assimilator_with_75_minerals.addTriggerCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR);
-	strategies.push_back(build_assimilator_with_75_minerals);
+	StrategyOrder choke_cannon(this);
+	Directive d_choke_cannon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, bases[0].get_defend_point(0));
+	Trigger t_choke_cannon;
+	t_choke_cannon.add_condition(COND::MIN_MINERALS, 150);
+	t_choke_cannon.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+	t_choke_cannon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, choke_point_1);
+	choke_cannon.setDirective(d_choke_cannon);
+	choke_cannon.setTrigger(t_choke_cannon);
+	strategies.push_back(choke_cannon);
+	
+	StrategyOrder base_assimilator(this);
+	Directive d_base_assimilator(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_ASSIMILATOR, start_location);
+	Trigger t_base_assimilator;
+	t_base_assimilator.add_condition(COND::MIN_MINERALS, 75);
+	t_base_assimilator.add_condition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR);
+	base_assimilator.setDirective(d_base_assimilator);
+	base_assimilator.setTrigger(t_base_assimilator);
+	strategies.push_back(base_assimilator);
 
-	StrategyOrder build_cybernetics_core_with_200_minerals(this);
-	Directive directive_build_cybernetics(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_CYBERNETICSCORE, start_location);
-	build_cybernetics_core_with_200_minerals.setDirective(directive_build_cybernetics);
-	build_cybernetics_core_with_200_minerals.addTriggerCondition(COND::MIN_MINERALS, 200);
-	build_cybernetics_core_with_200_minerals.addTriggerCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-	strategies.push_back(build_cybernetics_core_with_200_minerals);
+	StrategyOrder build_cyber_core(this);
+	Directive d_build_cyber_core(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_CYBERNETICSCORE, bases[0].get_random_build_area());
+	Trigger t_build_cyber_core;
+	t_build_cyber_core.add_condition(COND::MIN_MINERALS, 200);
+	t_build_cyber_core.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+	build_cyber_core.setDirective(d_build_cyber_core);
+	build_cyber_core.setTrigger(t_build_cyber_core);
+	strategies.push_back(build_cyber_core);
 
-	StrategyOrder build_gateway_with_150_minerals(this);
-	Directive directive_build_gateway(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_GATEWAY, start_location);
-	build_gateway_with_150_minerals.setDirective(directive_build_gateway);
-	build_gateway_with_150_minerals.addTriggerCondition(COND::MIN_MINERALS, 150);
-	build_gateway_with_150_minerals.addTriggerCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
-	strategies.push_back(build_gateway_with_150_minerals);
+	StrategyOrder base_gateway(this);
+	Directive d_base_gateway(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_GATEWAY, bases[0].get_random_build_area());
+	Trigger t_base_gateway;
+	t_base_gateway.add_condition(COND::MIN_MINERALS, 150);
+	t_base_gateway.add_condition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+	base_gateway.setDirective(d_base_gateway);
+	base_gateway.setTrigger(t_base_gateway);
+	strategies.push_back(base_gateway);
 
-	StrategyOrder build_twilight_council_150_minerals_100_gas(this);
-	Directive directive_twilight_council(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_TWILIGHTCOUNCIL, start_location);
-	build_twilight_council_150_minerals_100_gas.setDirective(directive_twilight_council);
-	build_twilight_council_150_minerals_100_gas.addTriggerCondition(COND::MIN_MINERALS, 150);
-	build_twilight_council_150_minerals_100_gas.addTriggerCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
-	strategies.push_back(build_twilight_council_150_minerals_100_gas);
+	StrategyOrder base_twi_council(this);
+	Directive d_base_twi_council(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_TWILIGHTCOUNCIL, bases[0].get_random_build_area());
+	Trigger t_base_twi_council;
+	t_base_twi_council.add_condition(COND::MIN_MINERALS, 150);
+	t_base_twi_council.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
+	base_twi_council.setDirective(d_base_twi_council);
+	base_twi_council.setTrigger(t_base_twi_council);
+	strategies.push_back(base_twi_council);
 
-	StrategyOrder train_stalker_125_minerals_50_gas(this);
-	Directive directive_train_stalker(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_STALKER);
-	train_stalker_125_minerals_50_gas.setDirective(directive_train_stalker);
-	train_stalker_125_minerals_50_gas.addTriggerCondition(COND::MIN_MINERALS, 125);
-	train_stalker_125_minerals_50_gas.addTriggerCondition(COND::MIN_GAS, 50);
-	train_stalker_125_minerals_50_gas.addTriggerCondition(COND::MIN_FOOD, 2);
-	strategies.push_back(train_stalker_125_minerals_50_gas);
+	StrategyOrder train_stalker(this);
+	Directive d_train_stalker(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_STALKER);
+	Trigger t_train_stalker;
+	t_train_stalker.add_condition(COND::MIN_MINERALS, 125);
+	t_train_stalker.add_condition(COND::MIN_GAS, 50);
+	t_train_stalker.add_condition(COND::MIN_FOOD, 2);
+	train_stalker.setDirective(d_train_stalker);
+	train_stalker.setTrigger(t_train_stalker);
+	strategies.push_back(train_stalker);
 
-	StrategyOrder research_blink_150_150(this);
-	Directive directive_research_blink(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL, sc2::ABILITY_ID::RESEARCH_BLINK);
-	research_blink_150_150.setDirective(directive_research_blink);
-	research_blink_150_150.addTriggerCondition(COND::MIN_MINERALS, 150);
-	research_blink_150_150.addTriggerCondition(COND::MIN_GAS, 150);
-	research_blink_150_150.addTriggerCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
-	strategies.push_back(research_blink_150_150);
+	StrategyOrder research_blink(this);
+	Directive d_research_blink(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL, sc2::ABILITY_ID::RESEARCH_BLINK);
+	Trigger t_research_blink;
+	t_research_blink.add_condition(COND::MIN_MINERALS, 150);
+	t_research_blink.add_condition(COND::MIN_GAS, 150);
+	t_research_blink.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
+	research_blink.setDirective(d_research_blink);
+	research_blink.setTrigger(t_research_blink);
+	strategies.push_back(research_blink);
 }
 
 void::BotAgent::OnStep_100() {
@@ -301,6 +349,7 @@ bool BotAgent::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) 
 //}
 
 void BotAgent::initLocations(int map_index, int p_id) {
+	const sc2::ObservationInterface* observation = Observation();
 	switch (map_index) {
 	case 1:
 		break;
@@ -309,19 +358,166 @@ void BotAgent::initLocations(int map_index, int p_id) {
 	case 3:
 		switch (p_id) {
 		case 1:
-			choke_point_1 = sc2::Point2D(146.0, 119.0);
-			choke_point_2 = sc2::Point2D(137.0, 90.0);
+		{
 			proxy_location = sc2::Point2D(28.0, 56.0);
 			enemy_location = sc2::Point2D(62.5, 28.5);
+
+			Base main_base(observation->GetStartLocation());
+			main_base.add_build_area(146.0, 128.0);
+			main_base.add_build_area(129.0, 138.0);
+			main_base.add_defend_point(149.0, 120.0);
+			main_base.set_active();
+			bases.push_back(main_base);
+
+			Base exp_1(164.5, 140.5);
+			exp_1.add_build_area(165.0, 135.0);
+			exp_1.add_defend_point(168.0, 132.0);
+			bases.push_back(exp_1);
+
+			Base exp_2(149.5, 102.5);
+			exp_2.add_build_area(144.0, 106.0);
+			exp_2.add_defend_point(141.0, 95.0);
+			bases.push_back(exp_2);
+
+			Base exp_3(166.5, 69.5);
+			exp_3.add_build_area(161.0, 79.0);
+			exp_3.add_defend_point(155.0, 69.0);
+			bases.push_back(exp_3);
+
+			Base exp_4(119.5, 111.5);
+			exp_4.add_defend_point(115.0, 105.0);
+			exp_4.add_defend_point(110.0, 115.0);
+			bases.push_back(exp_4);
+
+			Base exp_5(127.5, 57.5);
+			exp_5.add_defend_point(122.0, 69.0);
+			exp_5.add_build_area(137.0, 54.0);
+			bases.push_back(exp_5);
+
+			Base exp_6(165.5, 23.5);
+			exp_6.add_defend_point(157.0, 23.0);
+			bases.push_back(exp_6);
+
+			Base exp_7(93.5, 147.5);
+			exp_7.add_defend_point(94.0, 141.0);
+			bases.push_back(exp_7);
+
+			Base exp_8(106.5, 20.5);
+			exp_8.add_defend_point(106.0, 27.0);
+			bases.push_back(exp_8);
+
+			Base exp_9(34.5, 144.5);
+			exp_9.add_defend_point(43.0, 145.0);
+			bases.push_back(exp_9);
+
+			Base exp_10(72.5, 110.5);
+			exp_10.add_defend_point(78.0, 99.0);
+			exp_10.add_defend_point(63.0, 114.0);
+			bases.push_back(exp_10);
+
+			Base exp_11(80.5, 56.5);
+			exp_11.add_defend_point(85.0, 63.0);
+			exp_11.add_defend_point(90.0, 53.0);
+			bases.push_back(exp_11);
+
+			Base exp_12(33.5, 98.5);
+			exp_12.add_build_area(39.0, 89.0);
+			exp_12.add_defend_point(45.0, 99.0);
+			bases.push_back(exp_12);
+
+			Base exp_13(50.5, 65.5);
+			exp_13.add_build_area(56.0, 62.0);
+			exp_13.add_defend_point(59.0, 73.0);
+			bases.push_back(exp_13);
+
+			Base exp_14(35.5, 27.5);
+			exp_14.add_build_area(35.0, 33.0);
+			exp_14.add_defend_point(32.0, 36.0);
+			bases.push_back(exp_14);
+
 			break;
+		}
 		case 2:
-			choke_point_1 = sc2::Point2D(54.0, 49.0);
-			choke_point_2 = sc2::Point2D(63.0, 78.0);
+		{
 			proxy_location = sc2::Point2D(172.0, 112.0);
 			enemy_location = sc2::Point2D(137.5, 139.5);
+			Base main_base(observation->GetStartLocation());
+			main_base.add_build_area(54.0, 40.0);
+			main_base.add_build_area(71.0, 30.0);
+			main_base.add_defend_point(51.0, 48.0);
+			main_base.set_active();
+			bases.push_back(main_base);
+
+			Base exp_1(35.5, 27.5);
+			exp_1.add_build_area(35.0, 33.0);
+			exp_1.add_defend_point(32.0, 36.0);
+			bases.push_back(exp_1);
+
+			Base exp_2(50.5, 65.5);
+			exp_2.add_build_area(56.0, 62.0);
+			exp_2.add_defend_point(59.0, 73.0);
+			bases.push_back(exp_2);
+
+			Base exp_3(33.5, 98.5);
+			exp_3.add_build_area(39.0, 89.0);
+			exp_3.add_defend_point(45.0, 99.0);
+			bases.push_back(exp_3);
+
+			Base exp_4(80.5, 56.5);
+			exp_4.add_defend_point(85.0, 63.0);
+			exp_4.add_defend_point(90.0, 53.0);
+			bases.push_back(exp_4);
+
+			Base exp_5(72.5, 110.5);
+			exp_5.add_defend_point(78.0, 99.0);
+			exp_5.add_defend_point(63.0, 114.0);
+			bases.push_back(exp_5);
+
+			Base exp_6(34.5, 144.5);
+			exp_6.add_defend_point(43.0, 145.0);
+			bases.push_back(exp_6);
+
+			Base exp_7(106.5, 20.5);
+			exp_7.add_defend_point(106.0, 27.0);
+			bases.push_back(exp_7);
+
+			Base exp_8(93.5, 147.5);
+			exp_8.add_defend_point(94.0, 141.0);
+			bases.push_back(exp_8);
+
+			Base exp_9(165.5, 23.5);
+			exp_9.add_defend_point(157.0, 23.0);
+			bases.push_back(exp_9);
+
+			Base exp_10(127.5, 57.5);
+			exp_10.add_defend_point(122.0, 69.0);
+			exp_10.add_build_area(137.0, 54.0);
+			bases.push_back(exp_10);
+
+			Base exp_11(119.5, 111.5);
+			exp_11.add_defend_point(115.0, 105.0);
+			exp_11.add_defend_point(110.0, 115.0);
+			bases.push_back(exp_11);
+
+			Base exp_12(166.5, 69.5);
+			exp_12.add_build_area(161.0, 79.0);
+			exp_12.add_defend_point(155.0, 69.0);
+			bases.push_back(exp_12);
+
+			Base exp_13(149.5, 102.5);
+			exp_13.add_build_area(144.0, 106.0);
+			exp_13.add_defend_point(141.0, 95.0);
+			bases.push_back(exp_13);
+
+			Base exp_14(164.5, 140.5);
+			exp_14.add_build_area(165.0, 135.0);
+			exp_14.add_defend_point(168.0, 132.0);
+			bases.push_back(exp_14);
+
 			break;
 		}
 		break;
+		}
 	}
 }
 

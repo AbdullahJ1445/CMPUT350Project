@@ -4,7 +4,7 @@
 #include "Agents.h"
 
 
-Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_) {
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) {
 	// This constructor is only valid when a unit type is targeting a Point2D location
 	assert(assignee_ == ASSIGNEE::UNIT_TYPE);
 	assert(action_type_ == ACTION_TYPE::EXACT_LOCATION ||
@@ -16,6 +16,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	unit_type = unit_type_;
 	ability = ability_;
 	target_location = location_;
+	proximity = proximity_;
 }
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit target_) {
@@ -29,7 +30,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	target_unit = target_;
 }
 
-Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D location_) {
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D location_, float proximity_) {
 	// This constructor is only valid for gathering minerals/gas as a default directive
 	assert(assignee_ == ASSIGNEE::DEFAULT_DIRECTIVE);
 	assert(action_type_ == ACTION_TYPE::GET_MINERALS_NEAR_LOCATION ||
@@ -37,6 +38,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D 
 	action_type = action_type_;
 	assignee = assignee_;
 	target_location = location_;
+	proximity = proximity_;
 }
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_) {
@@ -57,6 +59,7 @@ Directive::Directive(const Directive& rhs) {
 	ability = rhs.ability;
 	target_location = rhs.target_location;
 	target_unit = rhs.target_unit;
+	proximity = rhs.proximity;
 }
 
 // todo: implement constructors involving squads
@@ -107,10 +110,13 @@ bool Directive::execute(BotAgent* agent, const sc2::ObservationInterface* obs) {
 			sc2::Point2D location = target_location;
 
 			if (action_type == ACTION_TYPE::NEAR_LOCATION) {
+				/*
 				// add random offsets when NEAR_LOCATION order is specified
 				float rx = sc2::GetRandomScalar();
 				float ry = sc2::GetRandomScalar();
 				location = sc2::Point2D(target_location.x + rx * 7.5f, target_location.y + ry * 10.0f);
+				*/
+				location = uniform_random_point_in_circle(target_location, proximity);
 			}
 			
 			// pick valid unit to execute order, closest to target location
@@ -178,5 +184,17 @@ bool Directive::executeForUnit(BotAgent* agent, const sc2::ObservationInterface*
 }
 
 void Directive::setDefault() {
+	// a default directive is something that a unit performs when it has no actions
+	// usually used for workers to return to gathering after building/defending
 	assignee = DEFAULT_DIRECTIVE;
+}
+
+sc2::Point2D Directive::uniform_random_point_in_circle(sc2::Point2D center, float radius) {
+	// given the center point and radius, return a uniform random point within the circle
+
+	float r = radius * sqrt(sc2::GetRandomScalar());
+	float theta = sc2::GetRandomScalar() * 2 * M_PI;
+	float x = center.x + r * cos(theta);
+	float y = center.y + r * sin(theta);
+	return sc2::Point2D(x, y);
 }
