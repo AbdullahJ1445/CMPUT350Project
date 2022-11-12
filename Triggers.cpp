@@ -139,27 +139,21 @@ void StrategyOrder::addDirective(Directive directive_) {
 	directives.push_back(directive);
 }
 
+void StrategyOrder::addTrigger(Trigger trigger_) {
+	triggers.push_back(trigger_);
+}
+
 void StrategyOrder::setTrigger(Trigger trigger_) {
-	trigger = trigger_;
-}
-
-void StrategyOrder::addTriggerCondition(COND cond_type_, int cond_value_) {
-	TriggerCondition tc(cond_type_, cond_value_);
-	trigger.add_condition(tc);
-}
-
-void StrategyOrder::addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
-	TriggerCondition tc(cond_type_, cond_value_, unit_of_type_);
-	trigger.add_condition(tc);
-}
-
-void StrategyOrder::addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
-	TriggerCondition tc(cond_type_, cond_value_, unit_of_type_, location_, radius_);
-	trigger.add_condition(tc);
+	triggers.clear();
+	triggers.push_back(trigger_);
 }
 
 bool StrategyOrder::checkTriggerConditions(const sc2::ObservationInterface* obs) {
-	return trigger.check_conditions(obs);
+	for (Trigger t_ : triggers) {
+		if (t_.check_conditions(obs))
+			return true;
+	}
+	return false;
 }
 
 Trigger StrategyOrder::getTrigger() {

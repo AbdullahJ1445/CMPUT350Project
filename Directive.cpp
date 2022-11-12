@@ -41,6 +41,17 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D 
 	proximity = proximity_;
 }
 
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) {
+	// This constructor is only valid for issuing an order to all units matching a flag, towards a location
+	assignee = assignee_;
+	action_type = action_type_;
+	flags = flags_;
+	ability = ability_;
+	target_location = location_;
+	proximity = proximity_;
+
+}
+
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_) {
 	// This constructor is only valid for simple actions for a unit_type
 	assert(action_type_ == ACTION_TYPE::SIMPLE_ACTION);
@@ -62,13 +73,12 @@ Directive::Directive(const Directive& rhs) {
 	proximity = rhs.proximity;
 }
 
-// todo: implement constructors involving squads
-
 bool Directive::execute(BotAgent* agent, const sc2::ObservationInterface* obs) {
 	bool found_valid_unit = false; // ensure unit has been assigned before issuing order
 
 	if (assignee == ASSIGNEE::UNIT_TYPE) {
 		if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION) {
+			
 			if (ability == sc2::ABILITY_ID::BUILD_ASSIMILATOR ||
 				ability == sc2::ABILITY_ID::BUILD_EXTRACTOR ||
 				ability == sc2::ABILITY_ID::BUILD_REFINERY) {
@@ -105,17 +115,12 @@ bool Directive::execute(BotAgent* agent, const sc2::ObservationInterface* obs) {
 				}
 				return false;
 			}
+
 			static const sc2::Unit* unit;
 			sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 			sc2::Point2D location = target_location;
 
 			if (action_type == ACTION_TYPE::NEAR_LOCATION) {
-				/*
-				// add random offsets when NEAR_LOCATION order is specified
-				float rx = sc2::GetRandomScalar();
-				float ry = sc2::GetRandomScalar();
-				location = sc2::Point2D(target_location.x + rx * 7.5f, target_location.y + ry * 10.0f);
-				*/
 				location = uniform_random_point_in_circle(target_location, proximity);
 			}
 			
@@ -157,6 +162,28 @@ bool Directive::execute(BotAgent* agent, const sc2::ObservationInterface* obs) {
 				agent->Actions()->UnitCommand(unit, ability);
 			};
 		}
+	}
+
+	if (assignee == MATCH_FLAGS) {
+		std::vector<SquadMember*> squads = agent->get_squad_members();
+		std::vector<SquadMember*> matching_squads = agent->filter_by_flags(squads, flags);
+		if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION) {
+			static const sc2::Unit* unit;
+			sc2::Point2D location = target_location;
+
+			for (SquadMember* s : matching_squads) {
+				unit = &(s->unit);
+				if (action_type == ACTION_TYPE::NEAR_LOCATION) {
+					location = uniform_random_point_in_circle(target_location, proximity);
+				}
+				// Unit has no orders
+				if ((unit->orders).size() == 0) {
+					found_valid_unit = true;
+					agent->Actions()->UnitCommand(unit, ability, location);
+				}
+			}
+		}
+		return found_valid_unit;
 	}
 	return false;
 }

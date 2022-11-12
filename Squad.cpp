@@ -10,6 +10,11 @@ SquadMember::SquadMember(const sc2::Unit& unit_, SQUAD squad_type) : unit(unit_)
 		flags.insert(FLAGS::IS_WORKER);
 		flags.insert(FLAGS::IS_MINERAL_GATHERER);
 	}
+
+	if (squad_type == SQUAD::SQUAD_ARMY) {
+		flags.insert(FLAGS::IS_ATTACKER);
+	}
+
 	if (squad_type == SQUAD::SQUAD_TOWNHALL) {
 		// true flags
 		flags.insert(FLAGS::IS_STRUCTURE);

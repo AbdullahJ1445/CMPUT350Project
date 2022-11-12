@@ -67,6 +67,9 @@ sc2::Point2D Base::get_defend_point(int index) {
 	return defend_points[index];
 }
 
+sc2::Point2D Base::get_townhall() {
+	return location_townhall;
+}
 int Base::get_num_build_areas() { 
 	// return the number of build areas in the base
 	return(build_areas.size());

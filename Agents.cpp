@@ -91,6 +91,7 @@ void BotAgent::OnGameStart() {
 	BotAgent::initVariables();
 	BotAgent::initStartingUnits();
 	std::cout << "Start Location: " << start_location.x << "," << start_location.y << std::endl;
+	std::cout << "Build Area 0: " << bases[0].get_build_area(0).x << "," << bases[0].get_build_area(0).y << std::endl;
 
 	// How to add a new StrategyOrder to the bot's portfolio:
 	// Create a StrategyOrder, Create a Directive, set the StrategyOrder directive, add TriggerCondition(s), push_back into strategies vector
@@ -99,11 +100,11 @@ void BotAgent::OnGameStart() {
 	Directive d_choke_pylon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bases[0].get_defend_point(0), 7.0f);
 	Trigger t_choke_pylon;
 	t_choke_pylon.add_condition(COND::MIN_MINERALS, 100);
-	t_choke_pylon.add_condition(COND::MAX_FOOD, 6);
+	t_choke_pylon.add_condition(COND::MAX_FOOD, 4);
 	t_choke_pylon.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
 	t_choke_pylon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_defend_point(0), 7.0f);
 	choke_pylon.setDirective(d_choke_pylon);
-	choke_pylon.setTrigger(t_choke_pylon);
+	choke_pylon.addTrigger(t_choke_pylon);
 	strategies.push_back(choke_pylon);
 
 	StrategyOrder base_pylon(this);
@@ -113,7 +114,11 @@ void BotAgent::OnGameStart() {
 	t_base_pylon.add_condition(COND::MAX_FOOD, 4);
 	t_base_pylon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
 	base_pylon.setDirective(d_base_pylon);
-	base_pylon.setTrigger(t_base_pylon);
+	base_pylon.addTrigger(t_base_pylon);
+	Trigger t_base_pylon_if_none;
+	t_base_pylon_if_none.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
+	t_base_pylon_if_none.add_condition(COND::MIN_FOOD_CAP, 20);
+	base_pylon.addTrigger(t_base_pylon_if_none);
 	strategies.push_back(base_pylon);
 
 	StrategyOrder base_pylon_2(this);
@@ -121,10 +126,15 @@ void BotAgent::OnGameStart() {
 	Trigger t_base_pylon_2;
 	t_base_pylon_2.add_condition(COND::MIN_MINERALS, 100);
 	t_base_pylon_2.add_condition(COND::MAX_FOOD, 4);
-	t_base_pylon_2.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
-	t_base_pylon_2.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 7, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(1));
+	t_base_pylon_2.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
+	t_base_pylon_2.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 9, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(1));
 	base_pylon_2.setDirective(d_base_pylon_2);
-	base_pylon_2.setTrigger(t_base_pylon_2);
+	base_pylon_2.addTrigger(t_base_pylon_2);
+	Trigger t_base_pylon_2_if_none;
+	t_base_pylon_2_if_none.add_condition(COND::MIN_MINERALS, 100);
+	t_base_pylon_2_if_none.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(1));
+	t_base_pylon_2_if_none.add_condition(COND::MIN_FOOD_CAP, 24);
+	base_pylon_2.addTrigger(t_base_pylon_2_if_none);
 	strategies.push_back(base_pylon_2);
 
 	StrategyOrder base_probe(this);
@@ -133,7 +143,7 @@ void BotAgent::OnGameStart() {
 	t_base_probe.add_condition(COND::MIN_MINERALS, 50);
 	t_base_probe.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 15, sc2::UNIT_TYPEID::PROTOSS_PROBE, start_location, 18.0f);
 	base_probe.setDirective(d_base_probe);
-	base_probe.setTrigger(t_base_probe);
+	base_probe.addTrigger(t_base_probe);
 	strategies.push_back(base_probe);
 
 	StrategyOrder build_forge(this);
@@ -142,7 +152,7 @@ void BotAgent::OnGameStart() {
 	t_build_forge.add_condition(COND::MIN_MINERALS, 150);
 	t_build_forge.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 	build_forge.setDirective(d_build_forge);
-	build_forge.setTrigger(t_build_forge);
+	build_forge.addTrigger(t_build_forge);
 	strategies.push_back(build_forge);
 
 
@@ -151,9 +161,9 @@ void BotAgent::OnGameStart() {
 	Trigger t_base_cannon;
 	t_base_cannon.add_condition(COND::MIN_MINERALS, 150);
 	t_base_cannon.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-	t_base_cannon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, start_location);
+	t_base_cannon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bases[0].get_build_area(0));
 	base_cannon.setDirective(d_base_cannon);
-	base_cannon.setTrigger(t_base_cannon);
+	base_cannon.addTrigger(t_base_cannon);
 	strategies.push_back(base_cannon);
 
 	StrategyOrder base_cannon_2(this);
@@ -164,17 +174,17 @@ void BotAgent::OnGameStart() {
 	t_base_cannon_2.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(1));
 	t_base_cannon_2.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bases[0].get_build_area(1));
 	base_cannon_2.setDirective(d_base_cannon_2);
-	base_cannon_2.setTrigger(t_base_cannon_2);
+	base_cannon_2.addTrigger(t_base_cannon_2);
 	strategies.push_back(base_cannon_2);
 	
 	StrategyOrder choke_cannon(this);
-	Directive d_choke_cannon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, bases[0].get_defend_point(0));
+	Directive d_choke_cannon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, bases[0].get_defend_point(0), 7.0f);
 	Trigger t_choke_cannon;
 	t_choke_cannon.add_condition(COND::MIN_MINERALS, 150);
 	t_choke_cannon.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-	t_choke_cannon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, choke_point_1);
+	t_choke_cannon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bases[0].get_defend_point(0), 7.0f);
 	choke_cannon.setDirective(d_choke_cannon);
-	choke_cannon.setTrigger(t_choke_cannon);
+	choke_cannon.addTrigger(t_choke_cannon);
 	strategies.push_back(choke_cannon);
 	
 	StrategyOrder base_assimilator(this);
@@ -183,7 +193,7 @@ void BotAgent::OnGameStart() {
 	t_base_assimilator.add_condition(COND::MIN_MINERALS, 75);
 	t_base_assimilator.add_condition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR);
 	base_assimilator.setDirective(d_base_assimilator);
-	base_assimilator.setTrigger(t_base_assimilator);
+	base_assimilator.addTrigger(t_base_assimilator);
 	strategies.push_back(base_assimilator);
 
 	StrategyOrder build_cyber_core(this);
@@ -192,7 +202,7 @@ void BotAgent::OnGameStart() {
 	t_build_cyber_core.add_condition(COND::MIN_MINERALS, 200);
 	t_build_cyber_core.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 	build_cyber_core.setDirective(d_build_cyber_core);
-	build_cyber_core.setTrigger(t_build_cyber_core);
+	build_cyber_core.addTrigger(t_build_cyber_core);
 	strategies.push_back(build_cyber_core);
 
 	StrategyOrder base_gateway(this);
@@ -201,7 +211,7 @@ void BotAgent::OnGameStart() {
 	t_base_gateway.add_condition(COND::MIN_MINERALS, 150);
 	t_base_gateway.add_condition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
 	base_gateway.setDirective(d_base_gateway);
-	base_gateway.setTrigger(t_base_gateway);
+	base_gateway.addTrigger(t_base_gateway);
 	strategies.push_back(base_gateway);
 
 	StrategyOrder base_twi_council(this);
@@ -210,7 +220,7 @@ void BotAgent::OnGameStart() {
 	t_base_twi_council.add_condition(COND::MIN_MINERALS, 150);
 	t_base_twi_council.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
 	base_twi_council.setDirective(d_base_twi_council);
-	base_twi_council.setTrigger(t_base_twi_council);
+	base_twi_council.addTrigger(t_base_twi_council);
 	strategies.push_back(base_twi_council);
 
 	StrategyOrder train_stalker(this);
@@ -219,8 +229,9 @@ void BotAgent::OnGameStart() {
 	t_train_stalker.add_condition(COND::MIN_MINERALS, 125);
 	t_train_stalker.add_condition(COND::MIN_GAS, 50);
 	t_train_stalker.add_condition(COND::MIN_FOOD, 2);
+	t_train_stalker.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 	train_stalker.setDirective(d_train_stalker);
-	train_stalker.setTrigger(t_train_stalker);
+	train_stalker.addTrigger(t_train_stalker);
 	strategies.push_back(train_stalker);
 
 	StrategyOrder research_blink(this);
@@ -230,8 +241,30 @@ void BotAgent::OnGameStart() {
 	t_research_blink.add_condition(COND::MIN_GAS, 150);
 	t_research_blink.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
 	research_blink.setDirective(d_research_blink);
-	research_blink.setTrigger(t_research_blink);
+	research_blink.addTrigger(t_research_blink);
 	strategies.push_back(research_blink);
+
+	// When we have 15 stalkers, send all of our "attackers" to the enemy base
+	StrategyOrder send_mass_stalkers(this);
+	std::unordered_set<FLAGS> attackers;
+	attackers.insert(FLAGS::IS_ATTACKER);
+	Directive d_send_mass_stalkers(Directive::MATCH_FLAGS, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, enemy_location);
+	Trigger t_send_mass_stalkers;
+	t_send_mass_stalkers.add_condition(COND::MIN_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+	t_send_mass_stalkers.add_condition(COND::MAX_UNIT_OF_TYPE, 18, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+	send_mass_stalkers.setDirective(d_send_mass_stalkers);
+	send_mass_stalkers.addTrigger(t_send_mass_stalkers);
+	strategies.push_back(send_mass_stalkers);
+
+	// When we have 19 stalkers, send all of our "attackers" to the enemy expansion
+	StrategyOrder send_mass_stalkers_2(this);
+	Directive d_send_mass_stalkers_2(Directive::MATCH_FLAGS, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, bases.back().get_townhall());
+	Trigger t_send_mass_stalkers_2;
+	t_send_mass_stalkers_2.add_condition(COND::MIN_UNIT_OF_TYPE, 19, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+	t_send_mass_stalkers_2.add_condition(COND::MAX_UNIT_OF_TYPE, 25, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+	send_mass_stalkers_2.setDirective(d_send_mass_stalkers_2);
+	send_mass_stalkers_2.addTrigger(t_send_mass_stalkers_2);
+	strategies.push_back(send_mass_stalkers_2);
 }
 
 void::BotAgent::OnStep_100() {
@@ -267,6 +300,10 @@ void BotAgent::OnStep() {
 }
 
 void BotAgent::OnBuildingConstructionComplete(const sc2::Unit* unit) {
+	if (getSquadMember(*unit)) { // unit already belongs to a SquadMember
+		return;
+	}
+
 	SquadMember* structure = new SquadMember(*unit, SQUAD::SQUAD_STRUCTURE);
 	sc2::UNIT_TYPEID unit_type = unit->unit_type;
 	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS ||
@@ -297,7 +334,7 @@ void BotAgent::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 }
 
 void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
-	if (getSquadMember(*unit)) {
+	if (getSquadMember(*unit)) { // unit already belongs to a SquadMember
 		return;
 	}
 	SquadMember* new_squad;
@@ -309,17 +346,38 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 		new_squad = new SquadMember(*unit, SQUAD::SQUAD_WORKER);
 		squad_created = true;
 	}
+	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_ZEALOT |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_IMMORTAL |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_DARKTEMPLAR |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_ARCHON |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_COLOSSUS |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_HIGHTEMPLAR |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_ADEPT |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_CARRIER |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_COLOSSUS |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_VOIDRAY |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_PHOENIX |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_INTERCEPTOR |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_MOTHERSHIP |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_ORACLE |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_SENTRY |
+		unit_type == sc2::UNIT_TYPEID::PROTOSS_TEMPEST)
+	{
+		new_squad = new SquadMember(*unit, SQUAD::SQUAD_ARMY);
+		squad_created = true;
+	}
 	if (squad_created)
 		squad_members.push_back(new_squad);
 }
 
 bool BotAgent::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) {
-	std::vector<FLAGS> flags;
+	std::unordered_set<FLAGS> flags;
 	bool found_viable_unit = false;
-	//flags.push_back(FLAGS::IS_WORKER);
-	//flags.push_back(FLAGS::IS_MINERAL_GATHERER);
-	//std::vector<SquadMember*> worker_miners = filter_by_flags(squad_members, flags);
-	std::vector<SquadMember*> worker_miners = filter_by_flag(squad_members, FLAGS::IS_MINERAL_GATHERER);
+	flags.insert(FLAGS::IS_WORKER);
+	flags.insert(FLAGS::IS_MINERAL_GATHERER);
+	std::vector<SquadMember*> worker_miners = filter_by_flags(squad_members, flags);
+	//std::vector<SquadMember*> worker_miners = filter_by_flag(squad_members, FLAGS::IS_MINERAL_GATHERER);
 	float distance = std::numeric_limits<float>::max();
 	SquadMember* target = nullptr;
 	for (SquadMember* s : worker_miners) {
@@ -347,6 +405,178 @@ bool BotAgent::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) 
 //void BotAgent::OnUnitIdle(const sc2::Unit* unit) {
 	// do stuff
 //}
+
+int BotAgent::getPlayerIDForMap(int map_index, sc2::Point2D location) {
+	location = getNearestStartLocation(location);
+	int p_id = 0;
+	switch (map_index) {
+	case 1:
+		// Cactus Valley LE
+		if (location == sc2::Point2D(33.5, 158.5)) {
+			// top left
+			p_id = 1;
+		}
+		if (location == sc2::Point2D(158.5, 158.5)) {
+			// top right
+			p_id = 2;
+		}
+		if (location == sc2::Point2D(158.5, 158.5)) {
+			// bottom right
+			p_id = 3;
+		}
+		if (location == sc2::Point2D(33.5, 33.5)) {
+			// bottom left
+			p_id = 4;
+		}
+		break;
+	case 2:
+		// Bel'Shir Vestige LE
+		if (location == sc2::Point2D(114.5, 25.5)) {
+			// bottom right
+			p_id = 1;
+		}
+		if (location == sc2::Point2D(29.5, 134.5)) {
+			// top left
+			p_id = 2;
+		}
+		break;
+	case 3:
+		// Proxima Station LE
+		if (location == sc2::Point2D(137.5, 139.5)) {
+			// top right
+			p_id = 1;
+		}
+		if (location == sc2::Point2D(62.5, 28.5)) {
+			// bottom left
+			p_id = 2;
+		}
+		break;
+	}
+	return p_id;
+}
+
+sc2::Point2D BotAgent::getNearestStartLocation(sc2::Point2D spot) {
+	// Get the nearest Start Location from a given point
+	float nearest_distance = 10000.0f;
+	sc2::Point2D nearest_point;
+
+	for (auto& iter : sc2::Client::Observation()->GetGameInfo().start_locations) {
+		float dist = sc2::Distance2D(spot, iter);
+		if (dist <= nearest_distance) {
+			nearest_distance = dist;
+			nearest_point = iter;
+		}
+	}
+	return nearest_point;
+}
+
+bool isMineralPatch(const sc2::Unit* unit_) {
+	// check whether a given unit is a mineral patch
+	sc2::UNIT_TYPEID type_ = unit_->unit_type;
+	return (type_ == sc2::UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD750 ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_LABMINERALFIELD750 ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_LABMINERALFIELD ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_MINERALFIELD750 ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_MINERALFIELD ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD750 ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750 ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750 ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD);
+}
+
+bool isGeyser(const sc2::Unit* unit_) {
+	// check whether a given unit is a geyser
+	sc2::UNIT_TYPEID type_ = unit_->unit_type;
+	return (type_ == sc2::UNIT_TYPEID::NEUTRAL_VESPENEGEYSER ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_PROTOSSVESPENEGEYSER ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_SPACEPLATFORMGEYSER ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERVESPENEGEYSER ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_SHAKURASVESPENEGEYSER ||
+		type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER);
+}
+
+const sc2::Unit* BotAgent::FindNearestMineralPatch(sc2::Point2D location) {
+	const sc2::ObservationInterface* obs = Observation();
+	sc2::Units units = sc2::Client::Observation()->GetUnits(sc2::Unit::Alliance::Neutral);
+	float distance = std::numeric_limits<float>::max();
+	const sc2::Unit * target = nullptr;
+	for (const auto& u : units) {
+		if (isMineralPatch(u)) {
+			float d = sc2::DistanceSquared2D(u->pos, location);		
+			if (d < distance) {
+				distance = d;
+				target = u;
+			}
+		}
+	}
+	return target;
+}
+
+const sc2::Unit* BotAgent::FindNearestGeyser(sc2::Point2D location) {
+	const sc2::ObservationInterface* obs = Observation();
+	sc2::Units units = sc2::Client::Observation()->GetUnits(sc2::Unit::Alliance::Neutral);
+	float distance = std::numeric_limits<float>::max();
+	const sc2::Unit* target = nullptr;
+	for (const auto& u : units) {
+		if (isGeyser(u)) {
+			float d = sc2::DistanceSquared2D(u->pos, location);
+			if (d < distance) {
+				distance = d;
+				target = u;
+			}
+		}
+	}
+	return target;
+}
+
+const sc2::Unit* BotAgent::FindNearestGasStructure(sc2::Point2D location) {
+	const sc2::ObservationInterface* obs = Observation();
+	sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+	float distance = std::numeric_limits<float>::max();
+	const sc2::Unit* target = nullptr;
+	for (const auto& u : units) {
+		sc2::UNIT_TYPEID unit_type = u->unit_type;
+		if (unit_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR || 
+			unit_type == sc2::UNIT_TYPEID::TERRAN_REFINERY ||
+			unit_type == sc2::UNIT_TYPEID::ZERG_EXTRACTOR ||
+			unit_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATORRICH ||
+			unit_type == sc2::UNIT_TYPEID::TERRAN_REFINERYRICH ||
+			unit_type == sc2::UNIT_TYPEID::ZERG_EXTRACTORRICH) {
+			float d = sc2::DistanceSquared2D(u->pos, location);
+			if (d < distance) {
+				distance = d;
+				target = u;
+			}
+		}
+	}
+	return target;
+}
+
+std::vector<SquadMember*> BotAgent::filter_by_flag(std::vector<SquadMember*> squad_vector, FLAGS flag) {
+	// filter a vector of SquadMember* by the given flag
+	std::vector<SquadMember*> filtered_squad;
+	
+	std::copy_if(squad_vector.begin(), squad_vector.end(), std::back_inserter(filtered_squad),
+		[flag](SquadMember* s) { return s->has_flag(flag); });
+	
+	return filtered_squad;
+}
+
+std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> squad_vector, std::unordered_set<FLAGS> flag_list) {
+	// filter a vector of SquadMember* by several flags
+	std::vector<SquadMember*> filtered_squad = squad_vector;
+	for (FLAGS f : flag_list) {
+		filtered_squad = filter_by_flag(filtered_squad, f);
+	}
+	return filtered_squad;
+}
+
+std::vector<SquadMember*> BotAgent::get_squad_members() {
+	return squad_members;
+}
 
 void BotAgent::initLocations(int map_index, int p_id) {
 	const sc2::ObservationInterface* observation = Observation();
@@ -519,172 +749,4 @@ void BotAgent::initLocations(int map_index, int p_id) {
 		break;
 		}
 	}
-}
-
-int BotAgent::getPlayerIDForMap(int map_index, sc2::Point2D location) {
-	location = getNearestStartLocation(location);
-	int p_id = 0;
-	switch (map_index) {
-	case 1:
-		// Cactus Valley LE
-		if (location == sc2::Point2D(33.5, 158.5)) {
-			// top left
-			p_id = 1;
-		}
-		if (location == sc2::Point2D(158.5, 158.5)) {
-			// top right
-			p_id = 2;
-		}
-		if (location == sc2::Point2D(158.5, 158.5)) {
-			// bottom right
-			p_id = 3;
-		}
-		if (location == sc2::Point2D(33.5, 33.5)) {
-			// bottom left
-			p_id = 4;
-		}
-		break;
-	case 2:
-		// Bel'Shir Vestige LE
-		if (location == sc2::Point2D(114.5, 25.5)) {
-			// bottom right
-			p_id = 1;
-		}
-		if (location == sc2::Point2D(29.5, 134.5)) {
-			// top left
-			p_id = 2;
-		}
-		break;
-	case 3:
-		// Proxima Station LE
-		if (location == sc2::Point2D(137.5, 139.5)) {
-			// top right
-			p_id = 1;
-		}
-		if (location == sc2::Point2D(62.5, 28.5)) {
-			// bottom left
-			p_id = 2;
-		}
-		break;
-	}
-	return p_id;
-}
-
-sc2::Point2D BotAgent::getNearestStartLocation(sc2::Point2D spot) {
-	// Get the nearest Start Location from a given point
-	float nearest_distance = 10000.0f;
-	sc2::Point2D nearest_point;
-
-	for (auto& iter : sc2::Client::Observation()->GetGameInfo().start_locations) {
-		float dist = sc2::Distance2D(spot, iter);
-		if (dist <= nearest_distance) {
-			nearest_distance = dist;
-			nearest_point = iter;
-		}
-	}
-	return nearest_point;
-}
-
-bool isMineralPatch(const sc2::Unit* unit_) {
-	// check whether a given unit is a mineral patch
-	sc2::UNIT_TYPEID type_ = unit_->unit_type;
-	return (type_ == sc2::UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD750 ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_LABMINERALFIELD750 ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_LABMINERALFIELD ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_MINERALFIELD750 ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_MINERALFIELD ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD750 ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750 ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750 ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD);
-}
-
-bool isGeyser(const sc2::Unit* unit_) {
-	// check whether a given unit is a geyser
-	sc2::UNIT_TYPEID type_ = unit_->unit_type;
-	return (type_ == sc2::UNIT_TYPEID::NEUTRAL_VESPENEGEYSER ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_PROTOSSVESPENEGEYSER ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_SPACEPLATFORMGEYSER ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERVESPENEGEYSER ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_SHAKURASVESPENEGEYSER ||
-		type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER);
-}
-
-const sc2::Unit* BotAgent::FindNearestMineralPatch(sc2::Point2D location) {
-	const sc2::ObservationInterface* obs = Observation();
-	sc2::Units units = sc2::Client::Observation()->GetUnits(sc2::Unit::Alliance::Neutral);
-	float distance = std::numeric_limits<float>::max();
-	const sc2::Unit * target = nullptr;
-	for (const auto& u : units) {
-		if (isMineralPatch(u)) {
-			float d = sc2::DistanceSquared2D(u->pos, location);		
-			if (d < distance) {
-				distance = d;
-				target = u;
-			}
-		}
-	}
-	return target;
-}
-
-const sc2::Unit* BotAgent::FindNearestGeyser(sc2::Point2D location) {
-	const sc2::ObservationInterface* obs = Observation();
-	sc2::Units units = sc2::Client::Observation()->GetUnits(sc2::Unit::Alliance::Neutral);
-	float distance = std::numeric_limits<float>::max();
-	const sc2::Unit* target = nullptr;
-	for (const auto& u : units) {
-		if (isGeyser(u)) {
-			float d = sc2::DistanceSquared2D(u->pos, location);
-			if (d < distance) {
-				distance = d;
-				target = u;
-			}
-		}
-	}
-	return target;
-}
-
-const sc2::Unit* BotAgent::FindNearestGasStructure(sc2::Point2D location) {
-	const sc2::ObservationInterface* obs = Observation();
-	sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
-	float distance = std::numeric_limits<float>::max();
-	const sc2::Unit* target = nullptr;
-	for (const auto& u : units) {
-		sc2::UNIT_TYPEID unit_type = u->unit_type;
-		if (unit_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR || 
-			unit_type == sc2::UNIT_TYPEID::TERRAN_REFINERY ||
-			unit_type == sc2::UNIT_TYPEID::ZERG_EXTRACTOR ||
-			unit_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATORRICH ||
-			unit_type == sc2::UNIT_TYPEID::TERRAN_REFINERYRICH ||
-			unit_type == sc2::UNIT_TYPEID::ZERG_EXTRACTORRICH) {
-			float d = sc2::DistanceSquared2D(u->pos, location);
-			if (d < distance) {
-				distance = d;
-				target = u;
-			}
-		}
-	}
-	return target;
-}
-
-std::vector<SquadMember*> BotAgent::filter_by_flag(std::vector<SquadMember*> squad_vector, FLAGS flag) {
-	// filter a vector of SquadMember* by the given flag
-	std::vector<SquadMember*> filtered_squad;
-	
-	std::copy_if(squad_vector.begin(), squad_vector.end(), std::back_inserter(filtered_squad),
-		[flag](SquadMember* s) { return s->has_flag(flag); });
-	
-	return filtered_squad;
-}
-
-std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> squad_vector, std::vector<FLAGS> flag_list) {
-	// filter a vector of SquadMember* by several flags
-	std::vector<SquadMember*> filtered_squad;
-	for (FLAGS f : flag_list) {
-		filtered_squad = filter_by_flag(filtered_squad, f);
-	}
-	return filtered_squad;
 }
