@@ -2,6 +2,7 @@
 
 #include "Directive.h"
 #include "Triggers.h"
+#include "Squad.h"
 #include "sc2api/sc2_api.h"
 #include "sc2api/sc2_args.h"
 #include "sc2lib/sc2_lib.h"
@@ -10,6 +11,7 @@
 #include "sc2utils/sc2_arg_parser.h"
 
 class StrategyOrder;
+class SquadMember;
 
 class Human : public sc2::Agent {
 public:
@@ -22,9 +24,16 @@ public:
 class BotAgent : public sc2::Agent {
 public:
 
+	void OnStep_1000();
+	void OnStep_100();
 	virtual void OnGameStart() final;
 	virtual void OnStep() final;
-	virtual void OnUnitIdle(const sc2::Unit* unit) final;
+	//virtual void OnUnitIdle(const sc2::Unit& unit) final;
+	SquadMember* getSquadMember(const sc2::Unit& unit);
+	std::vector<SquadMember*> getIdleWorkers();
+	const sc2::Unit* FindNearestMineralPatch(const sc2::Point2D location);
+	std::vector<SquadMember*> BotAgent::filter_by_flag(std::vector<SquadMember*> squad_vector, FLAGS flag);
+	std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> squad_vector, std::vector<FLAGS> flag_list);
 
 private:
 	sc2::Point2D start_location;
@@ -34,6 +43,7 @@ private:
 	sc2::Point2D proxy_location;
 	sc2::Point2D enemy_location;
 	std::vector<StrategyOrder> strategies; 
+	std::vector<SquadMember*> squad_members;
 	sc2::Unit proxy_worker;
 
 	int player_start_id;
@@ -43,6 +53,7 @@ private:
 
 
 	void initVariables();
+	void initStartingUnits();
 	void initLocations(int map_index, int p_id);
 	int getPlayerIDForMap(int map_index, sc2::Point2D location);
 	sc2::Point2D getNearestStartLocation(sc2::Point2D spot);

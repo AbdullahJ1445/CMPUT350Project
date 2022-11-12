@@ -1,5 +1,6 @@
 #include "Agents.h"
 #include "Directive.h"
+#include "Squad.h"
 #include "sc2api/sc2_api.h"
 #include "sc2api/sc2_args.h"
 #include "sc2api/sc2_client.h"
@@ -8,7 +9,7 @@
 #include "sc2utils/sc2_arg_parser.h"
 
 class TriggerCondition;
-enum class DIR_TYPE;
+class SquadMember;
 
 void BotAgent::initVariables() {
 	const sc2::ObservationInterface* observation = Observation();
@@ -29,36 +30,134 @@ void BotAgent::initVariables() {
 	std::cout << "Player Start ID: " << player_start_id << std::endl;
 }
 
+SquadMember* BotAgent::getSquadMember(const sc2::Unit& unit) {
+	assert(unit.alliance == sc2::Unit::Alliance::Self); // only call this on allied units!
+
+	// get the SquadMember object for a given sc2::Unit object
+	for (SquadMember* s : squad_members) {
+		if (&(s->unit) == &unit) {
+			return s;
+		}
+	}
+	return nullptr; // handle erroneous case where unit has no squad
+}
+
+std::vector<SquadMember*> BotAgent::getIdleWorkers() {
+	// get all worker units with no active orders
+	std::vector<SquadMember*> idle_workers;
+	
+	std::vector<SquadMember*> workers = filter_by_flag(squad_members, FLAGS::IS_WORKER);
+	for (SquadMember* s : workers) {
+		if (s->is_idle()) {
+			idle_workers.push_back(s);
+		}
+	}
+	
+	return idle_workers;
+}
+
+void BotAgent::initStartingUnits() {
+	// add all starting units to their respective squads
+	const sc2::ObservationInterface* observation = Observation();
+	sc2::Units units = observation->GetUnits(sc2::Unit::Alliance::Self);
+	for (const sc2::Unit* u : units) {
+		sc2::UNIT_TYPEID u_type = u->unit_type;
+		if (u_type == sc2::UNIT_TYPEID::TERRAN_SCV ||
+			u_type == sc2::UNIT_TYPEID::ZERG_DRONE ||
+			u_type == sc2::UNIT_TYPEID::PROTOSS_PROBE) 
+		{
+			SquadMember* worker = new SquadMember(*u, SQUAD::SQUAD_WORKER);
+			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, start_location);
+			worker->assignDirective(directive_get_minerals_near_Base);
+			squad_members.push_back(worker);
+		}
+		if (u_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS ||
+			u_type == sc2::UNIT_TYPEID::TERRAN_COMMANDCENTER ||
+			u_type == sc2::UNIT_TYPEID::TERRAN_COMMANDCENTERFLYING ||
+			u_type == sc2::UNIT_TYPEID::TERRAN_ORBITALCOMMAND ||
+			u_type == sc2::UNIT_TYPEID::TERRAN_ORBITALCOMMANDFLYING ||
+			u_type == sc2::UNIT_TYPEID::TERRAN_PLANETARYFORTRESS ||
+			u_type == sc2::UNIT_TYPEID::ZERG_HATCHERY ||
+			u_type == sc2::UNIT_TYPEID::ZERG_HIVE ||
+			u_type == sc2::UNIT_TYPEID::ZERG_LAIR) {
+			SquadMember* townhall = new SquadMember(*u, SQUAD::SQUAD_TOWNHALL);
+			squad_members.push_back(townhall);
+		}
+	}
+}
+
 void BotAgent::OnGameStart() {
-	BotAgent::initVariables();
 	start_location = Observation()->GetStartLocation();
+	BotAgent::initVariables();
+	BotAgent::initStartingUnits();
+	std::cout << "Start Location: " << start_location.x << "," << start_location.y << std::endl;
 
 	// How to add a new StrategyOrder to the bot's portfolio:
 	// Create a StrategyOrder, Create a Directive, set the StrategyOrder directive, add TriggerCondition(s), push_back into strategies vector
-	StrategyOrder build_pylon_with_500_minerals(this);
-	Directive directive_build_pylon_at_base(Directive::UNIT_TYPE_TO_NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, start_location);
-	build_pylon_with_500_minerals.setDirective(directive_build_pylon_at_base);
-	build_pylon_with_500_minerals.addTriggerCondition(COND::MIN_MINERALS, 500);
-	strategies.push_back(build_pylon_with_500_minerals);
+	StrategyOrder build_pylon_with_100_minerals(this);
+	Directive directive_build_pylon_at_base(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, start_location);
+	build_pylon_with_100_minerals.setDirective(directive_build_pylon_at_base);
+	build_pylon_with_100_minerals.addTriggerCondition(COND::MIN_MINERALS, 100);
+	build_pylon_with_100_minerals.addTriggerCondition(COND::MAX_FOOD, 4);
+	strategies.push_back(build_pylon_with_100_minerals);
+
+	StrategyOrder train_probe_with_50_minerals(this);
+	Directive train_probe(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_NEXUS, sc2::ABILITY_ID::TRAIN_PROBE);
+	train_probe_with_50_minerals.setDirective(train_probe);
+	train_probe_with_50_minerals.addTriggerCondition(COND::MIN_MINERALS, 50);
+	train_probe_with_50_minerals.addTriggerCondition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_PROBE);
+	strategies.push_back(train_probe_with_50_minerals);
+
+	StrategyOrder build_forge_with_150_minerals(this);
+	Directive directive_build_forge_at_base(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_FORGE, start_location);
+	build_forge_with_150_minerals.setDirective(directive_build_forge_at_base);
+	build_forge_with_150_minerals.addTriggerCondition(COND::MIN_MINERALS, 150);
+	build_forge_with_150_minerals.addTriggerCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+	strategies.push_back(build_forge_with_150_minerals);
+
+	StrategyOrder build_cannon_with_150_minerals(this);
+	Directive directive_build_photon_cannon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, start_location);
+	build_cannon_with_150_minerals.setDirective(directive_build_photon_cannon);
+	build_cannon_with_150_minerals.addTriggerCondition(COND::MIN_MINERALS, 150);
+	build_cannon_with_150_minerals.addTriggerCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+	strategies.push_back(build_cannon_with_150_minerals);
+}
+
+void::BotAgent::OnStep_100() {
+	// occurs every 100 steps
+	const sc2::ObservationInterface* observation = Observation();
+	std::vector<SquadMember*> idle_workers = getIdleWorkers();
+	for (SquadMember* s: idle_workers) {
+		s->executeDefaultDirective(this, observation);
+	}
+}
+
+void::BotAgent::OnStep_1000() {
+	// occurs every 1000 steps
+	std::cout << ".";
 }
 
 void BotAgent::OnStep() {
 	const sc2::ObservationInterface* observation = Observation();
 	int minerals = observation->GetMinerals();
-	if (observation->GetGameLoop() % 1000 == 0) {
-		std::cout << ".";
+	int gameloop = observation->GetGameLoop();
+	if (gameloop % 100 == 0) {
+		OnStep_100();
+	}
+	if (gameloop % 1000 == 0) {
+		OnStep_1000();
 	}
 
-	// iterate through strategies in strategies vector, check their triggers and execute accordingly
 	for (StrategyOrder s : strategies) {
-		if (s.checkTriggerConditions(observation))
+		if (s.checkTriggerConditions(observation)) {
 			s.execute(observation);
+		}
 	}
 }
 
-void BotAgent::OnUnitIdle(const sc2::Unit* unit) {
+//void BotAgent::OnUnitIdle(const sc2::Unit* unit) {
 	// do stuff
-}
+//}
 
 void BotAgent::initLocations(int map_index, int p_id) {
 	switch (map_index) {
@@ -147,4 +246,52 @@ sc2::Point2D BotAgent::getNearestStartLocation(sc2::Point2D spot) {
 		}
 	}
 	return nearest_point;
+}
+
+const sc2::Unit* BotAgent::FindNearestMineralPatch(sc2::Point2D location) {
+	const sc2::ObservationInterface* obs = Observation();
+	sc2::Units units = sc2::Client::Observation()->GetUnits(sc2::Unit::Alliance::Neutral);
+	float distance = std::numeric_limits<float>::max();
+	const sc2::Unit * target = nullptr;
+	for (const auto& u : units) {
+		sc2::UNIT_TYPEID type_ = u->unit_type;
+		if (type_ == sc2::UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD750 ||
+			type_ == sc2::UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD ||
+			type_ == sc2::UNIT_TYPEID::NEUTRAL_LABMINERALFIELD750 ||
+			type_ == sc2::UNIT_TYPEID::NEUTRAL_LABMINERALFIELD ||
+			type_ == sc2::UNIT_TYPEID::NEUTRAL_MINERALFIELD750 ||
+			type_ == sc2::UNIT_TYPEID::NEUTRAL_MINERALFIELD ||
+			type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD750 ||
+			type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD ||
+			type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750 ||
+			type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD ||
+			type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750 ||
+			type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD) {
+			float d = sc2::DistanceSquared2D(u->pos, location);		
+			if (d < distance) {
+				distance = d;
+				target = u;
+			}
+		}
+	}
+	return target;
+}
+
+std::vector<SquadMember*> BotAgent::filter_by_flag(std::vector<SquadMember*> squad_vector, FLAGS flag) {
+	// filter a vector of SquadMember* by the given flag
+	std::vector<SquadMember*> filtered_squad;
+	
+	std::copy_if(squad_vector.begin(), squad_vector.end(), std::back_inserter(filtered_squad),
+		[flag](SquadMember* s) { return s->has_flag(flag); });
+	
+	return filtered_squad;
+}
+
+std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> squad_vector, std::vector<FLAGS> flag_list) {
+	// filter a vector of SquadMember* by several flags
+	std::vector<SquadMember*> filtered_squad;
+	for (FLAGS f : flag_list) {
+		filtered_squad = filter_by_flag(filtered_squad, f);
+	}
+	return filtered_squad;
 }

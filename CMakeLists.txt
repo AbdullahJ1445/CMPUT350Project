@@ -62,7 +62,7 @@ include_directories(SYSTEM
 )
 
 # Create the executable.
-add_executable(BasicSc2Bot ${SOURCES_BASICSC2BOT} "Triggers.h" "Agents.h" "Game.h" "Directive.h")
+add_executable(BasicSc2Bot ${SOURCES_BASICSC2BOT} "Triggers.h" "Agents.h" "Game.h" "Directive.h" "Squad.h")
 target_link_libraries(BasicSc2Bot
     sc2api sc2lib sc2utils
 )

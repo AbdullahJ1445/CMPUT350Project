@@ -11,35 +11,40 @@ class BotAgent;
 class Directive {
 	// An order which is executed upon a Trigger being met
 public:
-
-	enum DIR_TYPE {
-		// different types of Directives
-		UNIT_TYPE_SIMPLE_ACTION,
-		SQUAD_MEMBER_SIMPLE_ACTION,
-		WHOLE_SQUAD_SIMPLE_ACTION,
-		UNIT_TYPE_TO_EXACT_LOCATION,
-		SQUAD_MEMBER_TO_EXACT_LOCATION,
-		WHOLE_SQUAD_TO_EXACT_LOCATION,
-		UNIT_TYPE_TO_NEAR_LOCATION,
-		SQUAD_MEMBER_TO_NEAR_LOCATION,
-		WHOLE_SQUAD_TO_NEAR_LOCATION,
-		UNIT_TYPE_TO_TARGET,
-		SQUAD_MEMBER_TO_TARGET,
-		WHOLE_SQUAD_TO_TARGET
+	enum ASSIGNEE {
+		// who the action should be assigned to
+		DEFAULT_DIRECTIVE,
+		UNIT_TYPE,
+		SQUAD_MEMBER,
+		WHOLE_SQUAD
+	};
+	enum ACTION_TYPE {
+		// types of action to be performed
+		SIMPLE_ACTION,
+		EXACT_LOCATION,
+		NEAR_LOCATION,
+		TARGET_UNIT,
+		TARGET_UNIT_NEAR_LOCATION,
+		GET_MINERALS_NEAR_LOCATION,
+		GET_GAS_NEAR_LOCATION
 	};
 
-	Directive(DIR_TYPE dir_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_);
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_);
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_);
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit target_);
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D location_);
 
-	Directive(DIR_TYPE dir_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_);
-
-	Directive(DIR_TYPE dir_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit target_);
+	Directive(const Directive& rhs);
 
 	// todo: implement constructors involving squads
 
 	bool execute(BotAgent* agent, const sc2::ObservationInterface* obs);
+	bool executeForUnit(BotAgent* agent, const sc2::ObservationInterface* obs, const sc2::Unit& unit);
+	void setDefault();
 
 private:
-	DIR_TYPE dir_type;
+	ASSIGNEE assignee;
+	ACTION_TYPE action_type;
 	sc2::UNIT_TYPEID unit_type;
 	sc2::ABILITY_ID ability;
 	sc2::Point2D target_location;
