@@ -16,6 +16,10 @@ SquadMember::SquadMember(const sc2::Unit& unit_, SQUAD squad_type) : unit(unit_)
 		flags.insert(FLAGS::IS_TOWNHALL);
 		flags.insert(FLAGS::IS_SUPPLY);
 	}
+	if (squad_type == SQUAD::SQUAD_STRUCTURE) {
+		// true flags
+		flags.insert(FLAGS::IS_STRUCTURE);
+	}
 }
 
 void SquadMember::initVars() {

@@ -23,13 +23,16 @@ enum class COND {
 	MAX_FOOD,
 	MAX_FOOD_CAP,
 	MAX_UNIT_OF_TYPE,
-	MIN_UNIT_OF_TYPE
+	MIN_UNIT_OF_TYPE,
+	MAX_UNIT_OF_TYPE_NEAR_LOCATION,
+	MIN_UNIT_OF_TYPE_NEAR_LOCATION
 };
 
 class TriggerCondition {
 public:
 	TriggerCondition(COND cond_type_, int cond_value_);
 	TriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
+	TriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float sq_distance_=200.0f);
 	bool is_met(const sc2::ObservationInterface* obs);
 
 
@@ -37,6 +40,8 @@ private:
 	COND cond_type;
 	int cond_value;
 	sc2::UNIT_TYPEID unit_of_type;
+	sc2::Point2D location_for_counting_units;
+	float distance_squared;
 };
 
 class Trigger {
@@ -57,6 +62,7 @@ public:
 	bool checkTriggerConditions(const sc2::ObservationInterface* obs);
 	void addTriggerCondition(COND cond_type_, int cond_value_);
 	void addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
+	void addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float sq_distance_=200.0f);
 	void setDirective(Directive directive_);
 	void addDirective(Directive directive_);
 	Trigger getTrigger();

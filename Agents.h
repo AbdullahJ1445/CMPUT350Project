@@ -29,9 +29,14 @@ public:
 	virtual void OnGameStart() final;
 	virtual void OnStep() final;
 	//virtual void OnUnitIdle(const sc2::Unit& unit) final;
+	virtual void OnBuildingConstructionComplete(const sc2::Unit* unit) final;
+	virtual void OnUnitCreated(const sc2::Unit* unit);
+	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
 	SquadMember* getSquadMember(const sc2::Unit& unit);
 	std::vector<SquadMember*> getIdleWorkers();
 	const sc2::Unit* FindNearestMineralPatch(const sc2::Point2D location);
+	const sc2::Unit* FindNearestGeyser(const sc2::Point2D location);
+	const sc2::Unit* FindNearestGasStructure(const sc2::Point2D location);
 	std::vector<SquadMember*> BotAgent::filter_by_flag(std::vector<SquadMember*> squad_vector, FLAGS flag);
 	std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> squad_vector, std::vector<FLAGS> flag_list);
 
