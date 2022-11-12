@@ -2,6 +2,9 @@
 #include "sc2api/sc2_api.h"
 #include "Directive.h"
 
+class Directive;
+class BotAgent;
+
 enum class SQUAD {
 	SQUAD_STRUCTURE,
 	SQUAD_WORKER,

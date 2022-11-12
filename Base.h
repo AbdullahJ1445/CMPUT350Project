@@ -17,6 +17,7 @@ public:
 	void set_active(bool flag=true);
 	sc2::Point2D get_build_area(int index);
 	sc2::Point2D get_defend_point(int index);
+	sc2::Point2D get_townhall();
 
 private:
 	sc2::Point2D location_townhall;

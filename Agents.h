@@ -40,9 +40,9 @@ public:
 	const sc2::Unit* FindNearestGeyser(const sc2::Point2D location);
 	const sc2::Unit* FindNearestGasStructure(const sc2::Point2D location);
 	std::vector<SquadMember*> BotAgent::filter_by_flag(std::vector<SquadMember*> squad_vector, FLAGS flag);
-	std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> squad_vector, std::vector<FLAGS> flag_list);
-
+	std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> squad_vector, std::unordered_set<FLAGS> flag_list);
 	std::vector<Base> bases;
+	std::vector<SquadMember*> get_squad_members();
 
 private:
 	sc2::Point2D start_location;

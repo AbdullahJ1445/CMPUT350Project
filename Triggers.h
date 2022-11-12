@@ -64,9 +64,7 @@ public:
 	bool execute(const sc2::ObservationInterface* obs);
 	bool checkTriggerConditions(const sc2::ObservationInterface* obs);
 	void setTrigger(Trigger trigger_);
-	void addTriggerCondition(COND cond_type_, int cond_value_);
-	void addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
-	void addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
+	void addTrigger(Trigger trigger_);
 	void setDirective(Directive directive_);
 	void addDirective(Directive directive_);
 	Trigger getTrigger();
@@ -74,6 +72,7 @@ public:
 private:
 	BotAgent* agent;
 	Trigger trigger;
+	std::vector<Trigger> triggers;
 	std::vector<Directive*> directives;
 	bool has_directive;
 };
