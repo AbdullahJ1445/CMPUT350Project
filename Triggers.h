@@ -12,27 +12,31 @@ class Directive;
 
 enum class COND {
 	// The types of trigger conditions
-	MIN_MINERALS = 0,
-	MIN_GAS = 1,
-	MIN_TIME = 2,
-	MIN_FOOD = 3,
-	MIN_FOOD_CAP = 4,
-	MAX_MINERALS = 5,
-	MAX_GAS = 6,
-	MAX_TIME = 7,
-	MAX_FOOD = 8,
-	MAX_FOOD_CAP = 9
+	MIN_MINERALS,
+	MIN_GAS,
+	MIN_TIME,
+	MIN_FOOD,
+	MIN_FOOD_CAP,
+	MAX_MINERALS,
+	MAX_GAS,
+	MAX_TIME,
+	MAX_FOOD,
+	MAX_FOOD_CAP,
+	MAX_UNIT_OF_TYPE,
+	MIN_UNIT_OF_TYPE
 };
 
 class TriggerCondition {
 public:
 	TriggerCondition(COND cond_type_, int cond_value_);
+	TriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
 	bool is_met(const sc2::ObservationInterface* obs);
 
 
 private:
 	COND cond_type;
 	int cond_value;
+	sc2::UNIT_TYPEID unit_of_type;
 };
 
 class Trigger {
@@ -48,15 +52,18 @@ private:
 class StrategyOrder {
 public:
 	StrategyOrder(BotAgent* agent_);
+	~StrategyOrder();
 	bool execute(const sc2::ObservationInterface* obs);
 	bool checkTriggerConditions(const sc2::ObservationInterface* obs);
 	void addTriggerCondition(COND cond_type_, int cond_value_);
+	void addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
 	void setDirective(Directive directive_);
+	void addDirective(Directive directive_);
 	Trigger getTrigger();
 
 private:
 	BotAgent* agent;
 	Trigger trigger;
-	Directive* directive;
+	std::vector<Directive*> directives;
 	bool has_directive;
 };
