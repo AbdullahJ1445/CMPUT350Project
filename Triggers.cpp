@@ -16,6 +16,15 @@ TriggerCondition::TriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_T
 	unit_of_type = unit_of_type_;
 }
 
+TriggerCondition::TriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float sq_distance_) {
+	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION);
+	cond_type = cond_type_;
+	cond_value = cond_value_;
+	unit_of_type = unit_of_type_;
+	location_for_counting_units = location_;
+	distance_squared = sq_distance_;
+}
+
 bool TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	switch (cond_type) {
 	case COND::MIN_MINERALS:
@@ -40,7 +49,8 @@ bool TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		return obs->GetFoodCap() <= cond_value;
 	}
 	
-	if (cond_type == COND::MAX_UNIT_OF_TYPE || cond_type == COND::MIN_UNIT_OF_TYPE) {
+	if (cond_type == COND::MAX_UNIT_OF_TYPE || 
+		cond_type == COND::MIN_UNIT_OF_TYPE) {
 		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		int num_units = count_if(units.begin(), units.end(),
 			[this](const sc2::Unit* u) { return u->unit_type == unit_of_type; });
@@ -53,6 +63,19 @@ bool TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			return (num_units >= cond_value);
 	}
 
+	if (cond_type == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION ||
+		cond_type == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION) {
+		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+		int num_units = count_if(units.begin(), units.end(),
+			[this](const sc2::Unit* u) { 
+				return (u->unit_type == unit_of_type
+					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared); });
+
+		if (cond_type == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION)
+			return (num_units <= cond_value);
+		if (cond_type == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION)
+			return (num_units >= cond_value);
+	}
 	return false;
 }
 
@@ -106,6 +129,11 @@ void StrategyOrder::addTriggerCondition(COND cond_type_, int cond_value_) {
 
 void StrategyOrder::addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
 	TriggerCondition tc(cond_type_, cond_value_, unit_of_type_);
+	trigger.add_condition(tc);
+}
+
+void StrategyOrder::addTriggerCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float sq_distance_) {
+	TriggerCondition tc(cond_type_, cond_value_, unit_of_type_, location_, sq_distance_);
 	trigger.add_condition(tc);
 }
 
