@@ -43,6 +43,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D 
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) {
 	// This constructor is only valid for issuing an order to all units matching a flag, towards a location
+	assert(assignee_ == ASSIGNEE::MATCH_FLAGS);
 	assignee = assignee_;
 	action_type = action_type_;
 	flags = flags_;
@@ -50,6 +51,20 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordere
 	target_location = location_;
 	proximity = proximity_;
 
+}
+
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_,
+	sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) {
+	// This constructor is only valid for issuing an order to all units matching a flag near a location, towards a location
+	assert(assignee_ == ASSIGNEE::MATCH_FLAGS_NEAR_LOCATION);
+	assignee = assignee_;
+	action_type = action_type_;
+	flags = flags_;
+	ability = ability_;
+	assignee_location = assignee_location_;
+	assignee_proximity = assignee_proximity_;
+	target_location = target_location_;
+	proximity = target_proximity_;
 }
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_) {
@@ -251,9 +266,26 @@ bool Directive::execute(BotAgent* agent, const sc2::ObservationInterface* obs) {
 		}
 	}
 
-	if (assignee == MATCH_FLAGS) {
+	if (assignee == MATCH_FLAGS || assignee == MATCH_FLAGS_NEAR_LOCATION) {
 		std::vector<SquadMember*> squads = agent->get_squad_members();
 		std::vector<SquadMember*> matching_squads = agent->filter_by_flags(squads, flags);
+
+		// get only units near the assignee_location parameter
+		if (assignee == MATCH_FLAGS_NEAR_LOCATION) {
+			float sq_dist = pow(assignee_proximity, 2);
+			std::vector<SquadMember*> nearby_squads;
+			std::copy_if(matching_squads.begin(), matching_squads.end(), std::back_inserter(nearby_squads),
+				[this, sq_dist](SquadMember* s) { return (
+					sc2::DistanceSquared2D(s->unit.pos, assignee_location) <= sq_dist);
+				});
+			matching_squads = nearby_squads;
+		}
+
+		// no units match the condition(s)
+		if (matching_squads.size() == 0) {
+			return false;
+		}
+
 		sc2::Point2D location = target_location;
 		static const sc2::Unit* unit;
 		sc2::Units units;

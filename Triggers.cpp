@@ -27,6 +27,26 @@ Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, s
 	agent = agent_;
 }
 
+Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_) {
+	assert(cond_type_ == COND::MIN_UNIT_WITH_FLAGS ||
+		cond_type == COND::MAX_UNIT_WITH_FLAGS);
+	cond_type = cond_type_;
+	cond_value = cond_value_;
+	filter_flags = flags_;
+	agent = agent_;
+}
+
+Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_) {
+	assert(cond_type_ == COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION || 
+		cond_type == COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION);
+	cond_type = cond_type_;
+	cond_value = cond_value_;
+	filter_flags = flags_;
+	agent = agent_;
+	distance_squared = pow(radius_, 2);
+	location_for_counting_units = location_;
+}
+
 Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
 	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE || cond_type_ == COND::MIN_UNIT_OF_TYPE || cond_type_ == COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION);
 	cond_type = cond_type_;
@@ -77,6 +97,44 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::MAX_MINERALS_MINED:
 		// not implemented
 		return false;
+	case COND::MIN_UNIT_WITH_FLAGS:
+	{
+		std::vector<SquadMember*> squads;
+		squads = agent->filter_by_flags(agent->get_squad_members(), filter_flags);
+		int num_units = squads.size();
+		return (num_units >= cond_value);
+	}
+	case COND::MAX_UNIT_WITH_FLAGS:
+	{
+		std::vector<SquadMember*> squads;
+		squads = agent->filter_by_flags(agent->get_squad_members(), filter_flags);
+		int num_units = squads.size();
+		return (num_units <= cond_value);
+	}
+	case COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION:
+	{
+		std::vector<SquadMember*> squads;
+		squads = agent->filter_by_flags(agent->get_squad_members(), filter_flags);
+		std::vector<SquadMember*> filtered_squads;
+		std::copy_if(squads.begin(), squads.end(), std::back_inserter(filtered_squads),
+			[this](SquadMember* s) { return (
+				sc2::DistanceSquared2D(s->unit.pos, location_for_counting_units) <= distance_squared); 
+			});
+		int num_units = filtered_squads.size();
+		return (num_units >= cond_value);
+	}
+	case COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION:
+	{
+		std::vector<SquadMember*> squads;
+		squads = agent->filter_by_flags(agent->get_squad_members(), filter_flags);
+		std::vector<SquadMember*> filtered_squads;
+		std::copy_if(squads.begin(), squads.end(), std::back_inserter(filtered_squads),
+			[this](SquadMember* s) { return (
+				sc2::DistanceSquared2D(s->unit.pos, location_for_counting_units) <= distance_squared);
+			});
+		int num_units = filtered_squads.size();
+		return (num_units <= cond_value);
+	}
 	case COND::BASE_IS_ACTIVE:
 		if (agent->bases.size() <= cond_value || cond_value < 0)
 			return false;
@@ -173,6 +231,16 @@ void Trigger::add_condition(COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2
 
 void Trigger::add_condition(COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_) {
 	TriggerCondition tc_(agent, cond_type_, upgrade_id_, is_true_);
+	conditions.push_back(tc_);
+}
+
+void Trigger::add_condition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_) {
+	TriggerCondition tc_(agent, cond_type_, cond_value_, flags_);
+	conditions.push_back(tc_);
+}
+
+void Trigger::add_condition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_) {
+	TriggerCondition tc_(agent, cond_type_, cond_value_, flags_, location_, radius_);
 	conditions.push_back(tc_);
 }
 
