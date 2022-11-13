@@ -33,6 +33,9 @@ public:
 	//virtual void OnUnitIdle(const sc2::Unit& unit) final;
 	virtual void OnBuildingConstructionComplete(const sc2::Unit* unit) final;
 	virtual void OnUnitCreated(const sc2::Unit* unit);
+	virtual void OnUnitDamaged(const sc2::Unit* unit, float health, float shields);
+	bool have_upgrade(const sc2::UpgradeID upgrade_);
+	bool AbilityAvailable(const sc2::Unit& unit, const sc2::ABILITY_ID ability_);
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
 	SquadMember* getSquadMember(const sc2::Unit& unit);
 	std::vector<SquadMember*> getIdleWorkers();
@@ -43,6 +46,7 @@ public:
 	std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> squad_vector, std::unordered_set<FLAGS> flag_list);
 	std::vector<Base> bases;
 	std::vector<SquadMember*> get_squad_members();
+	int BotAgent::get_index_of_closest_base(sc2::Point2D location_);
 
 private:
 	sc2::Point2D start_location;
