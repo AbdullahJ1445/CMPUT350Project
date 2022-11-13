@@ -167,8 +167,6 @@ bool Directive::execute(BotAgent* agent, const sc2::ObservationInterface* obs) {
 				if (with_orders.size() == 0)
 					return false;
 
-				std::cout << "made it here 3" << std::endl;
-
 				// then pick one of THESE closest to location
 				lowest_distance = 99999.0f;
 				bool found_suitable_target = false;
