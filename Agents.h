@@ -4,6 +4,7 @@
 #include "Triggers.h"
 #include "Squad.h"
 #include "Base.h"
+#include "Strategy.h"
 #include "sc2api/sc2_api.h"
 #include "sc2api/sc2_args.h"
 #include "sc2lib/sc2_lib.h"
@@ -14,6 +15,7 @@
 class StrategyOrder;
 class SquadMember;
 class Base;
+class Strategy;
 
 class Human : public sc2::Agent {
 public:
@@ -42,19 +44,23 @@ public:
 	const sc2::Unit* FindNearestMineralPatch(const sc2::Point2D location);
 	const sc2::Unit* FindNearestGeyser(const sc2::Point2D location);
 	const sc2::Unit* FindNearestGasStructure(const sc2::Point2D location);
+	void setCurrentStrategy(Strategy* strategy_);
 	std::vector<SquadMember*> BotAgent::filter_by_flag(std::vector<SquadMember*> squad_vector, FLAGS flag);
 	std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> squad_vector, std::unordered_set<FLAGS> flag_list);
 	std::vector<Base> bases;
 	std::vector<SquadMember*> get_squad_members();
 	int BotAgent::get_index_of_closest_base(sc2::Point2D location_);
+	void BotAgent::addStrat(StrategyOrder strategy);
+	sc2::Point2D start_location;
+	sc2::Point2D proxy_location;
+	sc2::Point2D enemy_location;
 
 private:
-	sc2::Point2D start_location;
+	
 	sc2::Point2D army_rally;
 	sc2::Point2D choke_point_1;
 	sc2::Point2D choke_point_2;
-	sc2::Point2D proxy_location;
-	sc2::Point2D enemy_location;
+	
 	std::vector<StrategyOrder> strategies; 
 	std::vector<SquadMember*> squad_members;
 	sc2::Unit proxy_worker;
@@ -63,6 +69,7 @@ private:
 	int enemy_start_id;
 	std::string map_name;
 	int map_index; // 1 = CactusValleyLE,  2 = BelShirVestigeLE,  3 = ProximaStationLE
+	Strategy* current_strategy;
 
 
 	void initVariables();
