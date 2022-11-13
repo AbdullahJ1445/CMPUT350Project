@@ -584,7 +584,72 @@ void BotAgent::initLocations(int map_index, int p_id) {
 	case 1:
 		break;
 	case 2:
+		switch (p_id) {
+		case 1:
+		{
+			enemy_location = sc2::Point2D(114.5, 25.5);
+			Base main_base(observation->GetStartLocation());
+
+			Base exp_1(82.5, 23.5);
+			bases.push_back(exp_1);
+
+			Base exp_2(115.5, 63.5);
+			bases.push_back(exp_2);
+
+			Base exp_3(45.5, 20.5);
+			bases.push_back(exp_3);
+
+			Base exp_4(120.5, 104.5);
+			bases.push_back(exp_4);
+
+			Base exp_5(98.5, 138.5);
+			bases.push_back(exp_5);
+
+			Base exp_6(23.5, 55.5);
+			bases.push_back(exp_6);
+
+			Base exp_7(28.5, 96.5);
+			bases.push_back(exp_7);
+
+			Base exp_8(61.5, 136.5);
+			bases.push_back(exp_8);
+			break;
+		}
+		case 2:
+		{
+			enemy_location = sc2::Point2D(29.5, 134.5);
+			Base main_base(observation->GetStartLocation());
+
+			Base exp_1(82.5, 23.5);
+			bases.push_back(exp_1);
+
+			Base exp_1(61.5, 136.5);
+			bases.push_back(exp_1);
+
+			Base exp_2(28.5, 96.5);
+			bases.push_back(exp_2);
+
+			Base exp_3(23.5, 55.5);
+			bases.push_back(exp_3);
+
+			Base exp_4(98.5, 138.5);
+			bases.push_back(exp_4);
+
+			Base exp_5(120.5, 104.5);
+			bases.push_back(exp_5);
+
+			Base exp_6(45.5, 20.5);
+			bases.push_back(exp_6);
+
+			Base exp_7(115.5, 63.5);
+			bases.push_back(exp_7);
+
+			Base exp_8(82.5, 23.5);
+			bases.push_back(exp_8);
+			break;
+		}
 		break;
+		}
 	case 3:
 		switch (p_id) {
 		case 1:
