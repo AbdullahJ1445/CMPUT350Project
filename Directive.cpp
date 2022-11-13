@@ -43,6 +43,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D 
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) {
 	// This constructor is only valid for issuing an order to all units matching a flag, towards a location
+	assert(assignee_ == ASSIGNEE::MATCH_FLAGS);
 	assignee = assignee_;
 	action_type = action_type_;
 	flags = flags_;
@@ -50,6 +51,20 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordere
 	target_location = location_;
 	proximity = proximity_;
 
+}
+
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_,
+	sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) {
+	// This constructor is only valid for issuing an order to all units matching a flag near a location, towards a location
+	assert(assignee_ == ASSIGNEE::MATCH_FLAGS_NEAR_LOCATION);
+	assignee = assignee_;
+	action_type = action_type_;
+	flags = flags_;
+	ability = ability_;
+	assignee_location = assignee_location_;
+	assignee_proximity = assignee_proximity_;
+	target_location = target_location_;
+	proximity = target_proximity_;
 }
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_) {
@@ -75,6 +90,8 @@ Directive::Directive(const Directive& rhs) {
 
 bool Directive::execute(BotAgent* agent, const sc2::ObservationInterface* obs) {
 	bool found_valid_unit = false; // ensure unit has been assigned before issuing order
+	const sc2::AbilityData ability_data = obs->GetAbilityData()[(int)ability]; // various info about the ability
+	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
 
 	if (assignee == ASSIGNEE::UNIT_TYPE) {
 		if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION) {
@@ -120,6 +137,69 @@ bool Directive::execute(BotAgent* agent, const sc2::ObservationInterface* obs) {
 			sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 			sc2::Point2D location = target_location;
 
+			if (ability == sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST) {
+				// this is more complex than it originally seemed
+				// must find the clostest nexus to the given location
+				// that has the chronoboost ability ready
+				// then find a structure that would benefit from it
+
+				static const sc2::Unit* unit_to_target;
+				// first get list of units matching type
+				std::vector<const sc2::Unit*> units_matching_type;
+				std::copy_if(units.begin(), units.end(), std::back_inserter(units_matching_type),
+					[this](const sc2::Unit* u) { return u->unit_type == unit_type; });
+
+				// then filter by units with ability available
+				std::vector<const sc2::Unit*> filtered_units;
+				std::copy_if(units_matching_type.begin(), units_matching_type.end(), std::back_inserter(filtered_units),
+					[agent, this](const sc2::Unit* u) { return agent->AbilityAvailable(*u, ability); });
+				int num_units = filtered_units.size();
+				if (num_units == 0)
+					return false;
+
+				// then pick the one closest to location
+				float lowest_distance = 99999.0f;
+				bool found_suitable_caster = false;
+				for (const sc2::Unit* u : filtered_units) {
+					float dist = sc2::DistanceSquared2D(u->pos, location);
+					if (dist < lowest_distance) {
+						unit = u;
+						lowest_distance = dist;
+						found_suitable_caster = true;
+					}
+				}
+				if (!found_suitable_caster)
+					return false;
+
+				// get all structures
+				std::vector<SquadMember*> squads = agent->get_squad_members();
+				std::vector<SquadMember*> structures = agent->filter_by_flag(squads, FLAGS::IS_STRUCTURE);
+				std::vector<SquadMember*> with_orders; // look for buildings that are doing something
+
+				std::copy_if(structures.begin(), structures.end(), std::back_inserter(with_orders),
+					[this](SquadMember* s) { return (s->unit.orders).size() > 0; });
+
+				if (with_orders.size() == 0)
+					return false;
+
+				// then pick one of THESE closest to location
+				lowest_distance = 99999.0f;
+				bool found_suitable_target = false;
+				for (SquadMember* s : with_orders) {
+					float dist = sc2::DistanceSquared2D(s->unit.pos, location);
+					if (dist < lowest_distance) {
+						unit_to_target = &s->unit;
+						lowest_distance = dist;
+						found_suitable_target = true;
+					}
+				}
+				if (!found_suitable_target)
+					return false;
+
+				agent->Actions()->UnitCommand(unit, ability, unit_to_target);
+				return true;
+			}
+
 			if (action_type == ACTION_TYPE::NEAR_LOCATION) {
 				location = uniform_random_point_in_circle(target_location, proximity);
 			}
@@ -143,9 +223,31 @@ bool Directive::execute(BotAgent* agent, const sc2::ObservationInterface* obs) {
 				}
 			}
 			if (found_valid_unit) {
+				if (ability_data.is_building) {
+					int i = 0;
+					while (!query_interface->Placement(ability, location)) {
+						location = uniform_random_point_in_circle(target_location, proximity);
+						i++;
+						if (i > 20) {
+							// can't find a suitable spot to build
+							//std::cerr << ability_data.friendly_name << " - cannot find suitable building location" << std::endl;
+							return false;
+						}
+					}
+				}
+
+				if (ability_data.target == sc2::AbilityData::Target::None) {
+					agent->Actions()->UnitCommand(unit, ability);
+					return true;
+				}
+				if (ability_data.target == sc2::AbilityData::Target::Unit) {
+					std::cerr << ability_data.friendly_name << " requires a target unit." << std::endl;
+					return false;
+				}
 				agent->Actions()->UnitCommand(unit, ability, location);
+				return true;
 			}
-			return true;
+			return false;
 		}
 		if (action_type == SIMPLE_ACTION) {
 			static const sc2::Unit* unit = nullptr;
@@ -164,13 +266,30 @@ bool Directive::execute(BotAgent* agent, const sc2::ObservationInterface* obs) {
 		}
 	}
 
-	if (assignee == MATCH_FLAGS) {
+	if (assignee == MATCH_FLAGS || assignee == MATCH_FLAGS_NEAR_LOCATION) {
 		std::vector<SquadMember*> squads = agent->get_squad_members();
 		std::vector<SquadMember*> matching_squads = agent->filter_by_flags(squads, flags);
-		if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION) {
-			static const sc2::Unit* unit;
-			sc2::Point2D location = target_location;
 
+		// get only units near the assignee_location parameter
+		if (assignee == MATCH_FLAGS_NEAR_LOCATION) {
+			float sq_dist = pow(assignee_proximity, 2);
+			std::vector<SquadMember*> nearby_squads;
+			std::copy_if(matching_squads.begin(), matching_squads.end(), std::back_inserter(nearby_squads),
+				[this, sq_dist](SquadMember* s) { return (
+					sc2::DistanceSquared2D(s->unit.pos, assignee_location) <= sq_dist);
+				});
+			matching_squads = nearby_squads;
+		}
+
+		// no units match the condition(s)
+		if (matching_squads.size() == 0) {
+			return false;
+		}
+
+		sc2::Point2D location = target_location;
+		static const sc2::Unit* unit;
+		sc2::Units units;
+		if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION) {
 			for (SquadMember* s : matching_squads) {
 				unit = &(s->unit);
 				if (action_type == ACTION_TYPE::NEAR_LOCATION) {
@@ -179,9 +298,12 @@ bool Directive::execute(BotAgent* agent, const sc2::ObservationInterface* obs) {
 				// Unit has no orders
 				if ((unit->orders).size() == 0) {
 					found_valid_unit = true;
-					agent->Actions()->UnitCommand(unit, ability, location);
+					units.push_back(unit);
 				}
 			}
+		}
+		if (found_valid_unit) {
+			agent->Actions()->UnitCommand(units, ability, location);
 		}
 		return found_valid_unit;
 	}

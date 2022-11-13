@@ -15,6 +15,7 @@ public:
 	sc2::Point2D get_random_build_area();
 	sc2::Point2D get_random_defend_point();
 	void set_active(bool flag=true);
+	bool is_active();
 	sc2::Point2D get_build_area(int index);
 	sc2::Point2D get_defend_point(int index);
 	sc2::Point2D get_townhall();

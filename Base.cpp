@@ -3,6 +3,7 @@
 Base::Base(sc2::Point2D location_) {
 	// stores the details of a base
 	location_townhall = location_;
+	active = false;
 }
 
 Base::Base(float x, float y) : Base(sc2::Point2D(x,y)) {}
@@ -82,15 +83,45 @@ int Base::get_num_defend_points() {
 
 sc2::Point2D Base::get_random_build_area() {
 	// get a random build area within the base
-	return sc2::GetRandomEntry<std::vector<sc2::Point2D>>(build_areas);
+
+	int num_build_areas = get_num_build_areas();
+	int num_defend_points = get_num_defend_points();
+	if (num_build_areas == 0) {
+		// if the base has no build areas, find an alternative
+		if (num_defend_points > 0) {
+			// return a defend point if one exists
+			return defend_points[sc2::GetRandomInteger(0, num_defend_points - 1)];
+		}
+		// if all else fails, return the townhall location
+		return location_townhall;
+	}
+	// if index is higher than last, get the last index instead
+	return build_areas[sc2::GetRandomInteger(0, num_build_areas - 1)];
 }
 
 sc2::Point2D Base::get_random_defend_point() {
-	// get a random build area within the base
-	return sc2::GetRandomEntry<std::vector<sc2::Point2D>>(defend_points);
+	// get a random defend points within the base
+
+	int num_build_areas = get_num_build_areas();
+	int num_defend_points = get_num_defend_points();
+	if (num_defend_points == 0) {
+		// if the base has no build areas, find an alternative
+		if (num_build_areas > 0) {
+			// return a defend point if one exists
+			return build_areas[sc2::GetRandomInteger(0, num_build_areas - 1)];
+		}
+		// if all else fails, return the townhall location
+		return location_townhall;
+	}
+	// if index is higher than last, get the last index instead
+	return defend_points[sc2::GetRandomInteger(0, num_defend_points - 1)];
 }
 
 void Base::set_active(bool flag) {
 	// sets the base as active (optionally use flag=false to deactivate)
 	active = flag;
+}
+
+bool Base::is_active() {
+	return active;
 }

@@ -9,41 +9,54 @@
 #include "LadderInterface.h"
 
 #include "Triggers.h"
+#include "Strategy.h"
 
 using namespace sc2;
 
 int main(int argc, char* argv[]) {
 	Coordinator coordinator;
 	coordinator.LoadSettings(argc, argv);
-	const char* kProximaStationLE = "Ladder/ProximaStationLE.SC2Map";
-	const char* kCactusValleyLE = "Ladder/CactusValleyLE.SC2Map";
-	bool human_player = false;
+	const char* kProximaStationLE = "Ladder/ProximaStationLE.SC2Map"; // 3
+	const char* kCactusValleyLE = "Ladder/CactusValleyLE.SC2Map";     // 1
+	std::vector<const char*> map_strings;
+	map_strings.push_back(kCactusValleyLE);
+	map_strings.push_back(sc2::kMapBelShirVestigeLE);
+	map_strings.push_back(kProximaStationLE);
 
 	BotAgent bot;
+	Strategy strategy(&bot);
 	Human human;
 	sc2::Agent* player_one;
 	player_one = &human;
+	bot.setCurrentStrategy(&strategy);
+	int map_index;
+	Race bot_race;
+	Race opp_race;
+	bool human_player;
+	bool fullscreen;
+	bool realtime;
+
+	strategy.loadGameSettings(&map_index, &bot_race, &opp_race, &human_player, &fullscreen, &realtime);
+
+	assert(map_index > 0 && map_index <= 3);
 
 	if (human_player) {
 		coordinator.SetParticipants({
-			CreateParticipant(Race::Zerg, &human),
-			CreateParticipant(Race::Protoss, &bot)
+			CreateParticipant(opp_race, &human),
+			CreateParticipant(bot_race, &bot)
 			});
 	}
 	else {
 		coordinator.SetParticipants({
-			CreateParticipant(Race::Protoss, &bot),
-			CreateComputer(Race::Zerg)
+			CreateParticipant(bot_race, &bot),
+			CreateComputer(opp_race)
 			});
 	}
 
-	//coordinator.SetRealtime(true);
-	//coordinator.SaveReplayList("C:/");
-	//coordinator.SetFullScreen(true);
+	coordinator.SetRealtime(realtime);
+	coordinator.SetFullScreen(fullscreen);
 	coordinator.LaunchStarcraft();
-	//coordinator.StartGame(kCactusValleyLE);
-	//coordinator.StartGame(kMapBelShirVestigeLE);
-	coordinator.StartGame(kProximaStationLE);
+	coordinator.StartGame(map_strings[map_index + 1]);
 
 	while (coordinator.Update()) {
 	}

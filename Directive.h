@@ -20,7 +20,8 @@ public:
 		// who the action should be assigned to
 		DEFAULT_DIRECTIVE,
 		UNIT_TYPE,
-		MATCH_FLAGS
+		MATCH_FLAGS,
+		MATCH_FLAGS_NEAR_LOCATION
 	};
 	enum ACTION_TYPE {
 		// types of action to be performed
@@ -35,6 +36,8 @@ public:
 
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_=DEFAULT_RADIUS);
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, 
+		sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_=DEFAULT_RADIUS, float target_proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit target_);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D location_, float proximity_ =DEFAULT_RADIUS);
@@ -53,8 +56,10 @@ private:
 	ACTION_TYPE action_type;
 	sc2::UNIT_TYPEID unit_type;
 	sc2::ABILITY_ID ability;
+	sc2::Point2D assignee_location;
 	sc2::Point2D target_location;
 	sc2::Unit target_unit;
+	float assignee_proximity;
 	float proximity;
 	std::unordered_set<FLAGS> flags;
 };

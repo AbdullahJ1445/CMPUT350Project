@@ -93,178 +93,7 @@ void BotAgent::OnGameStart() {
 	std::cout << "Start Location: " << start_location.x << "," << start_location.y << std::endl;
 	std::cout << "Build Area 0: " << bases[0].get_build_area(0).x << "," << bases[0].get_build_area(0).y << std::endl;
 
-	// How to add a new StrategyOrder to the bot's portfolio:
-	// Create a StrategyOrder, Create a Directive, set the StrategyOrder directive, add TriggerCondition(s), push_back into strategies vector
-	
-	StrategyOrder choke_pylon(this);
-	Directive d_choke_pylon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bases[0].get_defend_point(0), 7.0f);
-	Trigger t_choke_pylon;
-	t_choke_pylon.add_condition(COND::MIN_MINERALS, 100);
-	t_choke_pylon.add_condition(COND::MAX_FOOD, 4);
-	t_choke_pylon.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
-	t_choke_pylon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_defend_point(0), 7.0f);
-	choke_pylon.setDirective(d_choke_pylon);
-	choke_pylon.addTrigger(t_choke_pylon);
-	strategies.push_back(choke_pylon);
-
-	StrategyOrder base_pylon(this);
-	Directive d_base_pylon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bases[0].get_build_area(0));
-	Trigger t_base_pylon;
-	t_base_pylon.add_condition(COND::MIN_MINERALS, 100);
-	t_base_pylon.add_condition(COND::MAX_FOOD, 4);
-	t_base_pylon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
-	base_pylon.setDirective(d_base_pylon);
-	base_pylon.addTrigger(t_base_pylon);
-	Trigger t_base_pylon_if_none;
-	t_base_pylon_if_none.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
-	t_base_pylon_if_none.add_condition(COND::MIN_FOOD_CAP, 20);
-	base_pylon.addTrigger(t_base_pylon_if_none);
-	strategies.push_back(base_pylon);
-
-	StrategyOrder base_pylon_2(this);
-	Directive d_base_pylon_2(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bases[0].get_build_area(1));
-	Trigger t_base_pylon_2;
-	t_base_pylon_2.add_condition(COND::MIN_MINERALS, 100);
-	t_base_pylon_2.add_condition(COND::MAX_FOOD, 4);
-	t_base_pylon_2.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(0));
-	t_base_pylon_2.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 9, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(1));
-	base_pylon_2.setDirective(d_base_pylon_2);
-	base_pylon_2.addTrigger(t_base_pylon_2);
-	Trigger t_base_pylon_2_if_none;
-	t_base_pylon_2_if_none.add_condition(COND::MIN_MINERALS, 100);
-	t_base_pylon_2_if_none.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(1));
-	t_base_pylon_2_if_none.add_condition(COND::MIN_FOOD_CAP, 24);
-	base_pylon_2.addTrigger(t_base_pylon_2_if_none);
-	strategies.push_back(base_pylon_2);
-
-	StrategyOrder base_probe(this);
-	Directive d_base_probe(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_NEXUS, sc2::ABILITY_ID::TRAIN_PROBE);
-	Trigger t_base_probe;
-	t_base_probe.add_condition(COND::MIN_MINERALS, 50);
-	t_base_probe.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 15, sc2::UNIT_TYPEID::PROTOSS_PROBE, start_location, 18.0f);
-	base_probe.setDirective(d_base_probe);
-	base_probe.addTrigger(t_base_probe);
-	strategies.push_back(base_probe);
-
-	StrategyOrder build_forge(this);
-	Directive d_build_forge(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_FORGE, bases[0].get_build_area(0));
-	Trigger t_build_forge;
-	t_build_forge.add_condition(COND::MIN_MINERALS, 150);
-	t_build_forge.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-	build_forge.setDirective(d_build_forge);
-	build_forge.addTrigger(t_build_forge);
-	strategies.push_back(build_forge);
-
-
-	StrategyOrder base_cannon(this);
-	Directive d_base_cannon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, bases[0].get_build_area(0));
-	Trigger t_base_cannon;
-	t_base_cannon.add_condition(COND::MIN_MINERALS, 150);
-	t_base_cannon.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-	t_base_cannon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bases[0].get_build_area(0));
-	base_cannon.setDirective(d_base_cannon);
-	base_cannon.addTrigger(t_base_cannon);
-	strategies.push_back(base_cannon);
-
-	StrategyOrder base_cannon_2(this);
-	Directive d_base_cannon_2(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, bases[0].get_build_area(1));
-	Trigger t_base_cannon_2;
-	t_base_cannon_2.add_condition(COND::MIN_MINERALS, 150);
-	t_base_cannon_2.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-	t_base_cannon_2.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bases[0].get_build_area(1));
-	t_base_cannon_2.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bases[0].get_build_area(1));
-	base_cannon_2.setDirective(d_base_cannon_2);
-	base_cannon_2.addTrigger(t_base_cannon_2);
-	strategies.push_back(base_cannon_2);
-	
-	StrategyOrder choke_cannon(this);
-	Directive d_choke_cannon(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, bases[0].get_defend_point(0), 7.0f);
-	Trigger t_choke_cannon;
-	t_choke_cannon.add_condition(COND::MIN_MINERALS, 150);
-	t_choke_cannon.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-	t_choke_cannon.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bases[0].get_defend_point(0), 7.0f);
-	choke_cannon.setDirective(d_choke_cannon);
-	choke_cannon.addTrigger(t_choke_cannon);
-	strategies.push_back(choke_cannon);
-	
-	StrategyOrder base_assimilator(this);
-	Directive d_base_assimilator(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_ASSIMILATOR, start_location);
-	Trigger t_base_assimilator;
-	t_base_assimilator.add_condition(COND::MIN_MINERALS, 75);
-	t_base_assimilator.add_condition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR);
-	base_assimilator.setDirective(d_base_assimilator);
-	base_assimilator.addTrigger(t_base_assimilator);
-	strategies.push_back(base_assimilator);
-
-	StrategyOrder build_cyber_core(this);
-	Directive d_build_cyber_core(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_CYBERNETICSCORE, bases[0].get_random_build_area());
-	Trigger t_build_cyber_core;
-	t_build_cyber_core.add_condition(COND::MIN_MINERALS, 200);
-	t_build_cyber_core.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-	build_cyber_core.setDirective(d_build_cyber_core);
-	build_cyber_core.addTrigger(t_build_cyber_core);
-	strategies.push_back(build_cyber_core);
-
-	StrategyOrder base_gateway(this);
-	Directive d_base_gateway(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_GATEWAY, bases[0].get_random_build_area());
-	Trigger t_base_gateway;
-	t_base_gateway.add_condition(COND::MIN_MINERALS, 150);
-	t_base_gateway.add_condition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
-	base_gateway.setDirective(d_base_gateway);
-	base_gateway.addTrigger(t_base_gateway);
-	strategies.push_back(base_gateway);
-
-	StrategyOrder base_twi_council(this);
-	Directive d_base_twi_council(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_TWILIGHTCOUNCIL, bases[0].get_random_build_area());
-	Trigger t_base_twi_council;
-	t_base_twi_council.add_condition(COND::MIN_MINERALS, 150);
-	t_base_twi_council.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
-	base_twi_council.setDirective(d_base_twi_council);
-	base_twi_council.addTrigger(t_base_twi_council);
-	strategies.push_back(base_twi_council);
-
-	StrategyOrder train_stalker(this);
-	Directive d_train_stalker(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_STALKER);
-	Trigger t_train_stalker;
-	t_train_stalker.add_condition(COND::MIN_MINERALS, 125);
-	t_train_stalker.add_condition(COND::MIN_GAS, 50);
-	t_train_stalker.add_condition(COND::MIN_FOOD, 2);
-	t_train_stalker.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-	train_stalker.setDirective(d_train_stalker);
-	train_stalker.addTrigger(t_train_stalker);
-	strategies.push_back(train_stalker);
-
-	StrategyOrder research_blink(this);
-	Directive d_research_blink(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL, sc2::ABILITY_ID::RESEARCH_BLINK);
-	Trigger t_research_blink;
-	t_research_blink.add_condition(COND::MIN_MINERALS, 150);
-	t_research_blink.add_condition(COND::MIN_GAS, 150);
-	t_research_blink.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
-	research_blink.setDirective(d_research_blink);
-	research_blink.addTrigger(t_research_blink);
-	strategies.push_back(research_blink);
-
-	// When we have 15 stalkers, send all of our "attackers" to the enemy base
-	StrategyOrder send_mass_stalkers(this);
-	std::unordered_set<FLAGS> attackers;
-	attackers.insert(FLAGS::IS_ATTACKER);
-	Directive d_send_mass_stalkers(Directive::MATCH_FLAGS, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, enemy_location);
-	Trigger t_send_mass_stalkers;
-	t_send_mass_stalkers.add_condition(COND::MIN_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_STALKER);
-	t_send_mass_stalkers.add_condition(COND::MAX_UNIT_OF_TYPE, 18, sc2::UNIT_TYPEID::PROTOSS_STALKER);
-	send_mass_stalkers.setDirective(d_send_mass_stalkers);
-	send_mass_stalkers.addTrigger(t_send_mass_stalkers);
-	strategies.push_back(send_mass_stalkers);
-
-	// When we have 19 stalkers, send all of our "attackers" to the enemy expansion
-	StrategyOrder send_mass_stalkers_2(this);
-	Directive d_send_mass_stalkers_2(Directive::MATCH_FLAGS, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, bases.back().get_townhall());
-	Trigger t_send_mass_stalkers_2;
-	t_send_mass_stalkers_2.add_condition(COND::MIN_UNIT_OF_TYPE, 19, sc2::UNIT_TYPEID::PROTOSS_STALKER);
-	t_send_mass_stalkers_2.add_condition(COND::MAX_UNIT_OF_TYPE, 25, sc2::UNIT_TYPEID::PROTOSS_STALKER);
-	send_mass_stalkers_2.setDirective(d_send_mass_stalkers_2);
-	send_mass_stalkers_2.addTrigger(t_send_mass_stalkers_2);
-	strategies.push_back(send_mass_stalkers_2);
+	current_strategy->loadStrategies();
 }
 
 void::BotAgent::OnStep_100() {
@@ -299,6 +128,12 @@ void BotAgent::OnStep() {
 	}
 }
 
+bool BotAgent::have_upgrade(const sc2::UpgradeID upgrade_) {
+	const sc2::ObservationInterface* observation = Observation();
+	const std::vector<sc2::UpgradeID> upgrades = observation->GetUpgrades();
+	return (std::find(upgrades.begin(), upgrades.end(), upgrade_) != upgrades.end());
+}
+
 void BotAgent::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 	if (getSquadMember(*unit)) { // unit already belongs to a SquadMember
 		return;
@@ -309,8 +144,12 @@ void BotAgent::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS ||
 		unit_type == sc2::UNIT_TYPEID::TERRAN_COMMANDCENTER ||
 		unit_type == sc2::UNIT_TYPEID::ZERG_HATCHERY) {
+		// a townhall structure was created
 		structure->flags.insert(FLAGS::IS_TOWNHALL);
 		structure->flags.insert(FLAGS::IS_SUPPLY);
+		int base_index = get_index_of_closest_base(unit->pos);
+		std::cout << "expansion " << base_index << " has been activated." << std::endl;
+		bases[base_index].set_active();
 	}
 	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON ||
 		unit_type == sc2::UNIT_TYPEID::TERRAN_BUNKER ||
@@ -334,9 +173,25 @@ void BotAgent::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 }
 
 void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
+	const sc2::ObservationInterface* observation = Observation();
 	if (getSquadMember(*unit)) { // unit already belongs to a SquadMember
 		return;
 	}
+
+	/*   Testing various stuff
+	sc2::QueryInterface* query_interface = Query();
+	std::vector<sc2::AvailableAbility> available_abilities = query_interface->GetAbilitiesForUnit(unit).abilities;
+	const sc2::UnitTypes units_data = observation->GetUnitTypeData();
+	const sc2::Abilities abilities_data = observation->GetAbilityData();
+	const sc2::UnitTypeData unit_type_data = units_data[(int)unit->unit_type];
+	std::cout << "Abilities for " << unit_type_data.name << ":" << std::endl;
+	for (auto a : available_abilities) {
+		std::cout << abilities_data[a.ability_id].friendly_name << "(" << a.ability_id << "), ";
+	}
+	std::cout << std::endl;
+	bool test = AbilityAvailable(*unit, sc2::ABILITY_ID::GENERAL_MOVE);
+	*/
+
 	SquadMember* new_squad;
 	bool squad_created = false;
 	sc2::UNIT_TYPEID unit_type = unit->unit_type;
@@ -344,6 +199,9 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 		unit_type == sc2::UNIT_TYPEID::ZERG_DRONE |
 		unit_type == sc2::UNIT_TYPEID::PROTOSS_PROBE) {
 		new_squad = new SquadMember(*unit, SQUAD::SQUAD_WORKER);
+		int base_index = get_index_of_closest_base(unit->pos);
+		Directive directive_get_minerals_near_birth(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, bases[base_index].get_townhall());
+		new_squad->assignDirective(directive_get_minerals_near_birth);
 		squad_created = true;
 	}
 	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER |
@@ -369,6 +227,33 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 	}
 	if (squad_created)
 		squad_members.push_back(new_squad);
+}
+
+void BotAgent::OnUnitDamaged(const sc2::Unit* unit, float health, float shields) {
+	const sc2::ObservationInterface* observation = Observation();
+	// make Stalkers Blink away if low health
+	if (unit->unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER) {
+		if (have_upgrade(sc2::UPGRADE_ID::BLINKTECH)) {
+			if (unit->health / unit->health_max < .5f) {
+				// check if Blink is on cooldown
+				if (AbilityAvailable(*unit, sc2::ABILITY_ID::EFFECT_BLINK)) {
+					Actions()->UnitCommand(unit, sc2::ABILITY_ID::EFFECT_BLINK, bases[0].get_townhall());
+				}
+			}
+		}
+	}
+}
+
+bool BotAgent::AbilityAvailable(const sc2::Unit& unit, const sc2::ABILITY_ID ability_) {
+	// check if a unit is able to use an ability
+	sc2::QueryInterface* query_interface = Query();
+	std::vector<sc2::AvailableAbility> abilities = (query_interface->GetAbilitiesForUnit(&unit)).abilities;
+	for (auto a : abilities) {
+		if (a.ability_id == ability_) {
+			return true;
+		}
+	}
+	return false;
 }
 
 bool BotAgent::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) {
@@ -555,6 +440,11 @@ const sc2::Unit* BotAgent::FindNearestGasStructure(sc2::Point2D location) {
 	return target;
 }
 
+void BotAgent::setCurrentStrategy(Strategy* strategy_) {
+	// set the current strategy
+	current_strategy = strategy_;
+}
+
 std::vector<SquadMember*> BotAgent::filter_by_flag(std::vector<SquadMember*> squad_vector, FLAGS flag) {
 	// filter a vector of SquadMember* by the given flag
 	std::vector<SquadMember*> filtered_squad;
@@ -576,6 +466,24 @@ std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> sq
 
 std::vector<SquadMember*> BotAgent::get_squad_members() {
 	return squad_members;
+}
+
+int BotAgent::get_index_of_closest_base(sc2::Point2D location_) {
+	// get the index of the closest base to a location
+	float distance = std::numeric_limits<float>::max();
+	int lowest_index = 0;
+	for (int i = 0; i < bases.size(); i++) {
+		float b_dist = sc2::DistanceSquared2D(bases[i].get_townhall(), location_);
+		if (b_dist < distance) {
+			lowest_index = i;
+			distance = b_dist;
+		}
+	}
+	return lowest_index;
+}
+
+void BotAgent::addStrat(StrategyOrder strategy) {
+	strategies.push_back(strategy);
 }
 
 void BotAgent::initLocations(int map_index, int p_id) {
@@ -659,7 +567,7 @@ void BotAgent::initLocations(int map_index, int p_id) {
 
 			Base main_base(observation->GetStartLocation());
 			main_base.add_build_area(146.0, 128.0);
-			main_base.add_build_area(129.0, 138.0);
+			main_base.add_build_area(132.0, 132.0);
 			main_base.add_defend_point(149.0, 120.0);
 			main_base.set_active();
 			bases.push_back(main_base);
@@ -738,7 +646,7 @@ void BotAgent::initLocations(int map_index, int p_id) {
 			enemy_location = sc2::Point2D(137.5, 139.5);
 			Base main_base(observation->GetStartLocation());
 			main_base.add_build_area(54.0, 40.0);
-			main_base.add_build_area(71.0, 30.0);
+			main_base.add_build_area(68.0, 36.0);
 			main_base.add_defend_point(51.0, 48.0);
 			main_base.set_active();
 			bases.push_back(main_base);
