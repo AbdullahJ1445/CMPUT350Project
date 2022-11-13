@@ -32,6 +32,10 @@ enum class COND {
 	MIN_UNIT_OF_TYPE_NEAR_LOCATION,
 	MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION,
 	MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION,
+	MIN_UNIT_WITH_FLAGS,
+	MAX_UNIT_WITH_FLAGS,
+	MIN_UNIT_WITH_FLAGS_NEAR_LOCATION,
+	MAX_UNIT_WITH_FLAGS_NEAR_LOCATION,
 	HAS_ABILITY_READY,
 	BASE_IS_ACTIVE,
 	HAVE_UPGRADE
@@ -47,6 +51,8 @@ public:
 	void add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
 	void add_condition(COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_=true);
 	void add_condition(COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_=true);
+	void add_condition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_);
+	void add_condition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
 	void add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
 	bool check_conditions(const sc2::ObservationInterface* obs);
 	BotAgent* getAgent();
@@ -61,6 +67,8 @@ private:
 		TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
 		TriggerCondition(BotAgent* agent_, COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_=true);
 		TriggerCondition(BotAgent* agent_, COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_=true);
+		TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_);
+		TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
 		TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
 		bool is_met(const sc2::ObservationInterface* obs);
 
@@ -75,6 +83,7 @@ private:
 		bool is_true;
 		sc2::UPGRADE_ID upgrade_id;
 		sc2::ABILITY_ID ability_id;
+		std::unordered_set<FLAGS> filter_flags;
 	};
 
 };

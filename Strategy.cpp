@@ -275,16 +275,16 @@ void Strategy::loadStrategies() {
 		std::unordered_set<FLAGS> attackers;
 		for (int i = 2; i < num_bases-1; i++) {
 			StrategyOrder continue_scout(bot);
-			Directive d(Directive::MATCH_FLAGS, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, bot->bases[i + 1].get_townhall());
+			Directive d(Directive::MATCH_FLAGS_NEAR_LOCATION, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, bot->bases[i].get_townhall(), bot->bases[i + 1].get_townhall(), 22.0F);
 			Trigger t(bot);
-			t.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_STALKER, bot->bases[i].get_townhall());
+			t.add_condition(COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION, i+1, attackers, bot->bases[i].get_townhall());
 			continue_scout.setDirective(d);
 			continue_scout.addTrigger(t);
 			bot->addStrat(continue_scout);
 		}
 	}
 	{
-		// When we have 15 stalkers, send all of our "attackers" to the enemy base
+		// When we have 2 Collosus, send all of our "attackers" to the enemy base
 		StrategyOrder send_entire_army(bot);
 		std::unordered_set<FLAGS> attackers;
 		attackers.insert(FLAGS::IS_ATTACKER);
@@ -296,7 +296,7 @@ void Strategy::loadStrategies() {
 		bot->addStrat(send_entire_army);
 	}
 	{
-		// When we have 19 stalkers, send all of our "attackers" to the enemy expansion
+		// If there are 5 stalkers in enemy base, send an attack to their first expansion
 		StrategyOrder send_entire_army_2(bot);
 		std::unordered_set<FLAGS> attackers;
 		attackers.insert(FLAGS::IS_ATTACKER);
