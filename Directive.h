@@ -11,6 +11,7 @@
 # define DEFAULT_RADIUS 12.0f // should be equal to the square root of DEFAULT_SQ_DISTANCE in Triggers.h for best functionality
 
 class BotAgent;
+class SquadMember;
 enum class FLAGS;
 
 class Directive {
@@ -20,6 +21,7 @@ public:
 		// who the action should be assigned to
 		DEFAULT_DIRECTIVE,
 		UNIT_TYPE,
+		UNIT_TYPE_NEAR_LOCATION,
 		MATCH_FLAGS,
 		MATCH_FLAGS_NEAR_LOCATION
 	};
@@ -42,16 +44,26 @@ public:
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit target_);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D location_, float proximity_ =DEFAULT_RADIUS);
 
-	Directive(const Directive& rhs);
-
-	// todo: implement constructors involving squads
-
 	bool execute(BotAgent* agent, const sc2::ObservationInterface* obs);
 	bool executeForUnit(BotAgent* agent, const sc2::ObservationInterface* obs, const sc2::Unit& unit);
 	static sc2::Point2D uniform_random_point_in_circle(sc2::Point2D center, float radius);
 	void setDefault();
+	void enqueueDirective(Directive directive_);
+	bool hasQueuedDirective();
 
 private:
+
+	bool execute_simple_action_for_unit_type(BotAgent* agent);
+	bool execute_build_gas_structure(BotAgent* agent);
+	bool execute_protoss_nexus_chronoboost(BotAgent* agent);
+	bool execute_match_flags(BotAgent* agent);
+	bool execute_order_for_unit_type_with_location(BotAgent* agent);
+	bool is_any_executing_order(std::vector<SquadMember*> squad_vector, sc2::ABILITY_ID ability_);
+	SquadMember* get_closest_to_location(std::vector<SquadMember*> squad_vector, sc2::Point2D pos_);
+	std::vector<SquadMember*> filter_near_location(std::vector<SquadMember*> squad_vector, sc2::Point2D pos_, float radius_);
+	std::vector<SquadMember*> filter_by_unit_type(std::vector<SquadMember*> squad_vector, sc2::UNIT_TYPEID unit_type_);
+	std::vector<SquadMember*> filter_idle(std::vector<SquadMember*> squad_vector);
+
 	ASSIGNEE assignee;
 	ACTION_TYPE action_type;
 	sc2::UNIT_TYPEID unit_type;
@@ -62,4 +74,5 @@ private:
 	float assignee_proximity;
 	float proximity;
 	std::unordered_set<FLAGS> flags;
+	std::vector<Directive> order_queue;
 };

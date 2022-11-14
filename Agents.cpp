@@ -575,9 +575,6 @@ void BotAgent::initLocations(int map_index, int p_id) {
 			Base main_base(observation->GetStartLocation());
 			bases.push_back(main_base);
 
-			Base exp_1(82.5, 23.5);
-			bases.push_back(exp_1);
-
 			Base exp_1(61.5, 136.5);
 			bases.push_back(exp_1);
 

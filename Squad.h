@@ -28,6 +28,7 @@ enum class FLAGS {
 	IS_ATTACKING,
 	IS_FLYING,
 	IS_INVISIBLE,
+	PERFORMING_ORDER
 };
 
 class SquadMember {
