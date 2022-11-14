@@ -2,7 +2,7 @@
 
 #include "Directive.h"
 #include "Triggers.h"
-#include "Squad.h"
+#include "Mob.h"
 #include "Base.h"
 #include "Strategy.h"
 #include "sc2api/sc2_api.h"
@@ -13,7 +13,7 @@
 #include "sc2utils/sc2_arg_parser.h"
 
 class StrategyOrder;
-class SquadMember;
+class Mob;
 class Base;
 class Strategy;
 
@@ -39,16 +39,16 @@ public:
 	bool have_upgrade(const sc2::UpgradeID upgrade_);
 	bool AbilityAvailable(const sc2::Unit& unit, const sc2::ABILITY_ID ability_);
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
-	SquadMember* getSquadMember(const sc2::Unit& unit);
-	std::vector<SquadMember*> getIdleWorkers();
+	Mob* getMob(const sc2::Unit& unit);
+	std::vector<Mob*> getIdleWorkers();
 	const sc2::Unit* FindNearestMineralPatch(const sc2::Point2D location);
 	const sc2::Unit* FindNearestGeyser(const sc2::Point2D location);
 	const sc2::Unit* FindNearestGasStructure(const sc2::Point2D location);
 	void setCurrentStrategy(Strategy* strategy_);
-	std::vector<SquadMember*> BotAgent::filter_by_flag(std::vector<SquadMember*> squad_vector, FLAGS flag);
-	std::vector<SquadMember*> BotAgent::filter_by_flags(std::vector<SquadMember*> squad_vector, std::unordered_set<FLAGS> flag_list);
+	std::vector<Mob*> BotAgent::filter_by_flag(std::vector<Mob*> mobs_vector, FLAGS flag);
+	std::vector<Mob*> BotAgent::filter_by_flags(std::vector<Mob*> mobs_vector, std::unordered_set<FLAGS> flag_list);
 	std::vector<Base> bases;
-	std::vector<SquadMember*> get_squad_members();
+	std::vector<Mob*> get_mobs();
 	int BotAgent::get_index_of_closest_base(sc2::Point2D location_);
 	void BotAgent::addStrat(StrategyOrder strategy);
 	sc2::Point2D start_location;
@@ -62,7 +62,7 @@ private:
 	sc2::Point2D choke_point_2;
 	
 	std::vector<StrategyOrder> strategies; 
-	std::vector<SquadMember*> squad_members;
+	std::vector<Mob*> mobs;
 	sc2::Unit proxy_worker;
 
 	int player_start_id;
