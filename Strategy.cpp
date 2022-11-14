@@ -76,6 +76,7 @@ void Strategy::loadStrategies() {
 		t2.add_condition(COND::MIN_FOOD_CAP, 20);
 		base_pylon.addTrigger(t2);
 		bot->addStrat(base_pylon);
+		std::cout << "base pylon StrategyOrder added" << std::endl;
 	}
 	{
 		StrategyOrder pylon_by_townhall(bot);

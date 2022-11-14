@@ -32,23 +32,23 @@ public:
 	void OnStep_100();
 	virtual void OnGameStart() final;
 	virtual void OnStep() final;
-	//virtual void OnUnitIdle(const sc2::Unit& unit) final;
+	virtual void OnUnitIdle(const sc2::Unit& unit) final;
 	virtual void OnBuildingConstructionComplete(const sc2::Unit* unit) final;
 	virtual void OnUnitCreated(const sc2::Unit* unit);
 	virtual void OnUnitDamaged(const sc2::Unit* unit, float health, float shields);
 	bool have_upgrade(const sc2::UpgradeID upgrade_);
 	bool AbilityAvailable(const sc2::Unit& unit, const sc2::ABILITY_ID ability_);
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
-	Mob* getMob(const sc2::Unit& unit);
-	std::vector<Mob*> getIdleWorkers();
+	Mob* getMobFromSet(const sc2::Unit& unit, std::set<Mob*> mob_set);
+	std::set<Mob*> getIdleWorkers();
 	const sc2::Unit* FindNearestMineralPatch(const sc2::Point2D location);
 	const sc2::Unit* FindNearestGeyser(const sc2::Point2D location);
 	const sc2::Unit* FindNearestGasStructure(const sc2::Point2D location);
 	void setCurrentStrategy(Strategy* strategy_);
-	std::vector<Mob*> BotAgent::filter_by_flag(std::vector<Mob*> mobs_vector, FLAGS flag);
-	std::vector<Mob*> BotAgent::filter_by_flags(std::vector<Mob*> mobs_vector, std::unordered_set<FLAGS> flag_list);
+	std::set<Mob*> BotAgent::filter_by_flag(std::set<Mob*> mobs_set, FLAGS flag);
+	std::set<Mob*> BotAgent::filter_by_flags(std::set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list);
 	std::vector<Base> bases;
-	std::vector<Mob*> get_mobs();
+	std::set<Mob*> get_mobs();
 	int BotAgent::get_index_of_closest_base(sc2::Point2D location_);
 	void BotAgent::addStrat(StrategyOrder strategy);
 	sc2::Point2D start_location;
@@ -61,8 +61,9 @@ private:
 	sc2::Point2D choke_point_1;
 	sc2::Point2D choke_point_2;
 	
-	std::vector<StrategyOrder> strategies; 
-	std::vector<Mob*> mobs;
+	std::vector<StrategyOrder> strategies;
+	std::set<Mob*> mobs;
+	//std::set<Mob*> mobs;
 	sc2::Unit proxy_worker;
 
 	int player_start_id;

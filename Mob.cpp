@@ -28,6 +28,7 @@ Mob::Mob(const sc2::Unit& unit_, MOB mobs_type) : unit(unit_) {
 
 void Mob::initVars() {
 	// initialize all flags to false
+	tag = unit.tag;
 	has_default_directive = false;
 	birth_location = unit.pos;
 	home_location = unit.pos;
@@ -61,18 +62,22 @@ bool Mob::hasQueuedOrder() {
 	return (queued_orders.size() > 0);
 }
 
-bool Mob::executeDefaultDirective(BotAgent* agent, const sc2::ObservationInterface* obs) {
+bool Mob::executeDefaultDirective(BotAgent* agent) {
 	if (has_default_directive) {
-		return default_directive->executeForUnit(agent, obs, unit);
+		return default_directive->executeForUnit(agent, unit);
 	}
 	return false;
 }
 
 bool Mob::executeQueuedOrder(BotAgent* agent) {
 	if (hasQueuedOrder()) {
-		bool is_success = queued_orders.front().executeForUnit(agent, agent->Observation(), unit);
+		bool is_success = queued_orders.front().executeForUnit(agent, unit);
 		queued_orders.erase(queued_orders.begin());
 		return is_success;
 	}
 	return false;
+}
+
+sc2::Tag Mob::get_tag() {
+	return tag;
 }

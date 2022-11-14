@@ -99,40 +99,40 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		return false;
 	case COND::MIN_UNIT_WITH_FLAGS:
 	{
-		std::vector<Mob*> mobss;
-		mobss = agent->filter_by_flags(agent->get_mobs(), filter_flags);
-		int num_units = mobss.size();
+		std::set<Mob*> mobs;
+		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		int num_units = mobs.size();
 		return (num_units >= cond_value);
 	}
 	case COND::MAX_UNIT_WITH_FLAGS:
 	{
-		std::vector<Mob*> mobss;
-		mobss = agent->filter_by_flags(agent->get_mobs(), filter_flags);
-		int num_units = mobss.size();
+		std::set<Mob*> mobs;
+		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		int num_units = mobs.size();
 		return (num_units <= cond_value);
 	}
 	case COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
-		std::vector<Mob*> mobss;
-		mobss = agent->filter_by_flags(agent->get_mobs(), filter_flags);
-		std::vector<Mob*> filtered_mobss;
-		std::copy_if(mobss.begin(), mobss.end(), std::back_inserter(filtered_mobss),
-			[this](Mob* s) { return (
-				sc2::DistanceSquared2D(s->unit.pos, location_for_counting_units) <= distance_squared); 
+		std::set<Mob*> mobs;
+		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		std::set<Mob*> filtered_mobs;
+		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
+			[this](Mob* m) { return (
+				sc2::DistanceSquared2D(m->unit.pos, location_for_counting_units) <= distance_squared); 
 			});
-		int num_units = filtered_mobss.size();
+		int num_units = filtered_mobs.size();
 		return (num_units >= cond_value);
 	}
 	case COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
-		std::vector<Mob*> mobss;
-		mobss = agent->filter_by_flags(agent->get_mobs(), filter_flags);
-		std::vector<Mob*> filtered_mobss;
-		std::copy_if(mobss.begin(), mobss.end(), std::back_inserter(filtered_mobss),
-			[this](Mob* s) { return (
-				sc2::DistanceSquared2D(s->unit.pos, location_for_counting_units) <= distance_squared);
+		std::set<Mob*> mobs;
+		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		std::set<Mob*> filtered_mobs;
+		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
+			[this](Mob* m) { return (
+				sc2::DistanceSquared2D(m->unit.pos, location_for_counting_units) <= distance_squared);
 			});
-		int num_units = filtered_mobss.size();
+		int num_units = filtered_mobs.size();
 		return (num_units <= cond_value);
 	}
 	case COND::BASE_IS_ACTIVE:
@@ -160,10 +160,10 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			return (num_units <= cond_value);
 		}
 	case COND::HAS_ABILITY_READY:
-		std::vector<Mob*> structures = agent->filter_by_flag(agent->get_mobs(), FLAGS::IS_STRUCTURE);
+		std::set<Mob*> structures = agent->filter_by_flag(agent->get_mobs(), FLAGS::IS_STRUCTURE);
 		bool found_one = false;
-		for (auto s : structures) {
-			if (agent->AbilityAvailable(s->unit, ability_id)) {
+		for (auto m : structures) {
+			if (agent->AbilityAvailable(m->unit, ability_id)) {
 				found_one = true;
 				break;
 			}
@@ -250,9 +250,10 @@ void Trigger::add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID u
 }
 
 
-bool Trigger::check_conditions(const sc2::ObservationInterface* obs) {
+bool Trigger::check_conditions() {
 	// Iterate through all conditions and return false if any are not met.
 	// Otherwise return true.
+	const sc2::ObservationInterface* obs = agent->Observation();
 	for (auto c_ : conditions) {
 		if (!c_.is_met(obs))
 			return false;
@@ -272,8 +273,8 @@ StrategyOrder::~StrategyOrder() {
 	directives.clear();
 }
 
-bool StrategyOrder::execute(const sc2::ObservationInterface* obs) {
-	return directives.front().execute(agent, obs);
+bool StrategyOrder::execute() {
+	return directives.front().execute(agent);
 }
 
 void StrategyOrder::enqueueDirective(Directive directive_) {
@@ -287,9 +288,9 @@ void StrategyOrder::addTrigger(Trigger trigger_) {
 	triggers.push_back(trigger_);
 }
 
-bool StrategyOrder::checkTriggerConditions(const sc2::ObservationInterface* obs) {
+bool StrategyOrder::checkTriggerConditions() {
 	for (Trigger t_ : triggers) {
-		if (t_.check_conditions(obs))
+		if (t_.check_conditions())
 			return true;
 	}
 	return false;
