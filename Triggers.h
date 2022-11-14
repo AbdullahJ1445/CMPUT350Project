@@ -58,7 +58,7 @@ public:
 	void add_condition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_);
 	void add_condition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
 	void add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
-	bool check_conditions(const sc2::ObservationInterface* obs);
+	bool check_conditions();
 	BotAgent* getAgent();
 
 private:
@@ -96,8 +96,8 @@ class StrategyOrder {
 public:
 	StrategyOrder(BotAgent* agent_);
 	~StrategyOrder();
-	bool execute(const sc2::ObservationInterface* obs);
-	bool checkTriggerConditions(const sc2::ObservationInterface* obs);
+	bool execute();
+	bool checkTriggerConditions();
 	void addTrigger(Trigger trigger_);
 	void enqueueDirective(Directive directive_);
 

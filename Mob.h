@@ -29,7 +29,7 @@ enum class FLAGS {
 	IS_ATTACKING,
 	IS_FLYING,
 	IS_INVISIBLE,
-	PERFORMING_ORDER
+	IS_IDLE
 };
 
 class Mob {
@@ -42,8 +42,10 @@ public:
 	void assignDirective(Directive directive_);
 	bool hasDefaultDirective();
 	bool hasQueuedOrder();
-	bool executeDefaultDirective(BotAgent* agent, const sc2::ObservationInterface* obs);
+	bool executeDefaultDirective(BotAgent* agent);
 	bool executeQueuedOrder(BotAgent* agent);
+	sc2::Tag get_tag();
+	bool operator<(const Mob& mob) const { return tag < mob.tag; }
 
 	const sc2::Unit& unit;
 	std::unordered_set<FLAGS> flags;
@@ -52,6 +54,7 @@ public:
 	sc2::Point2D assigned_location;
 
 private:
+	sc2::Tag tag; // a unique identifier given to units
 	bool has_default_directive;
 	Directive* default_directive;
 	std::vector<Directive> queued_orders;

@@ -30,26 +30,28 @@ void BotAgent::initVariables() {
 	std::cout << "Player Start ID: " << player_start_id << std::endl;
 }
 
-Mob* BotAgent::getMob(const sc2::Unit& unit) {
+Mob* BotAgent::getMobFromSet(const sc2::Unit& unit, std::set<Mob*> mob_set) {
 	assert(unit.alliance == sc2::Unit::Alliance::Self); // only call this on allied units!
 
 	// get the Mob object for a given sc2::Unit object
-	for (Mob* s : mobs) {
-		if (&(s->unit) == &unit) {
-			return s;
+
+
+	for (Mob* m : mob_set) {
+		if (m->get_tag() == unit.tag) {
+			return m;
 		}
 	}
 	return nullptr; // handle erroneous case where unit has no mobs
 }
 
-std::vector<Mob*> BotAgent::getIdleWorkers() {
+std::set<Mob*> BotAgent::getIdleWorkers() {
 	// get all worker units with no active orders
-	std::vector<Mob*> idle_workers;
+	std::set<Mob*> idle_workers;
 	
-	std::vector<Mob*> workers = filter_by_flag(mobs, FLAGS::IS_WORKER);
-	for (Mob* s : workers) {
-		if (s->is_idle()) {
-			idle_workers.push_back(s);
+	std::set<Mob*> workers = filter_by_flag(mobs, FLAGS::IS_WORKER);
+	for (Mob* m : workers) {
+		if (m->is_idle()) {
+			idle_workers.insert(m);
 		}
 	}
 	
@@ -57,7 +59,7 @@ std::vector<Mob*> BotAgent::getIdleWorkers() {
 }
 
 void BotAgent::initStartingUnits() {
-	// add all starting units to their respective mobss
+	// add all starting units to their respective mobs
 	const sc2::ObservationInterface* observation = Observation();
 	sc2::Units units = observation->GetUnits(sc2::Unit::Alliance::Self);
 	for (const sc2::Unit* u : units) {
@@ -69,7 +71,7 @@ void BotAgent::initStartingUnits() {
 			Mob* worker = new Mob(*u, MOB::MOB_WORKER);
 			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, start_location);
 			worker->assignDirective(directive_get_minerals_near_Base);
-			mobs.push_back(worker);
+			mobs.insert(worker);
 		}
 		if (u_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS ||
 			u_type == sc2::UNIT_TYPEID::TERRAN_COMMANDCENTER ||
@@ -81,7 +83,7 @@ void BotAgent::initStartingUnits() {
 			u_type == sc2::UNIT_TYPEID::ZERG_HIVE ||
 			u_type == sc2::UNIT_TYPEID::ZERG_LAIR) {
 			Mob* townhall = new Mob(*u, MOB::MOB_TOWNHALL);
-			mobs.push_back(townhall);
+			mobs.insert(townhall);
 		}
 	}
 }
@@ -98,10 +100,9 @@ void BotAgent::OnGameStart() {
 
 void::BotAgent::OnStep_100() {
 	// occurs every 100 steps
-	const sc2::ObservationInterface* observation = Observation();
-	std::vector<Mob*> idle_workers = getIdleWorkers();
-	for (Mob* s: idle_workers) {
-		s->executeDefaultDirective(this, observation);
+	std::set<Mob*> idle_workers = getIdleWorkers();
+	for (Mob* m: idle_workers) {
+		m->executeDefaultDirective(this);
 	}
 }
 
@@ -112,7 +113,6 @@ void::BotAgent::OnStep_1000() {
 
 void BotAgent::OnStep() {
 	const sc2::ObservationInterface* observation = Observation();
-	int minerals = observation->GetMinerals();
 	int gameloop = observation->GetGameLoop();
 	if (gameloop % 100 == 0) {
 		OnStep_100();
@@ -122,8 +122,8 @@ void BotAgent::OnStep() {
 	}
 
 	for (StrategyOrder s : strategies) {
-		if (s.checkTriggerConditions(observation)) {
-			s.execute(observation);
+		if (s.checkTriggerConditions()) {
+			s.execute();
 		}
 	}
 }
@@ -135,7 +135,7 @@ bool BotAgent::have_upgrade(const sc2::UpgradeID upgrade_) {
 }
 
 void BotAgent::OnBuildingConstructionComplete(const sc2::Unit* unit) {
-	if (getMob(*unit)) { // unit already belongs to a Mob
+	if (getMobFromSet(*unit, mobs)) { // unit already belongs to a Mob
 		return;
 	}
 
@@ -169,12 +169,12 @@ void BotAgent::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 		AssignNearbyWorkerToGasStructure(*unit);
 		AssignNearbyWorkerToGasStructure(*unit);
 	}
-	mobs.push_back(structure);
+	mobs.insert(structure);
 }
 
 void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 	const sc2::ObservationInterface* observation = Observation();
-	if (getMob(*unit)) { // unit already belongs to a Mob
+	if (getMobFromSet(*unit, mobs)) { // unit already belongs to a Mob
 		return;
 	}
 
@@ -226,7 +226,7 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 		mobs_created = true;
 	}
 	if (mobs_created)
-		mobs.push_back(new_mobs);
+		mobs.insert(new_mobs);
 }
 
 void BotAgent::OnUnitDamaged(const sc2::Unit* unit, float health, float shields) {
@@ -261,15 +261,15 @@ bool BotAgent::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) 
 	bool found_viable_unit = false;
 	flags.insert(FLAGS::IS_WORKER);
 	flags.insert(FLAGS::IS_MINERAL_GATHERER);
-	std::vector<Mob*> worker_miners = filter_by_flags(mobs, flags);
-	//std::vector<Mob*> worker_miners = filter_by_flag(mobs, FLAGS::IS_MINERAL_GATHERER);
+	std::set<Mob*> worker_miners = filter_by_flags(mobs, flags);
+	//std::set<Mob*> worker_miners = filter_by_flag(mobs, FLAGS::IS_MINERAL_GATHERER);
 	float distance = std::numeric_limits<float>::max();
 	Mob* target = nullptr;
-	for (Mob* s : worker_miners) {
-		float d = sc2::DistanceSquared2D(s->unit.pos, gas_structure.pos);
+	for (Mob* m : worker_miners) {
+		float d = sc2::DistanceSquared2D(m->unit.pos, gas_structure.pos);
 		if (d < distance) {
 			distance = d;
-			target = s;
+			target = m;
 			found_viable_unit = true;
 		}
 	}
@@ -287,9 +287,9 @@ bool BotAgent::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) 
 	return false;
 }
 
-//void BotAgent::OnUnitIdle(const sc2::Unit* unit) {
+void BotAgent::OnUnitIdle(const sc2::Unit& unit) {
 	// do stuff
-//}
+}
 
 int BotAgent::getPlayerIDForMap(int map_index, sc2::Point2D location) {
 	location = getNearestStartLocation(location);
@@ -445,26 +445,26 @@ void BotAgent::setCurrentStrategy(Strategy* strategy_) {
 	current_strategy = strategy_;
 }
 
-std::vector<Mob*> BotAgent::filter_by_flag(std::vector<Mob*> mobs_vector, FLAGS flag) {
+std::set<Mob*> BotAgent::filter_by_flag(std::set<Mob*> mobs_set, FLAGS flag) {
 	// filter a vector of Mob* by the given flag
-	std::vector<Mob*> filtered_mobs;
+	std::set<Mob*> filtered_mobs;
 	
-	std::copy_if(mobs_vector.begin(), mobs_vector.end(), std::back_inserter(filtered_mobs),
-		[flag](Mob* s) { return s->has_flag(flag); });
+	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
+		[flag](Mob* m) { return m->has_flag(flag); });
 	
 	return filtered_mobs;
 }
 
-std::vector<Mob*> BotAgent::filter_by_flags(std::vector<Mob*> mobs_vector, std::unordered_set<FLAGS> flag_list) {
+std::set<Mob*> BotAgent::filter_by_flags(std::set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list) {
 	// filter a vector of Mob* by several flags
-	std::vector<Mob*> filtered_mobs = mobs_vector;
+	std::set<Mob*> filtered_mobs = mobs_set;
 	for (FLAGS f : flag_list) {
 		filtered_mobs = filter_by_flag(filtered_mobs, f);
 	}
 	return filtered_mobs;
 }
 
-std::vector<Mob*> BotAgent::get_mobs() {
+std::set<Mob*> BotAgent::get_mobs() {
 	return mobs;
 }
 
