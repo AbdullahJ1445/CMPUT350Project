@@ -5,13 +5,13 @@
 #include "sc2lib/sc2_lib.h"
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
-#include "Squad.h"
+#include "Mob.h"
 
 # define M_PI           3.14159265358979323846
-# define DEFAULT_RADIUS 12.0f // should be equal to the square root of DEFAULT_SQ_DISTANCE in Triggers.h for best functionality
+# define DEFAULT_RADIUS 12.0f 
 
 class BotAgent;
-class SquadMember;
+class Mob;
 enum class FLAGS;
 
 class Directive {
@@ -58,11 +58,11 @@ private:
 	bool execute_protoss_nexus_chronoboost(BotAgent* agent);
 	bool execute_match_flags(BotAgent* agent);
 	bool execute_order_for_unit_type_with_location(BotAgent* agent);
-	bool is_any_executing_order(std::vector<SquadMember*> squad_vector, sc2::ABILITY_ID ability_);
-	SquadMember* get_closest_to_location(std::vector<SquadMember*> squad_vector, sc2::Point2D pos_);
-	std::vector<SquadMember*> filter_near_location(std::vector<SquadMember*> squad_vector, sc2::Point2D pos_, float radius_);
-	std::vector<SquadMember*> filter_by_unit_type(std::vector<SquadMember*> squad_vector, sc2::UNIT_TYPEID unit_type_);
-	std::vector<SquadMember*> filter_idle(std::vector<SquadMember*> squad_vector);
+	bool is_any_executing_order(std::vector<Mob*> mobs_vector, sc2::ABILITY_ID ability_);
+	Mob* get_closest_to_location(std::vector<Mob*> mobs_vector, sc2::Point2D pos_);
+	std::vector<Mob*> filter_near_location(std::vector<Mob*> mobs_vector, sc2::Point2D pos_, float radius_);
+	std::vector<Mob*> filter_by_unit_type(std::vector<Mob*> mobs_vector, sc2::UNIT_TYPEID unit_type_);
+	std::vector<Mob*> filter_idle(std::vector<Mob*> mobs_vector);
 
 	ASSIGNEE assignee;
 	ACTION_TYPE action_type;

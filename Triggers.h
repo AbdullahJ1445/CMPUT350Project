@@ -6,9 +6,13 @@
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
 #include "Agents.h"
+#include "Mob.h"
+
+# define DEFAULT_RADIUS 12.0f 
 
 class BotAgent;
 class Directive;
+enum class FLAGS;
 
 enum class COND {
 	// The types of trigger conditions

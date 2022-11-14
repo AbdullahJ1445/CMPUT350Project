@@ -1,16 +1,17 @@
 #pragma once
 #include "sc2api/sc2_api.h"
 #include "Directive.h"
+#include "Agents.h"
 
 class Directive;
 class BotAgent;
 
-enum class SQUAD {
-	SQUAD_STRUCTURE,
-	SQUAD_WORKER,
-	SQUAD_ARMY,
-	SQUAD_PROXY,
-	SQUAD_TOWNHALL
+enum class MOB {
+	MOB_STRUCTURE,
+	MOB_WORKER,
+	MOB_ARMY,
+	MOB_PROXY,
+	MOB_TOWNHALL
 };
 
 enum class FLAGS {
@@ -31,28 +32,27 @@ enum class FLAGS {
 	PERFORMING_ORDER
 };
 
-class SquadMember {
+class Mob {
 public:
-	SquadMember(const sc2::Unit& unit_, SQUAD squad_type);
+	Mob(const sc2::Unit& unit_, MOB mobs_type);
 	void initVars();
 
 	bool is_idle();
 	bool has_flag(FLAGS flag);
 	void assignDirective(Directive directive_);
 	bool hasDefaultDirective();
+	bool hasQueuedOrder();
 	bool executeDefaultDirective(BotAgent* agent, const sc2::ObservationInterface* obs);
+	bool executeQueuedOrder(BotAgent* agent);
 
-
-	// several public flags to filter our units
-	bool has_default_directive;
-	int group_id;
+	const sc2::Unit& unit;
+	std::unordered_set<FLAGS> flags;
 	sc2::Point2D birth_location;
 	sc2::Point2D home_location;
 	sc2::Point2D assigned_location;
-	Directive* default_directive;
-	const sc2::Unit& unit;
-	std::unordered_set<FLAGS> flags;
 
 private:
-	
+	bool has_default_directive;
+	Directive* default_directive;
+	std::vector<Directive> queued_orders;
 };

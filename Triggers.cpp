@@ -99,40 +99,40 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		return false;
 	case COND::MIN_UNIT_WITH_FLAGS:
 	{
-		std::vector<SquadMember*> squads;
-		squads = agent->filter_by_flags(agent->get_squad_members(), filter_flags);
-		int num_units = squads.size();
+		std::vector<Mob*> mobss;
+		mobss = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		int num_units = mobss.size();
 		return (num_units >= cond_value);
 	}
 	case COND::MAX_UNIT_WITH_FLAGS:
 	{
-		std::vector<SquadMember*> squads;
-		squads = agent->filter_by_flags(agent->get_squad_members(), filter_flags);
-		int num_units = squads.size();
+		std::vector<Mob*> mobss;
+		mobss = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		int num_units = mobss.size();
 		return (num_units <= cond_value);
 	}
 	case COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
-		std::vector<SquadMember*> squads;
-		squads = agent->filter_by_flags(agent->get_squad_members(), filter_flags);
-		std::vector<SquadMember*> filtered_squads;
-		std::copy_if(squads.begin(), squads.end(), std::back_inserter(filtered_squads),
-			[this](SquadMember* s) { return (
+		std::vector<Mob*> mobss;
+		mobss = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		std::vector<Mob*> filtered_mobss;
+		std::copy_if(mobss.begin(), mobss.end(), std::back_inserter(filtered_mobss),
+			[this](Mob* s) { return (
 				sc2::DistanceSquared2D(s->unit.pos, location_for_counting_units) <= distance_squared); 
 			});
-		int num_units = filtered_squads.size();
+		int num_units = filtered_mobss.size();
 		return (num_units >= cond_value);
 	}
 	case COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
-		std::vector<SquadMember*> squads;
-		squads = agent->filter_by_flags(agent->get_squad_members(), filter_flags);
-		std::vector<SquadMember*> filtered_squads;
-		std::copy_if(squads.begin(), squads.end(), std::back_inserter(filtered_squads),
-			[this](SquadMember* s) { return (
+		std::vector<Mob*> mobss;
+		mobss = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		std::vector<Mob*> filtered_mobss;
+		std::copy_if(mobss.begin(), mobss.end(), std::back_inserter(filtered_mobss),
+			[this](Mob* s) { return (
 				sc2::DistanceSquared2D(s->unit.pos, location_for_counting_units) <= distance_squared);
 			});
-		int num_units = filtered_squads.size();
+		int num_units = filtered_mobss.size();
 		return (num_units <= cond_value);
 	}
 	case COND::BASE_IS_ACTIVE:
@@ -160,7 +160,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			return (num_units <= cond_value);
 		}
 	case COND::HAS_ABILITY_READY:
-		std::vector<SquadMember*> structures = agent->filter_by_flag(agent->get_squad_members(), FLAGS::IS_STRUCTURE);
+		std::vector<Mob*> structures = agent->filter_by_flag(agent->get_mobs(), FLAGS::IS_STRUCTURE);
 		bool found_one = false;
 		for (auto s : structures) {
 			if (agent->AbilityAvailable(s->unit, ability_id)) {

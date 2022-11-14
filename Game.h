@@ -9,14 +9,14 @@ using namespace sc2;
 class Army : Unit {
 private:
     bool isStructure();
-    enum squadron {
+    enum mobsron {
         MINERAL_GATHERER,
         VESPENE_GATHERER,
         BUILDER,
-        GROUND_SQUADRON_A,
-        GROUND_SQUADRON_B,
-        GROUND_SQUADRON_C,
-        AIR_SQUADRON
+        GROUND_MOBRON_A,
+        GROUND_MOBRON_B,
+        GROUND_MOBRON_C,
+        AIR_MOBRON
     };
     int value; // the cost to build the unit (minerals + vespene)
     ActionRaw currentAction;
