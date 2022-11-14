@@ -27,7 +27,7 @@ void Strategy::loadStrategies() {
 	// (3) Create a Trigger - A trigger contains TriggerConditions, and is satisfied when all conditions are met
 	// (4) Add TriggerConditions to the Trigger by using .add_condtion()
 	// (5) repeat 3 and 4 if you wish for this directive to be executed under different conditions
-	// (6) set the directive with .setDirective()
+	// (6) set the directive with .enqueueDirective()
 	// (7) add the trigger(s) with .addTrigger()
 	// (8) add the StrategyOrder to the bot with bot->addStrat()
 
@@ -37,7 +37,7 @@ void Strategy::loadStrategies() {
 		Trigger t(bot);
 		t.add_condition(COND::MIN_MINERALS, 50);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 15, sc2::UNIT_TYPEID::PROTOSS_PROBE, bot->bases[0].get_townhall(), 18.0f);
-		base_probe.setDirective(d);
+		base_probe.enqueueDirective(d);
 		base_probe.addTrigger(t);
 		bot->addStrat(base_probe);
 	}
@@ -49,7 +49,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MAX_FOOD, 4);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->bases[0].get_build_area(0));
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->bases[0].get_defend_point(0), 8.0f);
-		choke_pylon.setDirective(d);
+		choke_pylon.enqueueDirective(d);
 		choke_pylon.addTrigger(t);
 		bot->addStrat(choke_pylon);
 	}
@@ -58,7 +58,7 @@ void Strategy::loadStrategies() {
 		Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_NEXUS, sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST, bot->bases[0].get_townhall());
 		Trigger t(bot);
 		t.add_condition(COND::HAS_ABILITY_READY, sc2::UNIT_TYPEID::PROTOSS_NEXUS, sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST);
-		use_chrono.setDirective(d);
+		use_chrono.enqueueDirective(d);
 		use_chrono.addTrigger(t);
 		bot->addStrat(use_chrono);
 	}
@@ -69,7 +69,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_MINERALS, 100);
 		t.add_condition(COND::MAX_FOOD, 4);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->bases[0].get_build_area(0), 13.0F);
-		base_pylon.setDirective(d);
+		base_pylon.enqueueDirective(d);
 		base_pylon.addTrigger(t);
 		Trigger t2(bot);
 		t2.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->bases[0].get_build_area(0), 13.0F);
@@ -83,7 +83,7 @@ void Strategy::loadStrategies() {
 		Trigger t(bot);
 		t.add_condition(COND::MIN_MINERALS, 100);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->bases[0].get_townhall(), 9.0F);
-		pylon_by_townhall.setDirective(d);
+		pylon_by_townhall.enqueueDirective(d);
 		pylon_by_townhall.addTrigger(t);
 		bot->addStrat(pylon_by_townhall);
 	}
@@ -95,7 +95,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MAX_FOOD, 4);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->bases[0].get_build_area(0));
-		base_pylon_2.setDirective(d);
+		base_pylon_2.enqueueDirective(d);
 		base_pylon_2.addTrigger(t);
 		Trigger t2(bot);
 		t2.add_condition(COND::MIN_MINERALS, 100);
@@ -117,7 +117,7 @@ void Strategy::loadStrategies() {
 		Trigger t(bot);
 		t.add_condition(COND::MIN_MINERALS, 150);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-		build_forge.setDirective(d);
+		build_forge.enqueueDirective(d);
 		build_forge.addTrigger(t);
 		bot->addStrat(build_forge);
 	}
@@ -129,7 +129,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->bases[0].get_build_area(0));
-		base_cannon.setDirective(d);
+		base_cannon.enqueueDirective(d);
 		base_cannon.addTrigger(t);
 		bot->addStrat(base_cannon);
 	}
@@ -142,7 +142,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->bases[0].get_build_area(1));
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->bases[0].get_build_area(1));
-		base_cannon_2.setDirective(d);
+		base_cannon_2.enqueueDirective(d);
 		base_cannon_2.addTrigger(t);
 		Trigger t2(bot);
 		t2.add_condition(COND::MIN_MINERALS, 150);
@@ -160,7 +160,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 2, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->bases[0].get_defend_point(0), 7.0f);
-		choke_cannon.setDirective(d);
+		choke_cannon.enqueueDirective(d);
 		choke_cannon.addTrigger(t);
 		bot->addStrat(choke_cannon);
 	}
@@ -171,7 +171,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_MINERALS, 75);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->bases[0].get_townhall());
-		base_assimilator.setDirective(d);
+		base_assimilator.enqueueDirective(d);
 		base_assimilator.addTrigger(t);
 		Trigger t2(bot);
 		t2.add_condition(COND::MIN_MINERALS, 75);
@@ -186,7 +186,7 @@ void Strategy::loadStrategies() {
 		Trigger t(bot);
 		t.add_condition(COND::MIN_MINERALS, 200);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-		build_cyber_core.setDirective(d);
+		build_cyber_core.enqueueDirective(d);
 		build_cyber_core.addTrigger(t);
 		bot->addStrat(build_cyber_core);
 	}
@@ -196,7 +196,7 @@ void Strategy::loadStrategies() {
 		Trigger t(bot);
 		t.add_condition(COND::MIN_MINERALS, 150);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
-		base_gateway.setDirective(d);
+		base_gateway.enqueueDirective(d);
 		base_gateway.addTrigger(t);
 		Trigger t2(bot);
 		t2.add_condition(COND::MIN_MINERALS, 150);
@@ -218,7 +218,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_GAS, 100);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
-		base_twi_council.setDirective(d);
+		base_twi_council.enqueueDirective(d);
 		base_twi_council.addTrigger(t);
 		bot->addStrat(base_twi_council);
 	}
@@ -231,7 +231,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_FOOD, 2);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-		train_stalker.setDirective(d);
+		train_stalker.enqueueDirective(d);
 		train_stalker.addTrigger(t);
 		bot->addStrat(train_stalker);
 	}
@@ -243,7 +243,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_GAS, 150);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
 		t.add_condition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::BLINKTECH, false);
-		research_blink.setDirective(d);
+		research_blink.enqueueDirective(d);
 		research_blink.addTrigger(t);
 		bot->addStrat(research_blink);
 	}
@@ -254,7 +254,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_MINERALS, 100);
 		t.add_condition(COND::MIN_GAS, 100);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-		upgrade_attack.setDirective(d);
+		upgrade_attack.enqueueDirective(d);
 		upgrade_attack.addTrigger(t);
 		bot->addStrat(upgrade_attack);
 	}
@@ -266,7 +266,7 @@ void Strategy::loadStrategies() {
 		Trigger t(bot);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_STALKER);
-		send_small_scout.setDirective(d);
+		send_small_scout.enqueueDirective(d);
 		send_small_scout.addTrigger(t);
 		bot->addStrat(send_small_scout);
 	}
@@ -278,7 +278,7 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::MATCH_FLAGS_NEAR_LOCATION, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, bot->bases[i].get_townhall(), bot->bases[i + 1].get_townhall(), 22.0F);
 			Trigger t(bot);
 			t.add_condition(COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION, i+1, attackers, bot->bases[i].get_townhall());
-			continue_scout.setDirective(d);
+			continue_scout.enqueueDirective(d);
 			continue_scout.addTrigger(t);
 			bot->addStrat(continue_scout);
 		}
@@ -291,7 +291,7 @@ void Strategy::loadStrategies() {
 		Directive d(Directive::MATCH_FLAGS, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, bot->enemy_location);
 		Trigger t(bot);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
-		send_entire_army.setDirective(d);
+		send_entire_army.enqueueDirective(d);
 		send_entire_army.addTrigger(t);
 		bot->addStrat(send_entire_army);
 	}
@@ -303,7 +303,7 @@ void Strategy::loadStrategies() {
 		Directive d(Directive::MATCH_FLAGS, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, bot->bases.back().get_townhall());
 		Trigger t(bot);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 5, sc2::UNIT_TYPEID::PROTOSS_STALKER, bot->enemy_location);
-		send_entire_army_2.setDirective(d);
+		send_entire_army_2.enqueueDirective(d);
 		send_entire_army_2.addTrigger(t);
 		bot->addStrat(send_entire_army_2);
 	}
@@ -313,7 +313,7 @@ void Strategy::loadStrategies() {
 		Trigger t(bot);
 		t.add_condition(COND::MIN_MINERALS, 400);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->bases[1].get_townhall());
-		first_expansion.setDirective(d);
+		first_expansion.enqueueDirective(d);
 		first_expansion.addTrigger(t);
 		bot->addStrat(first_expansion);
 	}
@@ -324,7 +324,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_MINERALS, 100);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->bases[1].get_build_area(0));
 		t.add_condition(COND::BASE_IS_ACTIVE, 1);
-		pylon_exp1.setDirective(d);
+		pylon_exp1.enqueueDirective(d);
 		pylon_exp1.addTrigger(t);
 		bot->addStrat(pylon_exp1);
 	}
@@ -335,7 +335,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_MINERALS, 50);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 15, sc2::UNIT_TYPEID::PROTOSS_PROBE, bot->bases[1].get_townhall());
 		t.add_condition(COND::BASE_IS_ACTIVE, 1);
-		exp1_probe.setDirective(d);
+		exp1_probe.enqueueDirective(d);
 		exp1_probe.addTrigger(t);
 		bot->addStrat(exp1_probe);
 	}
@@ -346,7 +346,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_MINERALS, 75);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->bases[1].get_townhall());
 		t.add_condition(COND::BASE_IS_ACTIVE, 1);
-		exp1_assimilator.setDirective(d);
+		exp1_assimilator.enqueueDirective(d);
 		exp1_assimilator.addTrigger(t);
 		Trigger t2(bot);
 		t2.add_condition(COND::MIN_MINERALS, 75);
@@ -363,7 +363,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_MINERALS, 150);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->bases[1].get_build_area(0));
 		t.add_condition(COND::BASE_IS_ACTIVE, 1);
-		cannon_exp1.setDirective(d);
+		cannon_exp1.enqueueDirective(d);
 		cannon_exp1.addTrigger(t);
 		bot->addStrat(cannon_exp1);
 	}
@@ -376,7 +376,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_MINERALS, 150);
 		t.add_condition(COND::MIN_GAS, 100);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
-		robotics_fac_exp1.setDirective(d);
+		robotics_fac_exp1.enqueueDirective(d);
 		robotics_fac_exp1.addTrigger(t);
 		bot->addStrat(robotics_fac_exp1);
 	}
@@ -389,7 +389,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_FOOD, 4);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
-		train_immortal.setDirective(d);
+		train_immortal.enqueueDirective(d);
 		train_immortal.addTrigger(t);
 		bot->addStrat(train_immortal);
 	}
@@ -401,7 +401,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_GAS, 150);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
-		build_robotics_bay_main.setDirective(d);
+		build_robotics_bay_main.enqueueDirective(d);
 		build_robotics_bay_main.addTrigger(t);
 		bot->addStrat(build_robotics_bay_main);
 	}
@@ -413,7 +413,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_GAS, 150);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
-		build_robotics_bay_exp1.setDirective(d);
+		build_robotics_bay_exp1.enqueueDirective(d);
 		build_robotics_bay_exp1.addTrigger(t);
 		bot->addStrat(build_robotics_bay_exp1);
 	}
@@ -426,7 +426,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_FOOD, 6);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
-		train_colossus.setDirective(d);
+		train_colossus.enqueueDirective(d);
 		train_colossus.addTrigger(t);
 		bot->addStrat(train_colossus);
 	}
@@ -438,7 +438,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_GAS, 150);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 		t.add_condition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::EXTENDEDTHERMALLANCE, false);
-		research_thermal_lance.setDirective(d);
+		research_thermal_lance.enqueueDirective(d);
 		research_thermal_lance.addTrigger(t);
 		bot->addStrat(research_thermal_lance);
 	}

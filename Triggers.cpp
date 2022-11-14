@@ -273,15 +273,14 @@ StrategyOrder::~StrategyOrder() {
 }
 
 bool StrategyOrder::execute(const sc2::ObservationInterface* obs) {
-	return directives.front()->execute(agent, obs);
+	return directives.front().execute(agent, obs);
 }
 
-void StrategyOrder::setDirective(Directive directive_) {
-	if (directives.size() != 0) {
-		directives.clear();
-	}
-	Directive* directive = new Directive(directive_);
-	directives.push_back(directive);
+void StrategyOrder::enqueueDirective(Directive directive_) {
+	// once a directive has been added to a StrategyOrder, it cannot be modified
+	// this ensures we can look up whether the same directive already exists for a unit
+	directive_.lock();
+	directives.push_back(directive_);
 }
 
 void StrategyOrder::addTrigger(Trigger trigger_) {

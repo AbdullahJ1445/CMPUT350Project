@@ -47,9 +47,10 @@ public:
 	bool execute(BotAgent* agent, const sc2::ObservationInterface* obs);
 	bool executeForUnit(BotAgent* agent, const sc2::ObservationInterface* obs, const sc2::Unit& unit);
 	static sc2::Point2D uniform_random_point_in_circle(sc2::Point2D center, float radius);
-	void setDefault();
-	void enqueueDirective(Directive directive_);
+	bool setDefault();
+	bool enqueueDirective(Directive directive_);
 	bool hasQueuedDirective();
+	void lock();
 
 private:
 
@@ -64,6 +65,7 @@ private:
 	std::vector<Mob*> filter_by_unit_type(std::vector<Mob*> mobs_vector, sc2::UNIT_TYPEID unit_type_);
 	std::vector<Mob*> filter_idle(std::vector<Mob*> mobs_vector);
 
+	bool locked;
 	ASSIGNEE assignee;
 	ACTION_TYPE action_type;
 	sc2::UNIT_TYPEID unit_type;

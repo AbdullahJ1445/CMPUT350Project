@@ -11,6 +11,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 		action_type_ == ACTION_TYPE::NEAR_LOCATION ||
 		action_type_ == ACTION_TYPE::GET_MINERALS_NEAR_LOCATION ||
 		action_type_ == ACTION_TYPE::GET_GAS_NEAR_LOCATION);
+	locked = false;
 	action_type = action_type_;
 	assignee = assignee_;
 	unit_type = unit_type_;
@@ -23,6 +24,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	// This constructor is only valid when a unit type is targeting a unit
 	assert(assignee_ == ASSIGNEE::UNIT_TYPE);
 	assert(action_type_ == ACTION_TYPE::TARGET_UNIT);
+	locked = false;
 	action_type = action_type_;
 	assignee = assignee_;
 	unit_type = unit_type_;
@@ -35,6 +37,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D 
 	assert(assignee_ == ASSIGNEE::DEFAULT_DIRECTIVE);
 	assert(action_type_ == ACTION_TYPE::GET_MINERALS_NEAR_LOCATION ||
 		action_type_ == ACTION_TYPE::GET_GAS_NEAR_LOCATION);
+	locked = false;
 	action_type = action_type_;
 	assignee = assignee_;
 	target_location = location_;
@@ -43,6 +46,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D 
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) {
 	// This constructor is only valid for issuing an order to all units matching a flag, towards a location
+	locked = false;
 	assert(assignee_ == ASSIGNEE::MATCH_FLAGS);
 	assignee = assignee_;
 	action_type = action_type_;
@@ -57,6 +61,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordere
 	sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) {
 	// This constructor is only valid for issuing an order to all units matching a flag near a location, towards a location
 	assert(assignee_ == ASSIGNEE::MATCH_FLAGS_NEAR_LOCATION);
+	locked = false;
 	assignee = assignee_;
 	action_type = action_type_;
 	flags = flags_;
@@ -71,14 +76,17 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	// This constructor is only valid for simple actions for a unit_type
 	assert(action_type_ == ACTION_TYPE::SIMPLE_ACTION);
 	assert(assignee_ == ASSIGNEE::UNIT_TYPE);
+	locked = false;
 	assignee = assignee_;
 	unit_type = unit_type_;
 	action_type = action_type_;
 	ability = ability_;
 }
 
-void Directive::enqueueDirective(Directive directive_) {
-	order_queue.push_back(directive_);
+bool Directive::enqueueDirective(Directive directive_) {
+	if (!locked)
+		order_queue.push_back(directive_);
+	return !locked;
 }
 
 bool Directive::hasQueuedDirective() {
@@ -164,10 +172,12 @@ bool Directive::executeForUnit(BotAgent* agent, const sc2::ObservationInterface*
 	return false;
 }
 
-void Directive::setDefault() {
+bool Directive::setDefault() {
 	// a default directive is something that a unit performs when it has no actions
 	// usually used for workers to return to gathering after building/defending
-	assignee = DEFAULT_DIRECTIVE;
+	if (!locked)
+		assignee = DEFAULT_DIRECTIVE;
+	return !locked;
 }
 
 sc2::Point2D Directive::uniform_random_point_in_circle(sc2::Point2D center, float radius) {
@@ -452,4 +462,9 @@ std::vector<Mob*> Directive::filter_idle(std::vector<Mob*> mobs_vector) {
 	std::copy_if(mobs_vector.begin(), mobs_vector.end(), std::back_inserter(filtered),
 		[this](Mob* s) { return (s->unit.orders).size() == 0; });
 	return filtered;
+}
+
+void Directive::lock() {
+	// prevent further modification to this
+	locked = true;
 }

@@ -49,6 +49,7 @@ void Mob::assignDirective(Directive directive_) {
 	}
 	directive_.setDefault(); // change directive type to default directive
 	default_directive = new Directive(directive_);
+	default_directive->lock();
 	has_default_directive = true;
 }
 
