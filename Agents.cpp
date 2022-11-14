@@ -528,9 +528,6 @@ void BotAgent::initLocations(int map_index, int p_id) {
 			enemy_location = sc2::Point2D(29.5, 134.5);
 			Base main_base(observation->GetStartLocation());
 
-			Base exp_1(82.5, 23.5);
-			bases.push_back(exp_1);
-
 			Base exp_1(61.5, 136.5);
 			bases.push_back(exp_1);
 
