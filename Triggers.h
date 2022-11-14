@@ -99,11 +99,11 @@ public:
 	bool execute(const sc2::ObservationInterface* obs);
 	bool checkTriggerConditions(const sc2::ObservationInterface* obs);
 	void addTrigger(Trigger trigger_);
-	void setDirective(Directive directive_);
+	void enqueueDirective(Directive directive_);
 
 private:
 	BotAgent* agent;
 	std::vector<Trigger> triggers;
-	std::vector<Directive*> directives;
+	std::vector<Directive> directives;
 	bool has_directive;
 };
