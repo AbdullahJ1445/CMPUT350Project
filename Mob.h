@@ -16,6 +16,7 @@ enum class MOB {
 
 enum class FLAGS {
 	IS_STRUCTURE,
+	IS_CONSTRUCTING,
 	IS_TOWNHALL,
 	IS_SUPPLY,
 	IS_WORKER,
@@ -44,16 +45,23 @@ public:
 	bool hasQueuedOrder();
 	bool executeDefaultDirective(BotAgent* agent);
 	bool executeQueuedOrder(BotAgent* agent);
+	void set_flag(FLAGS flag);
+	void remove_flag(FLAGS flag);
+	sc2::Point2D get_birth_location();
+	sc2::Point2D get_home_location();
+	sc2::Point2D get_assigned_location();
+	void set_home_location(sc2::Point2D location);
+	void set_assigned_location(sc2::Point2D location);
+	std::unordered_set<FLAGS> get_flags();
 	sc2::Tag get_tag();
 	bool operator<(const Mob& mob) const { return tag < mob.tag; }
-
 	const sc2::Unit& unit;
+	
+private:
 	std::unordered_set<FLAGS> flags;
 	sc2::Point2D birth_location;
 	sc2::Point2D home_location;
 	sc2::Point2D assigned_location;
-
-private:
 	sc2::Tag tag; // a unique identifier given to units
 	bool has_default_directive;
 	Directive* default_directive;

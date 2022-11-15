@@ -19,10 +19,12 @@ Mob::Mob(const sc2::Unit& unit_, MOB mobs_type) : unit(unit_) {
 		flags.insert(FLAGS::IS_STRUCTURE);
 		flags.insert(FLAGS::IS_TOWNHALL);
 		flags.insert(FLAGS::IS_SUPPLY);
+		flags.insert(FLAGS::IS_CONSTRUCTING);
 	}
 	if (mobs_type == MOB::MOB_STRUCTURE) {
 		// true flags
 		flags.insert(FLAGS::IS_STRUCTURE);
+		flags.insert(FLAGS::IS_CONSTRUCTING);
 	}
 }
 
@@ -76,6 +78,38 @@ bool Mob::executeQueuedOrder(BotAgent* agent) {
 		return is_success;
 	}
 	return false;
+}
+
+void Mob::set_flag(FLAGS flag) {
+	flags.insert(flag);
+}
+
+void Mob::remove_flag(FLAGS flag) {
+	flags.erase(flag);
+}
+
+void Mob::set_home_location(sc2::Point2D location) {
+	home_location = location;
+}
+
+void Mob::set_assigned_location(sc2::Point2D location) {
+	assigned_location = location;
+}
+
+sc2::Point2D Mob::get_birth_location() {
+	return birth_location;
+}
+
+sc2::Point2D Mob::get_home_location() {
+	return home_location;
+}
+
+sc2::Point2D Mob::get_assigned_location() {
+	return assigned_location;
+}
+
+std::unordered_set<FLAGS> Mob::get_flags() {
+	return flags;
 }
 
 sc2::Tag Mob::get_tag() {
