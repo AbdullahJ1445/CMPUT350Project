@@ -94,7 +94,7 @@ bool Directive::execute(BotAgent* agent) {
 	bool found_valid_unit = false; // ensure unit has been assigned before issuing order
 	const sc2::AbilityData ability_data = obs->GetAbilityData()[(int)ability]; // various info about the ability
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
-	std::set<Mob*> mobs = agent->get_mobs(); // vector of all friendly units
+	std::unordered_set<Mob*> mobs = agent->get_mobs(); // unordered_set of all friendly units
 	Mob* mob; // used to store temporary mob
 
 	if (assignee == ASSIGNEE::UNIT_TYPE || assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION) {
@@ -114,7 +114,7 @@ bool Directive::execute(BotAgent* agent) {
 			return execute_order_for_unit_type_with_location(agent);
 		}
 		if (action_type == SIMPLE_ACTION) {
-			execute_simple_action_for_unit_type(agent);
+			return execute_simple_action_for_unit_type(agent);
 		}
 	}
 
@@ -127,30 +127,59 @@ bool Directive::execute(BotAgent* agent) {
 
 bool Directive::executeForUnit(BotAgent* agent, const sc2::Unit& unit) {
 	// used to assign an order to a specific unit
-	Mob* mob = agent->getMobFromSet(unit, agent->get_mobs());
+	Mob* mob = &agent->getMob(unit);
 	if (!mob) {
 		std::cerr << "executeForUnit called for unit without an associated Mob object" << std::endl;
 		return false;
 	}
 
 	if (action_type == GET_MINERALS_NEAR_LOCATION) {
+		
+		if (agent->is_unit_carrying_minerals(&unit)) {
+			// if unit is carrying minerals, return them to the townhall instead
+			const sc2::Unit* townhall = agent->FindNearestTownhall(target_location);
+			if (!townhall)
+				return false;
+			agent->set_mob_idle(mob, false);
+			agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::HARVEST_RETURN);
+			//agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::SMART, townhall);
+			return true;
+		}
+
 		const sc2::Unit* mineral_target = agent->FindNearestMineralPatch(target_location);
+
 		if (!mineral_target) {
 			return false;
 		}
+
+		agent->set_mob_idle(mob, false);
 		agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::SMART, mineral_target);
 		return true;
 	}
 	if (action_type == GET_GAS_NEAR_LOCATION) {
+		
+		if (agent->is_unit_carrying_gas(&unit)) {
+			// if unit is carrying gas, return them to the townhall instead
+			const sc2::Unit* townhall = agent->FindNearestTownhall(target_location);
+			if (!townhall)
+				return false;
+			agent->set_mob_idle(mob, false);
+			agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::HARVEST_RETURN);
+			//agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::SMART, townhall);
+			return true;
+		}
+
 		const sc2::Unit* gas_target = agent->FindNearestGasStructure(target_location);
 		if (!gas_target) {
 			return false;
 		}
+		agent->set_mob_idle(mob, false);
 		agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::HARVEST_GATHER, gas_target);
 		return true;
 	}
 	if (action_type == SIMPLE_ACTION) {
-		mob->flags.erase(FLAGS::IS_IDLE);
+		// set mob as not idle
+		agent->set_mob_idle(mob, false);
 		agent->Actions()->UnitCommand(&unit, ability);
 		return true;
 	}
@@ -160,6 +189,8 @@ bool Directive::executeForUnit(BotAgent* agent, const sc2::Unit& unit) {
 		if (action_type == NEAR_LOCATION)
 			location = uniform_random_point_in_circle(target_location, proximity);
 
+		// set mob as not idle
+		agent->set_mob_idle(mob, false);
 		agent->Actions()->UnitCommand(&unit, ability, location);
 		return true;
 	}
@@ -187,7 +218,7 @@ sc2::Point2D Directive::uniform_random_point_in_circle(sc2::Point2D center, floa
 bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 	// perform an action that does not require a target unit or point
 
-	std::set<Mob*> mobs = agent->get_mobs(); // vector of all friendly units
+	std::unordered_set<Mob*> mobs = agent->get_mobs(); // unordered_set of all friendly units
 	Mob* mob;
 
 	// filter idle units which match unit_type
@@ -203,7 +234,9 @@ bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 
 	mob = get_random_mob_from_set(mobs);
 
-	mob->flags.erase(FLAGS::IS_IDLE);
+	// set mob as not idle
+	agent->set_mob_idle(mob, false);
+	
 	agent->Actions()->UnitCommand(&mob->unit, ability);
 	return true;
 }
@@ -211,7 +244,7 @@ bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 bool Directive::execute_build_gas_structure(BotAgent* agent) {
 	// perform the necessary actions to have a gas structure built closest to the specified target_location
 
-	std::set<Mob*> mobs = agent->get_mobs(); // vector of all friendly units
+	std::unordered_set<Mob*> mobs = agent->get_mobs(); // vector of all friendly units
 	Mob* mob; // used to store temporary mob
 	bool found_valid_unit = false;
 
@@ -239,7 +272,10 @@ bool Directive::execute_build_gas_structure(BotAgent* agent) {
 	if (!mob)
 		return false;
 
-	mob->flags.erase(FLAGS::IS_IDLE);
+	// set mob as not idle
+	agent->set_mob_idle(mob, false);
+
+	std::cout << "building assimilator" << std::endl;
 	agent->Actions()->UnitCommand(&(mob->unit), ability, geyser_target);
 	return true;
 }
@@ -250,10 +286,10 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 	// that has the chronoboost ability ready
 	// then find a structure that would benefit from it
 
-	std::set<Mob*> mobs = agent->get_mobs(); // vector of all friendly units
+	std::unordered_set<Mob*> mobs = agent->get_mobs(); // vector of all friendly units
 	Mob* mob; // used to store temporary mob
 	Mob* chrono_target;
-	std::set<Mob*> mobs_filter1;
+	std::unordered_set<Mob*> mobs_filter1;
 	static const sc2::Unit* unit_to_target;
 
 	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
@@ -264,7 +300,7 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 	mobs = filter_by_unit_type(mobs, unit_type);
 
 	// then filter by those with ability available
-	std::set<Mob*> mobs_filter;
+	std::unordered_set<Mob*> mobs_filter;
 	std::copy_if(mobs.begin(), mobs.end(), std::inserter(mobs_filter, mobs_filter.begin()),
 		[agent, this](Mob* m) { return agent->AbilityAvailable(m->unit, ability); });
 	mobs = mobs_filter;
@@ -282,8 +318,8 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 		return false;
 
 	// get all structures
-	std::set<Mob*> structures = agent->filter_by_flag(agent->get_mobs(), FLAGS::IS_STRUCTURE);
-	std::set<Mob*> structures_with_orders; 
+	std::unordered_set<Mob*> structures = agent->filter_by_flag(agent->get_mobs(), FLAGS::IS_STRUCTURE);
+	std::unordered_set<Mob*> structures_with_orders; 
 
 	// look for buildings that are doing something
 	std::copy_if(structures.begin(), structures.end(), std::inserter(structures_with_orders, structures_with_orders.begin()),
@@ -300,7 +336,8 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 		return false;
 	}
 
-	mob->flags.erase(FLAGS::IS_IDLE);
+	// set mob as not idle
+	agent->set_mob_idle(mob, false);
 	agent->Actions()->UnitCommand(&mob->unit, ability, &chrono_target->unit);
 	return true;
 }
@@ -308,8 +345,8 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 bool Directive::execute_match_flags(BotAgent* agent) {
 	// issue an order to units matching the provided flags
 
-	std::set<Mob*> mobs = agent->get_mobs(); // vector of all friendly units
-	std::set<Mob*> matching_mobs = agent->filter_by_flags(mobs, flags);
+	std::unordered_set<Mob*> mobs = agent->get_mobs(); // vector of all friendly units
+	std::unordered_set<Mob*> matching_mobs = agent->filter_by_flags(mobs, flags);
 
 	// get only units near the assignee_location parameter
 	if (assignee == MATCH_FLAGS_NEAR_LOCATION) {
@@ -324,7 +361,7 @@ bool Directive::execute_match_flags(BotAgent* agent) {
 	bool found_valid_unit = false;
 	sc2::Point2D location = target_location;
 	sc2::Units units;
-	std::set<Mob*> filtered_mobs;
+	std::unordered_set<Mob*> filtered_mobs;
 	if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION) {
 		for (Mob* m : matching_mobs) {
 			if (action_type == ACTION_TYPE::NEAR_LOCATION) {
@@ -342,7 +379,8 @@ bool Directive::execute_match_flags(BotAgent* agent) {
 		return false;
 
 	for (auto m : filtered_mobs) {
-		m->flags.erase(FLAGS::IS_IDLE);
+		// set mob as not idle
+		agent->set_mob_idle(m, false);
 	}
 	agent->Actions()->UnitCommand(units, ability, location);
 	return true;
@@ -352,7 +390,7 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 	const sc2::AbilityData ability_data = agent->Observation()->GetAbilityData()[(int)ability]; // various info about the ability
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
 	sc2::Point2D location = target_location;
-	std::set<Mob*> mobs = agent->get_mobs();
+	std::unordered_set<Mob*> mobs = agent->get_mobs();
 	Mob* mob = nullptr;
 
 	if (action_type == ACTION_TYPE::NEAR_LOCATION) {
@@ -394,7 +432,9 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 
 	// if the ability does not require a target location
 	if (ability_data.target == sc2::AbilityData::Target::None) {
-		mob->flags.erase(FLAGS::IS_IDLE);
+		// set mob as not idle
+		agent->set_mob_idle(mob, false);
+
 		agent->Actions()->UnitCommand(&mob->unit, ability);
 		return true;
 	}
@@ -406,12 +446,12 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 	}
 
 	// else, the ability requires a target location
-	mob->flags.erase(FLAGS::IS_IDLE);
+	agent->set_mob_idle(mob, false);
 	agent->Actions()->UnitCommand(&mob->unit, ability, location);
 	return true;
 }
 
-bool Directive::is_any_executing_order(std::set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
+bool Directive::is_any_executing_order(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
 	// check if any Mob in the vector is already executing the specified order
 	for (Mob* m : mobs_set) {
 		for (const auto& order : m->unit.orders) {
@@ -422,7 +462,7 @@ bool Directive::is_any_executing_order(std::set<Mob*> mobs_set, sc2::ABILITY_ID 
 	return false;
 }
 
-Mob* Directive::get_closest_to_location(std::set<Mob*> mobs_set, sc2::Point2D pos_) {
+Mob* Directive::get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_) {
 	// return a pointer to the Mob object closest to a location
 
 	float lowest_distance = std::numeric_limits<float>::max();
@@ -437,11 +477,11 @@ Mob* Directive::get_closest_to_location(std::set<Mob*> mobs_set, sc2::Point2D po
 	return closest_sm;
 }
 
-std::set<Mob*> Directive::filter_near_location(std::set<Mob*> mobs_set, sc2::Point2D pos_, float radius_) {
+std::unordered_set<Mob*> Directive::filter_near_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_) {
 	// filters a vector of Mob* by only those within the specified distance to location
 	float sq_dist = pow(radius_, 2);
 
-	std::set<Mob*> filtered_mobs;
+	std::unordered_set<Mob*> filtered_mobs;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
 		[sq_dist, pos_](Mob* m) { return (
 			sc2::DistanceSquared2D(m->unit.pos, pos_) <= sq_dist);
@@ -449,21 +489,21 @@ std::set<Mob*> Directive::filter_near_location(std::set<Mob*> mobs_set, sc2::Poi
 	return filtered_mobs;
 }
 
-std::set<Mob*> Directive::filter_by_unit_type(std::set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_) {
-	std::set<Mob*> filtered;
+std::unordered_set<Mob*> Directive::filter_by_unit_type(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_) {
+	std::unordered_set<Mob*> filtered;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
 		[this](Mob* m) { return m->unit.unit_type == unit_type; });
 	return filtered;
 }
 
-std::set<Mob*> Directive::filter_idle(std::set<Mob*> mobs_set) {
-	std::set<Mob*> filtered;
+std::unordered_set<Mob*> Directive::filter_idle(std::unordered_set<Mob*> mobs_set) {
+	std::unordered_set<Mob*> filtered;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
 		[this](Mob* m) { return (m->unit.orders).size() == 0; });
 	return filtered;
 }
 
-Mob* Directive::get_random_mob_from_set(std::set<Mob*> mob_set) {
+Mob* Directive::get_random_mob_from_set(std::unordered_set<Mob*> mob_set) {
 	int index = rand() % mob_set.size();
 	auto it = mob_set.begin();
 	for (int i = 0; i < index; i++)

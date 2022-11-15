@@ -99,23 +99,23 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		return false;
 	case COND::MIN_UNIT_WITH_FLAGS:
 	{
-		std::set<Mob*> mobs;
+		std::unordered_set<Mob*> mobs;
 		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
 		int num_units = mobs.size();
 		return (num_units >= cond_value);
 	}
 	case COND::MAX_UNIT_WITH_FLAGS:
 	{
-		std::set<Mob*> mobs;
+		std::unordered_set<Mob*> mobs;
 		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
 		int num_units = mobs.size();
 		return (num_units <= cond_value);
 	}
 	case COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
-		std::set<Mob*> mobs;
+		std::unordered_set<Mob*> mobs;
 		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
-		std::set<Mob*> filtered_mobs;
+		std::unordered_set<Mob*> filtered_mobs;
 		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
 			[this](Mob* m) { return (
 				sc2::DistanceSquared2D(m->unit.pos, location_for_counting_units) <= distance_squared); 
@@ -125,9 +125,9 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	}
 	case COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
-		std::set<Mob*> mobs;
+		std::unordered_set<Mob*> mobs;
 		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
-		std::set<Mob*> filtered_mobs;
+		std::unordered_set<Mob*> filtered_mobs;
 		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
 			[this](Mob* m) { return (
 				sc2::DistanceSquared2D(m->unit.pos, location_for_counting_units) <= distance_squared);
@@ -160,7 +160,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			return (num_units <= cond_value);
 		}
 	case COND::HAS_ABILITY_READY:
-		std::set<Mob*> structures = agent->filter_by_flag(agent->get_mobs(), FLAGS::IS_STRUCTURE);
+		std::unordered_set<Mob*> structures = agent->filter_by_flag(agent->get_mobs(), FLAGS::IS_STRUCTURE);
 		bool found_one = false;
 		for (auto m : structures) {
 			if (agent->AbilityAvailable(m->unit, ability_id)) {
@@ -190,18 +190,24 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		return (num_units >= cond_value);
 	}
 
-	if (cond_type == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION ||
-		cond_type == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION) {
+	if (cond_type == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION) {
 		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		int num_units = count_if(units.begin(), units.end(),
 			[this](const sc2::Unit* u) { 
 				return (u->unit_type == unit_of_type
-					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared); });
-
-		if (cond_type == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION)
-			return (num_units <= cond_value);
-		if (cond_type == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION)
-			return (num_units >= cond_value);
+					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared); 
+			});
+		return (num_units <= cond_value);
+	}
+	if (cond_type == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION) {
+		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+		int num_units = count_if(units.begin(), units.end(),
+			[this](const sc2::Unit* u) {
+				return (u->unit_type == unit_of_type
+					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared) 
+					&& (u->build_progress == 1.0);
+			});
+		return (num_units >= cond_value);
 	}
 	return false;
 }

@@ -58,12 +58,12 @@ private:
 	bool execute_protoss_nexus_chronoboost(BotAgent* agent);
 	bool execute_match_flags(BotAgent* agent);
 	bool execute_order_for_unit_type_with_location(BotAgent* agent);
-	bool is_any_executing_order(std::set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
-	Mob* get_closest_to_location(std::set<Mob*> mobs_set, sc2::Point2D pos_);
-	std::set<Mob*> filter_near_location(std::set<Mob*> mobs_set, sc2::Point2D pos_, float radius_);
-	std::set<Mob*> filter_by_unit_type(std::set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_);
-	std::set<Mob*> filter_idle(std::set<Mob*> mobs_set);
-	Mob* get_random_mob_from_set(std::set<Mob*> mob_set);
+	bool is_any_executing_order(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
+	Mob* get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
+	std::unordered_set<Mob*> filter_near_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_);
+	std::unordered_set<Mob*> filter_by_unit_type(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_);
+	std::unordered_set<Mob*> filter_idle(std::unordered_set<Mob*> mobs_set);
+	Mob* get_random_mob_from_set(std::unordered_set<Mob*> mob_set);
 
 	bool locked;
 	ASSIGNEE assignee;

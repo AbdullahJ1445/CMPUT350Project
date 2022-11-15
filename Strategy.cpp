@@ -15,8 +15,8 @@ void Strategy::loadGameSettings(int* map_index, sc2::Race* bot_race, sc2::Race* 
 	*bot_race = sc2::Race::Protoss;
 	*opp_race = sc2::Race::Terran;
 	*human_player = false;
-	*fullscreen = false;
-	*realtime = false;
+	*fullscreen = true;
+	*realtime = true;
 }
 
 
@@ -36,6 +36,7 @@ void Strategy::loadStrategies() {
 		Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_NEXUS, sc2::ABILITY_ID::TRAIN_PROBE);
 		Trigger t(bot);
 		t.add_condition(COND::MIN_MINERALS, 50);
+		t.add_condition(COND::MIN_FOOD, 1);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 15, sc2::UNIT_TYPEID::PROTOSS_PROBE, bot->bases[0].get_townhall(), 18.0f);
 		base_probe.enqueueDirective(d);
 		base_probe.addTrigger(t);
@@ -76,7 +77,6 @@ void Strategy::loadStrategies() {
 		t2.add_condition(COND::MIN_FOOD_CAP, 20);
 		base_pylon.addTrigger(t2);
 		bot->addStrat(base_pylon);
-		std::cout << "base pylon StrategyOrder added" << std::endl;
 	}
 	{
 		StrategyOrder pylon_by_townhall(bot);
@@ -171,6 +171,7 @@ void Strategy::loadStrategies() {
 		Trigger t(bot);
 		t.add_condition(COND::MIN_MINERALS, 75);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+		t.add_condition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->bases[0].get_townhall());
 		base_assimilator.enqueueDirective(d);
 		base_assimilator.addTrigger(t);
@@ -219,6 +220,7 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MIN_GAS, 100);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 		t.add_condition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
+		t.add_condition(COND::BASE_IS_ACTIVE, 1);
 		base_twi_council.enqueueDirective(d);
 		base_twi_council.addTrigger(t);
 		bot->addStrat(base_twi_council);
