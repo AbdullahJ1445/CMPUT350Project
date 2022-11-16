@@ -36,6 +36,7 @@ void BotAgent::set_mob_idle(Mob* mob_, bool is_true) {
 	Mob* mob = &getMob(mob_->unit); // ensure we are pointing to the mob in our storage
 	if (is_true) {
 		mob_->set_flag(FLAGS::IS_IDLE);
+		mob_->remove_flag(FLAGS::IS_BUILDING_STRUCTURE);
 		idle_mobs.insert(mob);
 	}
 	else {
@@ -542,21 +543,21 @@ void BotAgent::setCurrentStrategy(Strategy* strategy_) {
 	current_strategy = strategy_;
 }
 
-std::unordered_set<Mob*> BotAgent::filter_by_flag(std::unordered_set<Mob*> mobs_set, FLAGS flag) {
+std::unordered_set<Mob*> BotAgent::filter_by_flag(std::unordered_set<Mob*> mobs_set, FLAGS flag, bool is_true) {
 	// filter a vector of Mob* by the given flag
 	std::unordered_set<Mob*> filtered_mobs;
 	
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
-		[flag](Mob* m) { return m->has_flag(flag); });
+		[flag, is_true](Mob* m) { return m->has_flag(flag) == is_true; });
 	
 	return filtered_mobs;
 }
 
-std::unordered_set<Mob*> BotAgent::filter_by_flags(std::unordered_set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list) {
+std::unordered_set<Mob*> BotAgent::filter_by_flags(std::unordered_set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list, bool is_true) {
 	// filter a vector of Mob* by several flags
 	std::unordered_set<Mob*> filtered_mobs = mobs_set;
 	for (FLAGS f : flag_list) {
-		filtered_mobs = filter_by_flag(filtered_mobs, f);
+		filtered_mobs = filter_by_flag(filtered_mobs, f, is_true);
 	}
 	return filtered_mobs;
 }

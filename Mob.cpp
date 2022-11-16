@@ -84,7 +84,7 @@ void Mob::bundle_directives(std::vector<Directive> dir_vec) {
 
 	if (dir_vec.size() > 0) {
 		for (auto d : dir_vec) {
-			direc->addDirective(d);
+			direc->bundleDirective(d);
 		}
 	}
 	has_bundled_directive = true;

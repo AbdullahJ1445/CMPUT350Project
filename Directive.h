@@ -48,7 +48,7 @@ public:
 	bool executeForUnit(BotAgent* agent, const sc2::Unit& unit);
 	static sc2::Point2D uniform_random_point_in_circle(sc2::Point2D center, float radius);
 	bool setDefault();
-	bool addDirective(Directive directive_);
+	bool bundleDirective(Directive directive_);
 	void lock();
 	static Mob* get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
 
@@ -59,8 +59,10 @@ private:
 	bool execute_protoss_nexus_chronoboost(BotAgent* agent);
 	bool execute_match_flags(BotAgent* agent);
 	bool execute_order_for_unit_type_with_location(BotAgent* agent);
-	bool have_queue();
+	bool have_bundle();
 	bool is_building_structure(BotAgent* agent, Mob* mob_);
+	bool has_build_order(Mob* mob_);
+	std::unordered_set<Mob*> filter_by_has_ability(BotAgent* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
 	bool is_any_executing_order(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
 	std::unordered_set<Mob*> filter_near_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_);
 	std::unordered_set<Mob*> filter_by_unit_type(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_);
@@ -79,5 +81,5 @@ private:
 	float assignee_proximity;
 	float proximity;
 	std::unordered_set<FLAGS> flags;
-	std::vector<Directive> order_queue;
+	std::vector<Directive> directive_bundle;
 };
