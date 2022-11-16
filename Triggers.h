@@ -99,7 +99,7 @@ public:
 	bool execute();
 	bool checkTriggerConditions();
 	void addTrigger(Trigger trigger_);
-	void enqueueDirective(Directive directive_);
+	void addDirective(Directive directive_);
 
 private:
 	BotAgent* agent;

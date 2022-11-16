@@ -83,7 +83,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	ability = ability_;
 }
 
-bool Directive::enqueueDirective(Directive directive_) {
+bool Directive::addDirective(Directive directive_) {
 	if (!locked)
 		order_queue.push_back(directive_);
 	return !locked;

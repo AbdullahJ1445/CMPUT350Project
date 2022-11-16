@@ -48,7 +48,7 @@ public:
 	bool executeForUnit(BotAgent* agent, const sc2::Unit& unit);
 	static sc2::Point2D uniform_random_point_in_circle(sc2::Point2D center, float radius);
 	bool setDefault();
-	bool enqueueDirective(Directive directive_);
+	bool addDirective(Directive directive_);
 	void lock();
 	static Mob* get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
 
