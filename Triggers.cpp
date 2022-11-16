@@ -176,7 +176,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 			std::vector<const sc2::Unit*> filtered_units;
 			std::copy_if(units.begin(), units.end(), std::back_inserter(filtered_units),
-				[this, equivalent_type](const sc2::Unit* u) { return (u->unit_type == unit_of_type | u->unit_type == equivalent_type) && (u->build_progress != 1.0); });
+				[this, equivalent_type](const sc2::Unit* u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) && (u->build_progress != 1.0); });
 			int num_units = filtered_units.size();
 			return (num_units <= cond_value);
 		}
@@ -206,7 +206,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		std::vector<const sc2::Unit*> filtered_units;
 		std::copy_if(units.begin(), units.end(), std::back_inserter(filtered_units),
-			[this, equivalent_type](const sc2::Unit * u) { return (u->unit_type == unit_of_type | u->unit_type == equivalent_type) && (u->build_progress == 1.0); });
+			[this, equivalent_type](const sc2::Unit * u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) && (u->build_progress == 1.0); });
 		int num_units = filtered_units.size();
 		return (num_units >= cond_value);
 	}
@@ -301,10 +301,15 @@ StrategyOrder::~StrategyOrder() {
 }
 
 bool StrategyOrder::execute() {
-	return directives.front().execute(agent);
+	bool any_executed = false;
+	for (auto d : directives) {
+		if (d.execute(agent))
+			any_executed = true;
+	}
+	return any_executed;
 }
 
-void StrategyOrder::enqueueDirective(Directive directive_) {
+void StrategyOrder::addDirective(Directive directive_) {
 	// once a directive has been added to a StrategyOrder, it cannot be modified
 	// this ensures we can look up whether the same directive already exists for a unit
 	directive_.lock();
