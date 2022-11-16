@@ -54,8 +54,8 @@ public:
 	bool is_unit_carrying_gas(const sc2::Unit* unit);
 	std::vector<sc2::Attribute> get_attributes(const sc2::Unit* unit);
 	sc2::UnitTypeData getUnitTypeData(const sc2::Unit* unit);
-	std::unordered_set<Mob*> BotAgent::filter_by_flag(std::unordered_set<Mob*> mobs_set, FLAGS flag);
-	std::unordered_set<Mob*> BotAgent::filter_by_flags(std::unordered_set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list);
+	std::unordered_set<Mob*> BotAgent::filter_by_flag(std::unordered_set<Mob*> mobs_set, FLAGS flag, bool is_true=true);
+	std::unordered_set<Mob*> BotAgent::filter_by_flags(std::unordered_set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list, bool is_true=true);
 	std::vector<Base> bases;
 	std::unordered_set<Mob*> get_mobs();
 	int BotAgent::get_index_of_closest_base(sc2::Point2D location_);

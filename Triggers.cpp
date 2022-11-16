@@ -66,8 +66,9 @@ Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, i
 }
 
 bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
-	sc2::UNIT_TYPEID equivalent_type = unit_of_type;
 
+	// assign equivalent_type for the same units that might have an alternate ID
+	sc2::UNIT_TYPEID equivalent_type = unit_of_type;
 	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_SUPPLYDEPOT) {
 		equivalent_type = sc2::UNIT_TYPEID::TERRAN_SUPPLYDEPOTLOWERED;
 	}
@@ -85,6 +86,24 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	}
 	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_ORBITALCOMMANDFLYING) {
 		equivalent_type = sc2::UNIT_TYPEID::TERRAN_ORBITALCOMMAND;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_REFINERY) {
+		equivalent_type = sc2::UNIT_TYPEID::TERRAN_REFINERYRICH;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_REFINERYRICH) {
+		equivalent_type = sc2::UNIT_TYPEID::TERRAN_REFINERY;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR) {
+		equivalent_type = sc2::UNIT_TYPEID::PROTOSS_ASSIMILATORRICH;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATORRICH) {
+		equivalent_type = sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::ZERG_EXTRACTOR) {
+		equivalent_type = sc2::UNIT_TYPEID::ZERG_EXTRACTORRICH;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::ZERG_EXTRACTORRICH) {
+		equivalent_type = sc2::UNIT_TYPEID::ZERG_EXTRACTOR;
 	}
 
 	switch (cond_type) {
