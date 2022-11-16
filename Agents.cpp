@@ -151,8 +151,13 @@ void BotAgent::OnStep() {
 	if (idle_mobs.size() > 0) {
 		for (auto it = idle_mobs.begin(); it != idle_mobs.end(); ) {
 			auto next = std::next(it);
-			if ((*it)->has_flag(FLAGS::IS_WORKER))
+			if ((*it)->hasBundledDirective()) {
+				Directive bundled = (*it)->popBundledDirective();
+				bundled.execute(this);
+			}
+			else {
 				(*it)->executeDefaultDirective(this);
+			}
 			it = next;
 		}
 	}
@@ -208,6 +213,15 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 		}
 		else {
 			mob_type = MOB::MOB_STRUCTURE;
+			if (unit_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR) {
+				/* this block of code is necessary to wake a protoss probe from standing idle          *
+				 * while the assimilator is under construction.                                         *
+				 * For some reason it does not trigger as idle after building this particular structure */
+				std::unordered_set<Mob*> gas_builders = filter_by_flag(mobs, FLAGS::BUILDING_GAS);
+				Mob* gas_builder = Directive::get_closest_to_location(gas_builders, unit->pos);
+				gas_builder->remove_flag(FLAGS::BUILDING_GAS);
+				Actions()->UnitCommand(&gas_builder->unit, sc2::ABILITY_ID::STOP);
+			}
 		}
 	}
 	Mob new_mob(*unit, mob_type);
