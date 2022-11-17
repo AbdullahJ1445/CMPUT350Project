@@ -29,7 +29,7 @@ void MobHandler::set_mob_idle(Mob* mob_, bool is_true) {
 	}
 }
 
-bool MobHandler::(Mob mob_) {
+bool MobHandler::addMob(Mob mob_) {
 	// add a mob to the game
 
 	if (mob_exists(mob_.unit))
@@ -85,6 +85,6 @@ std::unordered_set<Mob*> MobHandler::get_mobs() {
 	return mobs;
 }
 
-
-
-
+std::unordered_set<Mob*> MobHandler::get_idle_mobs() {
+    return idle_mobs;
+}

@@ -20,6 +20,7 @@ public:
     std::unordered_set<Mob*> filter_by_flag(std::unordered_set<Mob*> mobs_set, FLAGS flag, bool is_true);
     std::unordered_set<Mob*> filter_by_flags(std::unordered_set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list, bool is_true);
     std::unordered_set<Mob*> get_mobs();
+    std::unordered_set<Mob*> get_idle_mobs();
     
 private:
     BotAgent* agent;

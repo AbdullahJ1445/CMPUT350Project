@@ -11,11 +11,14 @@
 #include "sc2api/sc2_client.h"
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
+#include "MobHandler.h"
 
 class StrategyOrder;
 class Mob;
 class Base;
 class Strategy;
+class MobHandler; 
+
 
 class Human : public sc2::Agent {
 public:
@@ -28,29 +31,22 @@ public:
 class BotAgent : public sc2::Agent {
 public:
 
+	MobHandler mobH;
 	// public functions
 	void setCurrentStrategy(Strategy* strategy_);
 	void BotAgent::addStrat(StrategyOrder strategy);
-	void set_mob_idle(Mob* mob_, bool is_true = true);
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
-	bool addMob(Mob mob_);
 
 	// various bool functions
 	bool have_upgrade(const sc2::UpgradeID upgrade_);
 	bool can_unit_use_ability(const sc2::Unit& unit, const sc2::ABILITY_ID ability_);
-	bool mob_exists(const sc2::Unit& unit);
 	bool is_structure(const sc2::Unit* unit);
 	bool is_mineral_patch(const sc2::Unit* unit_);
 	bool is_geyser(const sc2::Unit* unit_);
 
-	// various getters etc.
-	Mob& getMob(const sc2::Unit& unit);
-	std::unordered_set<Mob*> getIdleWorkers();
+	// various getters
 	std::vector<sc2::Attribute> get_attributes(const sc2::Unit* unit);
 	sc2::UnitTypeData getUnitTypeData(const sc2::Unit* unit);
-	std::unordered_set<Mob*> BotAgent::filter_by_flag(std::unordered_set<Mob*> mobs_set, FLAGS flag, bool is_true=true);
-	std::unordered_set<Mob*> BotAgent::filter_by_flags(std::unordered_set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list, bool is_true=true);
-	std::unordered_set<Mob*> get_mobs();
 	int BotAgent::get_index_of_closest_base(sc2::Point2D location_);
 	sc2::Point2D getNearestStartLocation(sc2::Point2D spot);
 	const sc2::Unit* FindNearestMineralPatch(const sc2::Point2D location);
@@ -85,10 +81,6 @@ private:
 
 	// data containers
 	std::vector<StrategyOrder> strategies;
-	std::vector<std::shared_ptr<Mob>> mobs_storage;
-	std::unordered_set<Mob*> mobs;
-	std::unordered_set<Mob*> idle_mobs;
-	std::unordered_map<sc2::Tag, Mob*> mob_by_tag;
 
 	// private variables
 	int player_start_id;
