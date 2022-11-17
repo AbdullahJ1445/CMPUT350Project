@@ -88,7 +88,3 @@ std::unordered_set<Mob*> MobHandler::get_mobs() {
 std::unordered_set<Mob*> MobHandler::get_idle_mobs() {
     return idle_mobs;
 }
-
-
-
-
