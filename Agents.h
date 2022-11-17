@@ -43,7 +43,7 @@ public:
 	bool is_mineral_patch(const sc2::Unit* unit_);
 	bool is_geyser(const sc2::Unit* unit_);
 
-	// various getters
+	// various getters etc.
 	Mob& getMob(const sc2::Unit& unit);
 	std::unordered_set<Mob*> getIdleWorkers();
 	std::vector<sc2::Attribute> get_attributes(const sc2::Unit* unit);

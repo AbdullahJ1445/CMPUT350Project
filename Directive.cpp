@@ -3,85 +3,49 @@
 #include "Directive.h"
 #include "Agents.h"
 
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D assignee_location_,
+	sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_) {
+	// genertic private constructor delegated by others
+	// constructors which do not provide values for certain variables provide the listed default value instead
 
-Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) {
-	// This constructor is only valid when a unit type is targeting a Point2D location
-	assert(assignee_ == ASSIGNEE::UNIT_TYPE);
-	assert(action_type_ == ACTION_TYPE::EXACT_LOCATION ||
-		action_type_ == ACTION_TYPE::NEAR_LOCATION ||
-		action_type_ == ACTION_TYPE::GET_MINERALS_NEAR_LOCATION ||
-		action_type_ == ACTION_TYPE::GET_GAS_NEAR_LOCATION);
 	locked = false;
+	assignee = assignee;
 	action_type = action_type_;
-	assignee = assignee_;
-	unit_type = unit_type_;
-	ability = ability_;
-	target_location = location_;
-	proximity = proximity_;
+	unit_type = unit_type_;						// default: UNIT_TYPEID::INVALID
+	ability = ability_;							// default: ABILITY_TYPE::INVALID
+	assignee_location = assignee_location_;		// default: (-1, -1)
+	target_location = target_location_;			// default: (-1, -1)
+	assignee_proximity = assignee_proximity_;   // default: -1.0f
+	proximity = target_proximity_;				// default: -1.0f
+	flags = flags_;								// default: empty
+	target_unit = unit_;						// default: nullptr
 }
 
-Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit target_) {
-	// This constructor is only valid when a unit type is targeting a unit
-	assert(assignee_ == ASSIGNEE::UNIT_TYPE);
-	assert(action_type_ == ACTION_TYPE::TARGET_UNIT);
-	locked = false;
-	action_type = action_type_;
-	assignee = assignee_;
-	unit_type = unit_type_;
-	ability = ability_;
-	target_unit = target_;
-}
 
-Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D location_, float proximity_) {
-	// This constructor is only valid for gathering minerals/gas as a default directive
-	assert(assignee_ == ASSIGNEE::DEFAULT_DIRECTIVE);
-	assert(action_type_ == ACTION_TYPE::GET_MINERALS_NEAR_LOCATION ||
-		action_type_ == ACTION_TYPE::GET_GAS_NEAR_LOCATION);
-	locked = false;
-	action_type = action_type_;
-	assignee = assignee_;
-	target_location = location_;
-	proximity = proximity_;
-}
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_) :
+	Directive(assignee_, action_type_, unit_type_, ability_, sc2::Point2D(-1, -1), 
+		sc2::Point2D(-1, -1), -1.0f, -1.0f, std::unordered_set<FLAGS>(), nullptr) {}
 
-Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) {
-	// This constructor is only valid for issuing an order to all units matching a flag, towards a location
-	locked = false;
-	assert(assignee_ == ASSIGNEE::MATCH_FLAGS);
-	assignee = assignee_;
-	action_type = action_type_;
-	flags = flags_;
-	ability = ability_;
-	target_location = location_;
-	proximity = proximity_;
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) :
+	Directive(assignee_, action_type_, unit_type_, ability_, sc2::Point2D(-1, -1),
+		location_, -1.0f, proximity_, std::unordered_set<FLAGS>(), nullptr) {}
 
-}
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_) :
+	Directive(assignee_, action_type_, unit_type_, ability_, sc2::Point2D(-1, -1),
+		sc2::Point2D(-1, -1), -1.0f, -1.0f, std::unordered_set<FLAGS>(), target_) {}
+
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D location_, float proximity_) :
+	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, sc2::ABILITY_ID::INVALID, sc2::Point2D(-1, -1),
+		location_, -1.0f, proximity_, std::unordered_set<FLAGS>(), nullptr) {}
+
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) :
+	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, ability_, sc2::Point2D(-1, -1),
+		location_, -1.0f, proximity_, flags_, nullptr) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_,
-	sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) {
-	// This constructor is only valid for issuing an order to all units matching a flag near a location, towards a location
-	assert(assignee_ == ASSIGNEE::MATCH_FLAGS_NEAR_LOCATION);
-	locked = false;
-	assignee = assignee_;
-	action_type = action_type_;
-	flags = flags_;
-	ability = ability_;
-	assignee_location = assignee_location_;
-	assignee_proximity = assignee_proximity_;
-	target_location = target_location_;
-	proximity = target_proximity_;
-}
-
-Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_) {
-	// This constructor is only valid for simple actions for a unit_type
-	assert(action_type_ == ACTION_TYPE::SIMPLE_ACTION);
-	assert(assignee_ == ASSIGNEE::UNIT_TYPE);
-	locked = false;
-	assignee = assignee_;
-	unit_type = unit_type_;
-	action_type = action_type_;
-	ability = ability_;
-}
+	sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) :
+	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, ability_, assignee_location_,
+		target_location_, assignee_proximity_, target_proximity_, flags_, nullptr) {}
 
 bool Directive::bundleDirective(Directive directive_) {
 	if (!locked)
@@ -96,6 +60,27 @@ bool Directive::execute(BotAgent* agent) {
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
 	std::unordered_set<Mob*> mobs = agent->get_mobs(); // unordered_set of all friendly units
 	Mob* mob; // used to store temporary mob
+
+	// ensure proper variables are set for the specified ASSIGNEE and ACTION_TYPE
+
+	if (assignee == ASSIGNEE::UNIT_TYPE || assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION) {
+		assert(unit_type != sc2::UNIT_TYPEID::INVALID);
+	}
+
+	if (assignee == ASSIGNEE::MATCH_FLAGS || assignee == ASSIGNEE::MATCH_FLAGS_NEAR_LOCATION) {
+		assert(flags.size() > 0);
+	}
+
+	if (assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION || assignee == ASSIGNEE::MATCH_FLAGS_NEAR_LOCATION) {
+		assert(assignee_location != sc2::Point2D(-1, -1));
+	}
+
+	if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION ||
+		action_type == ACTION_TYPE::GET_GAS_NEAR_LOCATION || action_type == ACTION_TYPE::GET_MINERALS_NEAR_LOCATION ||
+		action_type == ACTION_TYPE::TARGET_UNIT_NEAR_LOCATION) {
+		assert(target_location != sc2::Point2D(-1, -1));
+	}
+
 
 	if (assignee == ASSIGNEE::UNIT_TYPE || assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION) {
 		if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION) {

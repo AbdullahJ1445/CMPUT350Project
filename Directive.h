@@ -41,7 +41,7 @@ public:
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, 
 		sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_=DEFAULT_RADIUS, float target_proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_=DEFAULT_RADIUS);
-	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit target_);
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D location_, float proximity_ =DEFAULT_RADIUS);
 
 	bool execute(BotAgent* agent);
@@ -53,6 +53,10 @@ public:
 	static Mob* get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
 
 private:
+
+	// generic constructor delegated by others
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D assignee_location_,
+		sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_);
 
 	bool execute_simple_action_for_unit_type(BotAgent* agent);
 	bool execute_build_gas_structure(BotAgent* agent);
@@ -77,7 +81,7 @@ private:
 	sc2::ABILITY_ID ability;
 	sc2::Point2D assignee_location;
 	sc2::Point2D target_location;
-	sc2::Unit target_unit;
+	sc2::Unit* target_unit;
 	float assignee_proximity;
 	float proximity;
 	std::unordered_set<FLAGS> flags;
