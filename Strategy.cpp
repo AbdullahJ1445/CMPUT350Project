@@ -16,7 +16,7 @@ void Strategy::loadGameSettings(int* map_index, sc2::Race* bot_race, sc2::Race* 
 	*opp_race = sc2::Race::Protoss;
 	*human_player = false;
 	*fullscreen = false;
-	*realtime = true;
+	*realtime = false;
 }
 
 
@@ -32,7 +32,8 @@ void Strategy::loadStrategies() {
 	// (8) add the StrategyOrder to the bot with bot->addStrat()
 	
 	
-	/*  This shows how to bundle several directives together. 
+	/*  This shows how to bundle several directives together. */
+	/*
 	{
 		StrategyOrder test(bot);
 		Directive big_d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->bases[0].get_build_area(0));
@@ -67,9 +68,9 @@ void Strategy::loadStrategies() {
 		bot->addStrat(base_scv);
 	}
 	
-	
 	*/
-
+	
+	
 	{
 		StrategyOrder build_supply(bot);
 		Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::TERRAN_SCV, sc2::ABILITY_ID::BUILD_SUPPLYDEPOT, bot->bases[0].get_defend_point(0), 7.0f);
@@ -93,7 +94,7 @@ void Strategy::loadStrategies() {
 		bot->addStrat(build_supply_and_barracks);
 	}
 
-
+	
 	
 	/*
 	{

@@ -11,6 +11,8 @@
 // forward declarations
 class TriggerCondition;
 class Mob;
+class MobHandler;
+
 
 void BotAgent::setCurrentStrategy(Strategy* strategy_) {
 	// set the current strategy
@@ -21,30 +23,15 @@ void BotAgent::addStrat(StrategyOrder strategy) {
 	strategies.push_back(strategy);
 }
 
-void BotAgent::set_mob_idle(Mob* mob_, bool is_true) {
-	// set a mob as idle
-
-	Mob* mob = &getMob(mob_->unit); // ensure we are pointing to the mob in our storage
-	if (is_true) {
-		mob_->set_flag(FLAGS::IS_IDLE);
-		mob_->remove_flag(FLAGS::IS_BUILDING_STRUCTURE);
-		idle_mobs.insert(mob);
-	}
-	else {
-		mob_->remove_flag(FLAGS::IS_IDLE);
-		idle_mobs.erase(mob);
-	}
-}
-
 bool BotAgent::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) {
 	// get a nearby worker unit that is not currently assigned to gas
 	// and assign it to harvest gas
 
 	bool found_viable_unit = false;
-
+	
 	// get a filtered set of workers that are currently assigned to minerals
 	std::unordered_set<FLAGS> flags{ FLAGS::IS_WORKER, FLAGS::IS_MINERAL_GATHERER };
-	std::unordered_set<Mob*> worker_miners = filter_by_flags(mobs, flags);
+	std::unordered_set<Mob*> worker_miners = mobH.filter_by_flags(mobH.get_mobs(), flags);
 
 	//std::unordered_set<Mob*> worker_miners = filter_by_flag(mobs, FLAGS::IS_MINERAL_GATHERER);
 	float distance = std::numeric_limits<float>::max();
@@ -72,20 +59,6 @@ bool BotAgent::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) 
 	return false;
 }
 
-bool BotAgent::addMob(Mob mob_) {
-	// add a mob to the game
-
-	if (mob_exists(mob_.unit))
-		return false;
-
-	mobs_storage.emplace_back(std::make_unique<Mob>(mob_));
-	int size = mobs_storage.size();
-
-	mobs.insert(mobs_storage.back().get());
-	mob_by_tag[mob_.unit.tag] = mobs_storage.back().get();
-
-	return true;
-}
 
 bool BotAgent::have_upgrade(const sc2::UpgradeID upgrade_) {
 	// return true if the bot has fully researched the specified upgrade
@@ -107,12 +80,6 @@ bool BotAgent::can_unit_use_ability(const sc2::Unit& unit, const sc2::ABILITY_ID
 		}
 	}
 	return false;
-}
-
-bool BotAgent::mob_exists(const sc2::Unit& unit) {
-	// check whether mob exists in storage
-
-	return mob_by_tag[unit.tag];
 }
 
 bool BotAgent::is_structure(const sc2::Unit* unit) {
@@ -152,15 +119,6 @@ bool BotAgent::is_geyser(const sc2::Unit* unit_) {
 		type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER);
 }
 
-Mob& BotAgent::getMob(const sc2::Unit& unit) {
-	// get the correct mob from storage
-
-	return *mob_by_tag[unit.tag];
-}
-
-std::unordered_set<Mob*> BotAgent::getIdleWorkers() {
-	return filter_by_flag(idle_mobs, FLAGS::IS_WORKER);
-}
 
 std::vector<sc2::Attribute> BotAgent::get_attributes(const sc2::Unit* unit) {
 	// get attributes for a unit
@@ -174,30 +132,6 @@ sc2::UnitTypeData BotAgent::getUnitTypeData(const sc2::Unit* unit) {
 	return Observation()->GetUnitTypeData()[unit->unit_type];
 }
 
-std::unordered_set<Mob*> BotAgent::filter_by_flag(std::unordered_set<Mob*> mobs_set, FLAGS flag, bool is_true) {
-	// filter a vector of Mob* by the given flag
-
-	std::unordered_set<Mob*> filtered_mobs;
-
-	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
-		[flag, is_true](Mob* m) { return m->has_flag(flag) == is_true; });
-
-	return filtered_mobs;
-}
-
-std::unordered_set<Mob*> BotAgent::filter_by_flags(std::unordered_set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list, bool is_true) {
-	// filter a vector of Mob* by several flags
-
-	std::unordered_set<Mob*> filtered_mobs = mobs_set;
-	for (FLAGS f : flag_list) {
-		filtered_mobs = filter_by_flag(filtered_mobs, f, is_true);
-	}
-	return filtered_mobs;
-}
-
-std::unordered_set<Mob*> BotAgent::get_mobs() {
-	return mobs;
-}
 
 int BotAgent::get_index_of_closest_base(sc2::Point2D location_) {
 	// get the index of the closest base to a location
@@ -288,7 +222,7 @@ const sc2::Unit* BotAgent::FindNearestGasStructure(sc2::Point2D location) {
 const sc2::Unit* BotAgent::FindNearestTownhall(const sc2::Point2D location) {
 	// find nearest townhall to location
 
-	std::unordered_set<Mob*> townhalls = filter_by_flag(mobs, FLAGS::IS_TOWNHALL);
+	std::unordered_set<Mob*> townhalls = mobH.filter_by_flag(mobH.get_mobs(), FLAGS::IS_TOWNHALL);
 	for (auto m : townhalls) {
 		return &(m->unit);
 	}
@@ -327,7 +261,7 @@ void BotAgent::initStartingUnits() {
 			Mob worker (*u, MOB::MOB_WORKER);
 			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, start_location);
 			worker.assignDirective(directive_get_minerals_near_Base);
-			addMob(worker);
+			mobH.addMob(worker);
 		}
 		if (u_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS ||
 			u_type == sc2::UNIT_TYPEID::TERRAN_COMMANDCENTER ||
@@ -339,13 +273,14 @@ void BotAgent::initStartingUnits() {
 			u_type == sc2::UNIT_TYPEID::ZERG_HIVE ||
 			u_type == sc2::UNIT_TYPEID::ZERG_LAIR) {
 			Mob townhall(*u, MOB::MOB_TOWNHALL);
-			addMob(townhall);
+			mobH.addMob(townhall);
 		}
 	}
 }
 
 void BotAgent::OnGameStart() {
 	start_location = Observation()->GetStartLocation();
+	mobH = MobHandler(this); // initialize mob handler 
 	BotAgent::initVariables();
 	BotAgent::initStartingUnits();
 	std::cout << "Start Location: " << start_location.x << "," << start_location.y << std::endl;
@@ -372,9 +307,9 @@ void BotAgent::OnStep() {
 	if (gameloop % 1000 == 0) {
 		OnStep_1000();
 	}
-
-	if (idle_mobs.size() > 0) {
-		for (auto it = idle_mobs.begin(); it != idle_mobs.end(); ) {
+	
+	if (mobH.get_idle_mobs().size() > 0) {
+		for (auto it = mobH.get_idle_mobs().begin(); it != mobH.get_idle_mobs().end(); ) {
 			auto next = std::next(it);
 			if ((*it)->hasBundledDirective()) {
 				Directive bundled = (*it)->popBundledDirective();
@@ -398,7 +333,7 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 	const sc2::ObservationInterface* observation = Observation();
 	
 	// mob already exists
-	if (mob_exists(*unit))
+	if (mobH.mob_exists(*unit))
 		return;
 
 	sc2::UNIT_TYPEID unit_type = unit->unit_type;
@@ -433,7 +368,7 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 				|*   while the assimilator is under construction.                                           *|
 				|*   For some reason it does not trigger as idle after building this particular structure   */
 
-				std::unordered_set<Mob*> gas_builders = filter_by_flag(mobs, FLAGS::BUILDING_GAS);
+				std::unordered_set<Mob*> gas_builders = mobH.filter_by_flag(mobH.get_mobs(), FLAGS::BUILDING_GAS);
 				Mob* gas_builder = Directive::get_closest_to_location(gas_builders, unit->pos);
 				gas_builder->remove_flag(FLAGS::BUILDING_GAS);
 				Actions()->UnitCommand(&gas_builder->unit, sc2::ABILITY_ID::STOP);
@@ -455,8 +390,8 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 			new_mob.set_assigned_location(new_mob.get_home_location());
 		}
 	}
-	addMob(new_mob);	
-	Mob* mob = &getMob(*unit);
+	mobH.addMob(new_mob);	
+	Mob* mob = &mobH.getMob(*unit);
 	if (!is_worker && !structure) {
 		Directive atk_mv_to_defense(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, unit_type, sc2::ABILITY_ID::ATTACK_ATTACK, mob->get_assigned_location(), 2.0F);
 		atk_mv_to_defense.executeForUnit(this, *unit);
@@ -464,7 +399,7 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 }
 
 void BotAgent::OnBuildingConstructionComplete(const sc2::Unit* unit) {
-	Mob* mob = &getMob(*unit);
+	Mob* mob = &mobH.getMob(*unit);
 	sc2::UNIT_TYPEID unit_type = unit->unit_type;
 	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS ||
 		unit_type == sc2::UNIT_TYPEID::TERRAN_COMMANDCENTER ||
@@ -509,8 +444,8 @@ void BotAgent::OnUnitDamaged(const sc2::Unit* unit, float health, float shields)
 }
 
 void BotAgent::OnUnitIdle(const sc2::Unit* unit) {
-	Mob* mob = &getMob(*unit);
-	set_mob_idle(mob, true);
+	Mob* mob = &mobH.getMob(*unit);
+	mobH.set_mob_idle(mob, true);
 }
 
 int BotAgent::getPlayerIDForMap(int map_index, sc2::Point2D location) {
