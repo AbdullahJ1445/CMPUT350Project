@@ -138,7 +138,7 @@ bool Directive::executeForUnit(BotAgent* agent, const sc2::Unit& unit) {
 		// Note: this order cannot have further queued directives attached,
 		//       as harvesting continues indefinitely
 		
-		if (agent->is_unit_carrying_minerals(&unit)) {
+		if (mob->is_carrying_minerals()) {
 			// if unit is carrying minerals, return them to the townhall instead
 			const sc2::Unit* townhall = agent->FindNearestTownhall(target_location);
 			if (!townhall)
@@ -166,7 +166,7 @@ bool Directive::executeForUnit(BotAgent* agent, const sc2::Unit& unit) {
 		// Note: this order cannot have further queued directives attached
 		//       as harvesting continues indefinitely
 		
-		if (agent->is_unit_carrying_gas(&unit)) {
+		if (mob->is_carrying_gas()) {
 			// if unit is carrying gas, return them to the townhall instead
 			const sc2::Unit* townhall = agent->FindNearestTownhall(target_location);
 			if (!townhall)
@@ -324,7 +324,7 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 	// then filter by those with ability available
 	std::unordered_set<Mob*> mobs_filter;
 	std::copy_if(mobs.begin(), mobs.end(), std::inserter(mobs_filter, mobs_filter.begin()),
-		[agent, this](Mob* m) { return agent->AbilityAvailable(m->unit, ability); });
+		[agent, this](Mob* m) { return agent->can_unit_use_ability(m->unit, ability); });
 	mobs = mobs_filter;
 	
 	// return false if no structures exist with chronoboost ready to cast
@@ -582,7 +582,7 @@ std::unordered_set<Mob*> Directive::filter_by_has_ability(BotAgent* agent, std::
 
 	std::unordered_set<Mob*> mobs_filter;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(mobs_filter, mobs_filter.begin()),
-		[agent, this](Mob* m) { return agent->AbilityAvailable(m->unit, ability); });
+		[agent, this](Mob* m) { return agent->can_unit_use_ability(m->unit, ability); });
 
 	return mobs_filter;
 }

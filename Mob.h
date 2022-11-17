@@ -46,6 +46,8 @@ public:
 	bool hasBundledDirective();
 	bool executeDefaultDirective(BotAgent* agent);
 	Directive popBundledDirective();
+	bool is_carrying_minerals();
+	bool is_carrying_gas();
 	void set_flag(FLAGS flag);
 	void remove_flag(FLAGS flag);
 	sc2::Point2D get_birth_location();

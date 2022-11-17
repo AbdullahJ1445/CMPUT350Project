@@ -203,7 +203,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		std::unordered_set<Mob*> structures = agent->filter_by_flag(agent->get_mobs(), FLAGS::IS_STRUCTURE);
 		bool found_one = false;
 		for (auto m : structures) {
-			if (agent->AbilityAvailable(m->unit, ability_id)) {
+			if (agent->can_unit_use_ability(m->unit, ability_id)) {
 				found_one = true;
 				break;
 			}
