@@ -108,6 +108,31 @@ Directive Mob::popBundledDirective() {
 	return bundled;
 }
 
+bool Mob::is_carrying_minerals() {
+	// return true if a unit is carrying minerals
+
+	std::vector<sc2::BuffID> unit_buffs = unit.buffs;
+	std::vector<sc2::BuffID> mineral_buffs{
+		sc2::BUFF_ID::CARRYHIGHYIELDMINERALFIELDMINERALS,
+		sc2::BUFF_ID::CARRYMINERALFIELDMINERALS
+	};
+
+	return std::find_first_of(unit_buffs.begin(), unit_buffs.end(), mineral_buffs.begin(), mineral_buffs.end()) != unit_buffs.end();
+}
+
+bool Mob::is_carrying_gas() {
+	// return true if a unit is carrying gas
+
+	std::vector<sc2::BuffID> unit_buffs = unit.buffs;
+	std::vector<sc2::BuffID> gas_buffs{
+		sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGAS,
+		sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASPROTOSS,
+		sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASZERG
+	};
+
+	return std::find_first_of(unit_buffs.begin(), unit_buffs.end(), gas_buffs.begin(), gas_buffs.end()) != unit_buffs.end();
+}
+
 void Mob::set_home_location(sc2::Point2D location) {
 	home_location = location;
 }
