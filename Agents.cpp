@@ -49,8 +49,8 @@ bool BotAgent::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) 
 		target->set_flag(FLAGS::IS_GAS_GATHERER);
 
 		// make the unit continue to mine gas after being idle
-		Directive directive_get_gas(Directive::DEFAULT_DIRECTIVE, Directive::GET_GAS_NEAR_LOCATION, gas_structure.pos);
-		target->assignDirective(directive_get_gas);
+		Directive directive_get_gas(Directive::DEFAULT_DIRECTIVE, Directive::GET_GAS_NEAR_LOCATION, target->unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, gas_structure.pos);
+		target->assignDefaultDirective(directive_get_gas);
 		Actions()->UnitCommand(&(target->unit), sc2::ABILITY_ID::HARVEST_GATHER, &gas_structure);
 
 
@@ -259,8 +259,8 @@ void BotAgent::initStartingUnits() {
 			u_type == sc2::UNIT_TYPEID::PROTOSS_PROBE) 
 		{
 			Mob worker (*u, MOB::MOB_WORKER);
-			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, start_location);
-			worker.assignDirective(directive_get_minerals_near_Base);
+			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, u_type, sc2::ABILITY_ID::HARVEST_GATHER, start_location);
+			worker.assignDefaultDirective(directive_get_minerals_near_Base);
 			mobH.addMob(worker);
 		}
 		if (u_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS ||
@@ -379,8 +379,9 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 	new_mob.set_home_location(bases[base_index].get_townhall());
 	if (is_worker) {
 		new_mob.set_assigned_location(new_mob.get_home_location());
-		Directive directive_get_minerals_near_birth(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, bases[base_index].get_townhall());
-		new_mob.assignDirective(directive_get_minerals_near_birth);
+		Directive directive_get_minerals_near_birth(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION,
+			new_mob.unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, bases[base_index].get_townhall());
+		new_mob.assignDefaultDirective(directive_get_minerals_near_birth);
 	}
 	else {
 		if (!structure) {
@@ -394,7 +395,7 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 	Mob* mob = &mobH.getMob(*unit);
 	if (!is_worker && !structure) {
 		Directive atk_mv_to_defense(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, unit_type, sc2::ABILITY_ID::ATTACK_ATTACK, mob->get_assigned_location(), 2.0F);
-		atk_mv_to_defense.executeForUnit(this, *unit);
+		atk_mv_to_defense.executeForMob(this, mob);
 	}
 }
 

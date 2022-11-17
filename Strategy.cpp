@@ -49,7 +49,7 @@ void Strategy::loadStrategies() {
 		test.addTrigger(t);
 		bot->addStrat(test);
 	} 
-	
+	*/
 	{
 		StrategyOrder base_scv(bot);
 		Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::TERRAN_COMMANDCENTER, sc2::ABILITY_ID::TRAIN_SCV);
@@ -67,15 +67,11 @@ void Strategy::loadStrategies() {
 		base_scv.addTrigger(t2);
 		bot->addStrat(base_scv);
 	}
-	
-	*/
-	
-	
 	{
 		StrategyOrder build_supply(bot);
 		Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::TERRAN_SCV, sc2::ABILITY_ID::BUILD_SUPPLYDEPOT, bot->bases[0].get_defend_point(0), 7.0f);
 		Trigger t(bot);
-		t.add_condition(COND::MIN_MINERALS, 200);
+		t.add_condition(COND::MIN_MINERALS, 100);
 		build_supply.addDirective(d);
 		build_supply.addTrigger(t);
 		bot->addStrat(build_supply);
