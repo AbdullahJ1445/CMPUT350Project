@@ -66,6 +66,46 @@ Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, i
 }
 
 bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
+
+	// assign equivalent_type for the same units that might have an alternate ID
+	sc2::UNIT_TYPEID equivalent_type = unit_of_type;
+	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_SUPPLYDEPOT) {
+		equivalent_type = sc2::UNIT_TYPEID::TERRAN_SUPPLYDEPOTLOWERED;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_SUPPLYDEPOTLOWERED) {
+		equivalent_type = sc2::UNIT_TYPEID::TERRAN_SUPPLYDEPOT;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_COMMANDCENTER) {
+		equivalent_type = sc2::UNIT_TYPEID::TERRAN_COMMANDCENTERFLYING;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_COMMANDCENTER) {
+		equivalent_type = sc2::UNIT_TYPEID::TERRAN_COMMANDCENTERFLYING;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_ORBITALCOMMAND) {
+		equivalent_type = sc2::UNIT_TYPEID::TERRAN_ORBITALCOMMANDFLYING;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_ORBITALCOMMANDFLYING) {
+		equivalent_type = sc2::UNIT_TYPEID::TERRAN_ORBITALCOMMAND;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_REFINERY) {
+		equivalent_type = sc2::UNIT_TYPEID::TERRAN_REFINERYRICH;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_REFINERYRICH) {
+		equivalent_type = sc2::UNIT_TYPEID::TERRAN_REFINERY;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR) {
+		equivalent_type = sc2::UNIT_TYPEID::PROTOSS_ASSIMILATORRICH;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATORRICH) {
+		equivalent_type = sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::ZERG_EXTRACTOR) {
+		equivalent_type = sc2::UNIT_TYPEID::ZERG_EXTRACTORRICH;
+	}
+	if (unit_of_type == sc2::UNIT_TYPEID::ZERG_EXTRACTORRICH) {
+		equivalent_type = sc2::UNIT_TYPEID::ZERG_EXTRACTOR;
+	}
+
 	switch (cond_type) {
 	case COND::MIN_MINERALS:
 		return obs->GetMinerals() >= cond_value;
@@ -155,7 +195,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 			std::vector<const sc2::Unit*> filtered_units;
 			std::copy_if(units.begin(), units.end(), std::back_inserter(filtered_units),
-				[this](const sc2::Unit* u) { return (u->unit_type == unit_of_type) && (u->build_progress != 1.0); });
+				[this, equivalent_type](const sc2::Unit* u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) && (u->build_progress != 1.0); });
 			int num_units = filtered_units.size();
 			return (num_units <= cond_value);
 		}
@@ -163,7 +203,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		std::unordered_set<Mob*> structures = agent->filter_by_flag(agent->get_mobs(), FLAGS::IS_STRUCTURE);
 		bool found_one = false;
 		for (auto m : structures) {
-			if (agent->AbilityAvailable(m->unit, ability_id)) {
+			if (agent->can_unit_use_ability(m->unit, ability_id)) {
 				found_one = true;
 				break;
 			}
@@ -176,7 +216,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		// when it is done it will put the count over the maximum
 		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		int num_units = count_if(units.begin(), units.end(),
-			[this](const sc2::Unit* u) { return u->unit_type == unit_of_type; });
+			[this, equivalent_type](const sc2::Unit* u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) ; });
 		return (num_units <= cond_value);
 	}
 	if (cond_type == COND::MIN_UNIT_OF_TYPE) {
@@ -185,7 +225,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		std::vector<const sc2::Unit*> filtered_units;
 		std::copy_if(units.begin(), units.end(), std::back_inserter(filtered_units),
-			[this](const sc2::Unit * u) { return (u->unit_type == unit_of_type) && (u->build_progress == 1.0); });
+			[this, equivalent_type](const sc2::Unit * u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) && (u->build_progress == 1.0); });
 		int num_units = filtered_units.size();
 		return (num_units >= cond_value);
 	}
@@ -280,10 +320,15 @@ StrategyOrder::~StrategyOrder() {
 }
 
 bool StrategyOrder::execute() {
-	return directives.front().execute(agent);
+	bool any_executed = false;
+	for (auto d : directives) {
+		if (d.execute(agent))
+			any_executed = true;
+	}
+	return any_executed;
 }
 
-void StrategyOrder::enqueueDirective(Directive directive_) {
+void StrategyOrder::addDirective(Directive directive_) {
 	// once a directive has been added to a StrategyOrder, it cannot be modified
 	// this ensures we can look up whether the same directive already exists for a unit
 	directive_.lock();

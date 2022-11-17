@@ -32,6 +32,7 @@ void Mob::initVars() {
 	// initialize all flags to false
 	tag = unit.tag;
 	has_default_directive = false;
+	has_bundled_directive = false;
 	birth_location = unit.pos;
 	home_location = unit.pos;
 	assigned_location = unit.pos;
@@ -60,9 +61,10 @@ bool Mob::hasDefaultDirective() {
 	return has_default_directive;
 }
 
-bool Mob::hasQueuedOrder() {
-	return (queued_orders.size() > 0);
+bool Mob::hasBundledDirective() {
+	return has_bundled_directive;
 }
+
 
 bool Mob::executeDefaultDirective(BotAgent* agent) {
 	if (has_default_directive) {
@@ -71,14 +73,24 @@ bool Mob::executeDefaultDirective(BotAgent* agent) {
 	return false;
 }
 
-bool Mob::executeQueuedOrder(BotAgent* agent) {
-	if (hasQueuedOrder()) {
-		bool is_success = queued_orders.front().executeForUnit(agent, unit);
-		queued_orders.erase(queued_orders.begin());
-		return is_success;
+void Mob::bundle_directives(std::vector<Directive> dir_vec) {
+	// bundle the orders to be executed after this unit is 
+	// completed its current order
+	if (hasBundledDirective())
+		delete bundled_directive;
+
+	Directive* direc = new Directive(dir_vec.front());
+	dir_vec.erase(dir_vec.begin());
+
+	if (dir_vec.size() > 0) {
+		for (auto d : dir_vec) {
+			direc->bundleDirective(d);
+		}
 	}
-	return false;
+	has_bundled_directive = true;
+	bundled_directive = direc;
 }
+
 
 void Mob::set_flag(FLAGS flag) {
 	flags.insert(flag);
@@ -86,6 +98,39 @@ void Mob::set_flag(FLAGS flag) {
 
 void Mob::remove_flag(FLAGS flag) {
 	flags.erase(flag);
+}
+
+Directive Mob::popBundledDirective() {
+	// get the directive bundled on this mob and simultaneously remove it from this mob
+	Directive bundled = *bundled_directive;
+	delete bundled_directive;
+	has_bundled_directive = false;
+	return bundled;
+}
+
+bool Mob::is_carrying_minerals() {
+	// return true if a unit is carrying minerals
+
+	std::vector<sc2::BuffID> unit_buffs = unit.buffs;
+	std::vector<sc2::BuffID> mineral_buffs{
+		sc2::BUFF_ID::CARRYHIGHYIELDMINERALFIELDMINERALS,
+		sc2::BUFF_ID::CARRYMINERALFIELDMINERALS
+	};
+
+	return std::find_first_of(unit_buffs.begin(), unit_buffs.end(), mineral_buffs.begin(), mineral_buffs.end()) != unit_buffs.end();
+}
+
+bool Mob::is_carrying_gas() {
+	// return true if a unit is carrying gas
+
+	std::vector<sc2::BuffID> unit_buffs = unit.buffs;
+	std::vector<sc2::BuffID> gas_buffs{
+		sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGAS,
+		sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASPROTOSS,
+		sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASZERG
+	};
+
+	return std::find_first_of(unit_buffs.begin(), unit_buffs.end(), gas_buffs.begin(), gas_buffs.end()) != unit_buffs.end();
 }
 
 void Mob::set_home_location(sc2::Point2D location) {

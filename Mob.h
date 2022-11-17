@@ -30,6 +30,8 @@ enum class FLAGS {
 	IS_ATTACKING,
 	IS_FLYING,
 	IS_INVISIBLE,
+	BUILDING_GAS,
+	IS_BUILDING_STRUCTURE,
 	IS_IDLE
 };
 
@@ -37,14 +39,15 @@ class Mob {
 public:
 	Mob(const sc2::Unit& unit_, MOB mobs_type);
 	void initVars();
-
 	bool is_idle();
 	bool has_flag(FLAGS flag);
 	void assignDirective(Directive directive_);
 	bool hasDefaultDirective();
-	bool hasQueuedOrder();
+	bool hasBundledDirective();
 	bool executeDefaultDirective(BotAgent* agent);
-	bool executeQueuedOrder(BotAgent* agent);
+	Directive popBundledDirective();
+	bool is_carrying_minerals();
+	bool is_carrying_gas();
 	void set_flag(FLAGS flag);
 	void remove_flag(FLAGS flag);
 	sc2::Point2D get_birth_location();
@@ -52,6 +55,7 @@ public:
 	sc2::Point2D get_assigned_location();
 	void set_home_location(sc2::Point2D location);
 	void set_assigned_location(sc2::Point2D location);
+	void bundle_directives(std::vector<Directive> dir_vec);
 	std::unordered_set<FLAGS> get_flags();
 	sc2::Tag get_tag();
 	bool operator<(const Mob& mob) const { return tag < mob.tag; }
@@ -64,6 +68,7 @@ private:
 	sc2::Point2D assigned_location;
 	sc2::Tag tag; // a unique identifier given to units
 	bool has_default_directive;
+	bool has_bundled_directive;
 	Directive* default_directive;
-	std::vector<Directive> queued_orders;
+	Directive* bundled_directive;
 };

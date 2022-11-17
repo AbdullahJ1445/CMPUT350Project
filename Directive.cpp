@@ -83,9 +83,9 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	ability = ability_;
 }
 
-bool Directive::enqueueDirective(Directive directive_) {
+bool Directive::bundleDirective(Directive directive_) {
 	if (!locked)
-		order_queue.push_back(directive_);
+		directive_bundle.push_back(directive_);
 	return !locked;
 }
 
@@ -134,8 +134,11 @@ bool Directive::executeForUnit(BotAgent* agent, const sc2::Unit& unit) {
 	}
 
 	if (action_type == GET_MINERALS_NEAR_LOCATION) {
+
+		// Note: this order cannot have further queued directives attached,
+		//       as harvesting continues indefinitely
 		
-		if (agent->is_unit_carrying_minerals(&unit)) {
+		if (mob->is_carrying_minerals()) {
 			// if unit is carrying minerals, return them to the townhall instead
 			const sc2::Unit* townhall = agent->FindNearestTownhall(target_location);
 			if (!townhall)
@@ -152,21 +155,28 @@ bool Directive::executeForUnit(BotAgent* agent, const sc2::Unit& unit) {
 			return false;
 		}
 
+		/* ORDER IS EXECUTED */
 		agent->set_mob_idle(mob, false);
 		agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::SMART, mineral_target);
 		return true;
+		/* * * * * * * * * * */
 	}
 	if (action_type == GET_GAS_NEAR_LOCATION) {
+
+		// Note: this order cannot have further queued directives attached
+		//       as harvesting continues indefinitely
 		
-		if (agent->is_unit_carrying_gas(&unit)) {
+		if (mob->is_carrying_gas()) {
 			// if unit is carrying gas, return them to the townhall instead
 			const sc2::Unit* townhall = agent->FindNearestTownhall(target_location);
 			if (!townhall)
 				return false;
+
+			/* ORDER IS EXECUTED */
 			agent->set_mob_idle(mob, false);
 			agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::HARVEST_RETURN);
-			//agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::SMART, townhall);
 			return true;
+			/* * * * * * * * * * */
 		}
 
 		const sc2::Unit* gas_target = agent->FindNearestGasStructure(target_location);
@@ -178,10 +188,13 @@ bool Directive::executeForUnit(BotAgent* agent, const sc2::Unit& unit) {
 		return true;
 	}
 	if (action_type == SIMPLE_ACTION) {
-		// set mob as not idle
+
+		/* ORDER IS EXECUTED */
 		agent->set_mob_idle(mob, false);
 		agent->Actions()->UnitCommand(&unit, ability);
+		if (have_bundle()) mob->bundle_directives(directive_bundle);
 		return true;
+		/* * * * * * * * * * */
 	}
 	if (action_type == EXACT_LOCATION || action_type == NEAR_LOCATION) {
 		sc2::Point2D location = target_location;
@@ -189,10 +202,12 @@ bool Directive::executeForUnit(BotAgent* agent, const sc2::Unit& unit) {
 		if (action_type == NEAR_LOCATION)
 			location = uniform_random_point_in_circle(target_location, proximity);
 
-		// set mob as not idle
+		/* ORDER IS EXECUTED */
 		agent->set_mob_idle(mob, false);
 		agent->Actions()->UnitCommand(&unit, ability, location);
+		if (have_bundle()) mob->bundle_directives(directive_bundle);
 		return true;
+		/* * * * * * * * * * */
 	}
 	return false;
 }
@@ -234,11 +249,14 @@ bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 
 	mob = get_random_mob_from_set(mobs);
 
-	// set mob as not idle
+	/* ORDER IS EXECUTED */
 	agent->set_mob_idle(mob, false);
-	
 	agent->Actions()->UnitCommand(&mob->unit, ability);
+	if (have_bundle()) mob->bundle_directives(directive_bundle);
 	return true;
+	/* * * * * * * * * * */
+
+
 }
 
 bool Directive::execute_build_gas_structure(BotAgent* agent) {
@@ -272,12 +290,16 @@ bool Directive::execute_build_gas_structure(BotAgent* agent) {
 	if (!mob)
 		return false;
 
-	// set mob as not idle
+	/* ORDER IS EXECUTED */
 	agent->set_mob_idle(mob, false);
-
-	std::cout << "building assimilator" << std::endl;
-	agent->Actions()->UnitCommand(&(mob->unit), ability, geyser_target);
+	mob->set_flag(FLAGS::BUILDING_GAS);
+	mob->set_flag(FLAGS::IS_BUILDING_STRUCTURE);
+	agent->Actions()->UnitCommand(&(mob->unit), ability, geyser_target, true);
+	if (have_bundle()) mob->bundle_directives(directive_bundle);
 	return true;
+	/* * * * * * * * * * */
+
+
 }
 
 bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
@@ -302,7 +324,7 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 	// then filter by those with ability available
 	std::unordered_set<Mob*> mobs_filter;
 	std::copy_if(mobs.begin(), mobs.end(), std::inserter(mobs_filter, mobs_filter.begin()),
-		[agent, this](Mob* m) { return agent->AbilityAvailable(m->unit, ability); });
+		[agent, this](Mob* m) { return agent->can_unit_use_ability(m->unit, ability); });
 	mobs = mobs_filter;
 	
 	// return false if no structures exist with chronoboost ready to cast
@@ -336,10 +358,12 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 		return false;
 	}
 
-	// set mob as not idle
+	/* ORDER IS EXECUTED */
 	agent->set_mob_idle(mob, false);
-	agent->Actions()->UnitCommand(&mob->unit, ability, &chrono_target->unit);
+	agent->Actions()->UnitCommand(&mob->unit, ability, &chrono_target->unit, true);
+	if (have_bundle()) mob->bundle_directives(directive_bundle);
 	return true;
+	/* * * * * * * * * * */
 }
 
 bool Directive::execute_match_flags(BotAgent* agent) {
@@ -378,12 +402,13 @@ bool Directive::execute_match_flags(BotAgent* agent) {
 	if (!found_valid_unit)
 		return false;
 
-	for (auto m : filtered_mobs) {
-		// set mob as not idle
-		agent->set_mob_idle(m, false);
-	}
+	/* ORDER IS EXECUTED */
+	for (auto m : filtered_mobs) agent->set_mob_idle(m, false);
+	Mob* mob_with_bundle = get_random_mob_from_set(filtered_mobs);
 	agent->Actions()->UnitCommand(units, ability, location);
+	if (have_bundle()) mob_with_bundle->bundle_directives(directive_bundle);
 	return true;
+	/* * * * * * * * * * */
 }
 
 bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
@@ -399,24 +424,22 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 
 	mobs = filter_by_unit_type(mobs, unit_type);
 
+	// check if a unit of this type is already executing this order
+	if (is_any_executing_order(mobs, ability)) {
+		return false;
+	}
+
 	// unit of type does not exist
 	if (mobs.size() == 0) {
 		return false;
 	}
 
-	// check if a unit of this type is already executing this order
-	if (is_any_executing_order(mobs, ability)) {
+	mobs = filter_by_has_ability(agent, mobs, ability);
+	if (mobs.size() == 0) {
 		return false;
 	}
-	
-	// get closest matching unit to target location
-	mob = get_closest_to_location(mobs, target_location);
 
-	if (!mob) {
-		std::cerr << "!mob" << std::endl;
-		return false;
-	}
-	
+    
 	// if order is a build structure order, ensure a valid placement location
 	if (ability_data.is_building) {
 		int i = 0;
@@ -428,14 +451,29 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 				return false;
 			}
 		}
+
+		// filter only those not currently building a structure
+		mobs = filter_not_building_structure(agent, mobs);
+
+		if (mobs.size() == 0) {
+			return false;
+		}
+	}
+
+	// get closest matching unit to target location
+	mob = get_closest_to_location(mobs, target_location);
+
+	if (!mob) {
+		return false;
 	}
 
 	// if the ability does not require a target location
 	if (ability_data.target == sc2::AbilityData::Target::None) {
-		// set mob as not idle
+		
+		/* ORDER IS EXECUTED */
 		agent->set_mob_idle(mob, false);
-
 		agent->Actions()->UnitCommand(&mob->unit, ability);
+		if (have_bundle()) mob->bundle_directives(directive_bundle);
 		return true;
 	}
 
@@ -446,9 +484,44 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 	}
 
 	// else, the ability requires a target location
+
+	/* ORDER IS EXECUTED */
+	if (ability_data.is_building)
+		mob->set_flag(FLAGS::IS_BUILDING_STRUCTURE);
 	agent->set_mob_idle(mob, false);
 	agent->Actions()->UnitCommand(&mob->unit, ability, location);
+	if (have_bundle()) mob->bundle_directives(directive_bundle);
 	return true;
+	/* * * * * * * * * * */
+}
+
+bool Directive::have_bundle() {
+	// if this directive has other directives bundled with it
+	return (directive_bundle.size() > 0);
+}
+
+bool Directive::is_building_structure(BotAgent* agent, Mob* mob_) {
+	sc2::QueryInterface* query_interface = agent->Query();
+	const sc2::ObservationInterface* obs = agent->Observation();
+	std::vector<sc2::AbilityData> ability_data = obs->GetAbilityData();
+
+	// check if unit is on its way to build a structure
+	for (const auto& order : mob_->unit.orders) {
+		sc2::ABILITY_ID order_ability = order.ability_id;
+		if (ability_data[(int)order_ability].is_building) {
+			return true;
+		}
+	}
+	
+	// check if unit is in the process of building a structure
+	std::vector<sc2::AvailableAbility> abilities = (query_interface->GetAbilitiesForUnit(&mob_->unit)).abilities;
+	bool match = false;
+	for (auto a : abilities) {
+		if (a.ability_id == sc2::ABILITY_ID::HALT) {
+			return true;
+		}
+	}
+	return match;
 }
 
 bool Directive::is_any_executing_order(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
@@ -487,6 +560,31 @@ std::unordered_set<Mob*> Directive::filter_near_location(std::unordered_set<Mob*
 			sc2::DistanceSquared2D(m->unit.pos, pos_) <= sq_dist);
 		});
 	return filtered_mobs;
+}
+
+std::unordered_set<Mob*> Directive::filter_not_building_structure(BotAgent* agent, std::unordered_set<Mob*> mobs_set) {
+	// returns only units that are not currently constructing a structure
+	
+	std::unordered_set<Mob*> filtered;
+
+	/*
+	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
+		[this, agent](Mob* m) { return !is_building_structure(agent, m); });
+		*/
+
+	filtered = agent->filter_by_flag(mobs_set, FLAGS::IS_BUILDING_STRUCTURE, false);
+	return filtered;
+
+}
+
+std::unordered_set<Mob*> Directive::filter_by_has_ability(BotAgent* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
+	// get only mobs from set that have a specified ability
+
+	std::unordered_set<Mob*> mobs_filter;
+	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(mobs_filter, mobs_filter.begin()),
+		[agent, this](Mob* m) { return agent->can_unit_use_ability(m->unit, ability); });
+
+	return mobs_filter;
 }
 
 std::unordered_set<Mob*> Directive::filter_by_unit_type(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_) {
