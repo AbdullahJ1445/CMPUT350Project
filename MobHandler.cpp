@@ -5,10 +5,6 @@
 #include "sc2api/sc2_unit_filters.h"
 #include "sc2api/sc2_interfaces.h"
 #include "sc2api/sc2_typeenums.h"
-#include "sc2api/sc2_unit_types.h"
-
-class Mob;
-class BotAgent;
 
 MobHandler::MobHandler(BotAgent* agent) {
     this->agent = agent;
