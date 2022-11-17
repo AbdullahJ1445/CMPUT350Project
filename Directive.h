@@ -7,8 +7,9 @@
 #include "sc2utils/sc2_arg_parser.h"
 #include "Mob.h"
 
-# define M_PI           3.14159265358979323846
-# define DEFAULT_RADIUS 12.0f 
+# define M_PI					3.14159265358979323846
+# define DEFAULT_RADIUS			12.0f 
+# define USE_DEFINED_ABILITY	sc2::ABILITY_ID::EXPERIMENTALPLASMAGUN
 
 class BotAgent;
 class Mob;
@@ -42,16 +43,20 @@ public:
 		sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_=DEFAULT_RADIUS, float target_proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_);
-	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::Point2D location_, float proximity_ =DEFAULT_RADIUS);
 
 	bool execute(BotAgent* agent);
-	bool executeForUnit(BotAgent* agent, const sc2::Unit& unit);
+	bool executeForMob(BotAgent* agent, Mob* mob_);
 	static sc2::Point2D uniform_random_point_in_circle(sc2::Point2D center, float radius);
 	bool setDefault();
 	bool bundleDirective(Directive directive_);
 	void lock();
+	bool assignMob(Mob* mob_);
+	bool allowMultiple(bool is_true);
+	bool allowsMultiple();
+	bool hasAssignedMob();
+	std::unordered_set<sc2::Tag> getAssignedMobTags();
 	static Mob* get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
-
+	
 private:
 
 	// generic constructor delegated by others
@@ -74,11 +79,21 @@ private:
 	std::unordered_set<Mob*> filter_idle(std::unordered_set<Mob*> mobs_set);
 	Mob* get_random_mob_from_set(std::unordered_set<Mob*> mob_set);
 
+	bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BotAgent* agent, Mob * mob_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BotAgent* agent, Mob * mob_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_= USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BotAgent* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+
 	bool locked;
+	bool allow_multiple;
 	ASSIGNEE assignee;
 	ACTION_TYPE action_type;
 	sc2::UNIT_TYPEID unit_type;
 	sc2::ABILITY_ID ability;
+	
 	sc2::Point2D assignee_location;
 	sc2::Point2D target_location;
 	sc2::Unit* target_unit;
@@ -86,4 +101,5 @@ private:
 	float proximity;
 	std::unordered_set<FLAGS> flags;
 	std::vector<Directive> directive_bundle;
+	std::unordered_set<sc2::Tag> assigned_mob_tags;
 };

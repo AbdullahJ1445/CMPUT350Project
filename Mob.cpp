@@ -47,7 +47,7 @@ bool Mob::has_flag(FLAGS flag) {
 	return (flags.find(flag) != flags.end());
 }
 
-void Mob::assignDirective(Directive directive_) {
+void Mob::assignDefaultDirective(Directive directive_) {
 	if (has_default_directive) {
 		delete default_directive;
 	}
@@ -68,7 +68,7 @@ bool Mob::hasBundledDirective() {
 
 bool Mob::executeDefaultDirective(BotAgent* agent) {
 	if (has_default_directive) {
-		return default_directive->executeForUnit(agent, unit);
+		return default_directive->executeForMob(agent, this);
 	}
 	return false;
 }
@@ -155,6 +155,19 @@ sc2::Point2D Mob::get_assigned_location() {
 
 std::unordered_set<FLAGS> Mob::get_flags() {
 	return flags;
+}
+
+bool Mob::setCurrentDirective(Directive* directive_) {
+	if (!directive_->allowsMultiple() && directive_->hasAssignedMob()) {
+		return false;
+	}
+	current_directive = directive_;
+	directive_->assignMob(this);
+	return true;
+}
+
+Directive* Mob::getCurrentDirective() {
+	return current_directive;
 }
 
 sc2::Tag Mob::get_tag() {

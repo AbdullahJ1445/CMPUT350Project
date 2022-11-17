@@ -41,7 +41,7 @@ public:
 	void initVars();
 	bool is_idle();
 	bool has_flag(FLAGS flag);
-	void assignDirective(Directive directive_);
+	void assignDefaultDirective(Directive directive_);
 	bool hasDefaultDirective();
 	bool hasBundledDirective();
 	bool executeDefaultDirective(BotAgent* agent);
@@ -58,6 +58,8 @@ public:
 	void bundle_directives(std::vector<Directive> dir_vec);
 	std::unordered_set<FLAGS> get_flags();
 	sc2::Tag get_tag();
+	bool setCurrentDirective(Directive* directive_);
+	Directive* getCurrentDirective();
 	bool operator<(const Mob& mob) const { return tag < mob.tag; }
 	const sc2::Unit& unit;
 	
@@ -71,4 +73,5 @@ private:
 	bool has_bundled_directive;
 	Directive* default_directive;
 	Directive* bundled_directive;
+	Directive* current_directive;
 };
