@@ -31,7 +31,7 @@ public:
 class BotAgent : public sc2::Agent {
 public:
 
-	MobHandler mobH;
+	MobHandler* mobH;
 	// public functions
 	void setCurrentStrategy(Strategy* strategy_);
 	void BotAgent::addStrat(StrategyOrder strategy);

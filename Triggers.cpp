@@ -140,21 +140,21 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::MIN_UNIT_WITH_FLAGS:
 	{
 		std::unordered_set<Mob*> mobs;
-		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		mobs = agent->mobH->filter_by_flags(agent->mobH->get_mobs(), filter_flags);
 		int num_units = mobs.size();
 		return (num_units >= cond_value);
 	}
 	case COND::MAX_UNIT_WITH_FLAGS:
 	{
 		std::unordered_set<Mob*> mobs;
-		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		mobs = agent->mobH->filter_by_flags(agent->mobH->get_mobs(), filter_flags);
 		int num_units = mobs.size();
 		return (num_units <= cond_value);
 	}
 	case COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
 		std::unordered_set<Mob*> mobs;
-		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		mobs = agent->mobH->filter_by_flags(agent->mobH->get_mobs(), filter_flags);
 		std::unordered_set<Mob*> filtered_mobs;
 		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
 			[this](Mob* m) { return (
@@ -166,7 +166,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
 		std::unordered_set<Mob*> mobs;
-		mobs = agent->filter_by_flags(agent->get_mobs(), filter_flags);
+		mobs = agent->mobH->filter_by_flags(agent->mobH->get_mobs(), filter_flags);
 		std::unordered_set<Mob*> filtered_mobs;
 		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
 			[this](Mob* m) { return (
@@ -200,7 +200,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			return (num_units <= cond_value);
 		}
 	case COND::HAS_ABILITY_READY:
-		std::unordered_set<Mob*> structures = agent->filter_by_flag(agent->get_mobs(), FLAGS::IS_STRUCTURE);
+		std::unordered_set<Mob*> structures = agent->mobH->filter_by_flag(agent->mobH->get_mobs(), FLAGS::IS_STRUCTURE);
 		bool found_one = false;
 		for (auto m : structures) {
 			if (agent->can_unit_use_ability(m->unit, ability_id)) {

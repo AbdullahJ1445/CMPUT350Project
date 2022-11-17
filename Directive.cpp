@@ -67,7 +67,7 @@ bool Directive::execute(BotAgent* agent) {
 	bool found_valid_unit = false; // ensure unit has been assigned before issuing order
 	const sc2::AbilityData ability_data = obs->GetAbilityData()[(int)ability]; // various info about the ability
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
-	std::unordered_set<Mob*> mobs = agent->get_mobs(); // unordered_set of all friendly units
+	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // unordered_set of all friendly units
 	Mob* mob; // used to store temporary mob
 
 	// ensure proper variables are set for the specified ASSIGNEE and ACTION_TYPE
@@ -120,7 +120,7 @@ bool Directive::execute(BotAgent* agent) {
 
 bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 	// used to assign an order to a specific unit
-	Mob* mob = &agent->getMob(mob_->unit);
+	Mob* mob = &agent->mobH->getMob(mob_->unit);
 	if (!mob) {
 		return false;
 	}
@@ -136,7 +136,7 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 			if (!townhall)
 				return false;
 			/* ORDER IS EXECUTED */
-			agent->set_mob_idle(mob, false);
+			agent->mobH->set_mob_idle(mob, false);
 			return issueOrder(agent, mob, false, sc2::ABILITY_ID::HARVEST_RETURN);
 			/* * * * * * * * * * */
 		}
@@ -148,7 +148,7 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 		}
 
 		/* ORDER IS EXECUTED */
-		agent->set_mob_idle(mob, false);
+		agent->mobH->set_mob_idle(mob, false);
 		return issueOrder(agent, mob, mineral_target);
 		//agent->Actions()->UnitCommand(&mob->unit, ability, mineral_target);
 		/* * * * * * * * * * */
@@ -165,7 +165,7 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 				return false;
 
 			/* ORDER IS EXECUTED */
-			agent->set_mob_idle(mob, false);
+			agent->mobH->set_mob_idle(mob, false);
 			return issueOrder(agent, mob, false, sc2::ABILITY_ID::HARVEST_RETURN);
 			/* * * * * * * * * * */
 		}
@@ -175,7 +175,7 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 			return false;
 		}
 		/* ORDER IS EXECUTED */
-		agent->set_mob_idle(mob, false);
+		agent->mobH->set_mob_idle(mob, false);
 		return issueOrder(agent, mob, gas_target);
 		//agent->Actions()->UnitCommand(&mob->unit, sc2::ABILITY_ID::HARVEST_GATHER, gas_target);
 		/* * * * * * * * * * */
@@ -183,7 +183,7 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 	if (action_type == SIMPLE_ACTION) {
 
 		/* ORDER IS EXECUTED */
-		agent->set_mob_idle(mob, false);
+		agent->mobH->set_mob_idle(mob, false);
 		//agent->Actions()->UnitCommand(&mob->unit, ability);
 		if (have_bundle()) mob->bundle_directives(directive_bundle);
 		return issueOrder(agent, mob);
@@ -196,7 +196,7 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 			location = uniform_random_point_in_circle(target_location, proximity);
 
 		/* ORDER IS EXECUTED */
-		agent->set_mob_idle(mob, false);
+		agent->mobH->set_mob_idle(mob, false);
 		//agent->Actions()->UnitCommand(&mob->unit, ability, location);
 		if (have_bundle()) mob->bundle_directives(directive_bundle);
 		return issueOrder(agent, mob, location);
@@ -325,7 +325,7 @@ sc2::Point2D Directive::uniform_random_point_in_circle(sc2::Point2D center, floa
 bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 	// perform an action that does not require a target unit or point
 
-	std::unordered_set<Mob*> mobs = agent->get_mobs(); // unordered_set of all friendly units
+	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // unordered_set of all friendly units
 	Mob* mob;
 
 	// filter idle units which match unit_type
@@ -342,7 +342,7 @@ bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 	mob = get_random_mob_from_set(mobs);
 
 	/* ORDER IS EXECUTED */
-	agent->set_mob_idle(mob, false);
+	agent->mobH->set_mob_idle(mob, false);
 	agent->Actions()->UnitCommand(&mob->unit, ability);
 	if (have_bundle()) mob->bundle_directives(directive_bundle);
 	return true;
@@ -354,7 +354,7 @@ bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 bool Directive::execute_build_gas_structure(BotAgent* agent) {
 	// perform the necessary actions to have a gas structure built closest to the specified target_location
 
-	std::unordered_set<Mob*> mobs = agent->get_mobs(); // vector of all friendly units
+	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // vector of all friendly units
 	Mob* mob; // used to store temporary mob
 	bool found_valid_unit = false;
 
@@ -383,7 +383,7 @@ bool Directive::execute_build_gas_structure(BotAgent* agent) {
 		return false;
 
 	/* ORDER IS EXECUTED */
-	agent->set_mob_idle(mob, false);
+	agent->mobH->set_mob_idle(mob, false);
 	mob->set_flag(FLAGS::BUILDING_GAS);
 	mob->set_flag(FLAGS::IS_BUILDING_STRUCTURE);
 	agent->Actions()->UnitCommand(&(mob->unit), ability, geyser_target, true);
@@ -400,7 +400,7 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 	// that has the chronoboost ability ready
 	// then find a structure that would benefit from it
 
-	std::unordered_set<Mob*> mobs = agent->get_mobs(); // vector of all friendly units
+	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // vector of all friendly units
 	Mob* mob; // used to store temporary mob
 	Mob* chrono_target;
 	std::unordered_set<Mob*> mobs_filter1;
@@ -432,7 +432,7 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 		return false;
 
 	// get all structures
-	std::unordered_set<Mob*> structures = agent->filter_by_flag(agent->get_mobs(), FLAGS::IS_STRUCTURE);
+	std::unordered_set<Mob*> structures = agent->mobH->filter_by_flag(agent->mobH->get_mobs(), FLAGS::IS_STRUCTURE);
 	std::unordered_set<Mob*> structures_with_orders; 
 
 	// look for buildings that are doing something
@@ -451,7 +451,7 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 	}
 
 	/* ORDER IS EXECUTED */
-	agent->set_mob_idle(mob, false);
+	agent->mobH->set_mob_idle(mob, false);
 	agent->Actions()->UnitCommand(&mob->unit, ability, &chrono_target->unit, true);
 	if (have_bundle()) mob->bundle_directives(directive_bundle);
 	return true;
@@ -461,8 +461,8 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 bool Directive::execute_match_flags(BotAgent* agent) {
 	// issue an order to units matching the provided flags
 
-	std::unordered_set<Mob*> mobs = agent->get_mobs(); // vector of all friendly units
-	std::unordered_set<Mob*> matching_mobs = agent->filter_by_flags(mobs, flags);
+	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // vector of all friendly units
+	std::unordered_set<Mob*> matching_mobs = agent->mobH->filter_by_flags(mobs, flags);
 
 	// get only units near the assignee_location parameter
 	if (assignee == MATCH_FLAGS_NEAR_LOCATION) {
@@ -495,7 +495,7 @@ bool Directive::execute_match_flags(BotAgent* agent) {
 		return false;
 
 	/* ORDER IS EXECUTED */
-	for (auto m : filtered_mobs) agent->set_mob_idle(m, false);
+	for (auto m : filtered_mobs) agent->mobH->set_mob_idle(m, false);
 	Mob* mob_with_bundle = get_random_mob_from_set(filtered_mobs);
 	agent->Actions()->UnitCommand(units, ability, location);
 	if (have_bundle()) mob_with_bundle->bundle_directives(directive_bundle);
@@ -507,7 +507,7 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 	const sc2::AbilityData ability_data = agent->Observation()->GetAbilityData()[(int)ability]; // various info about the ability
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
 	sc2::Point2D location = target_location;
-	std::unordered_set<Mob*> mobs = agent->get_mobs();
+	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs();
 	Mob* mob = nullptr;
 
 	if (action_type == ACTION_TYPE::NEAR_LOCATION) {
@@ -563,7 +563,7 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 	if (ability_data.target == sc2::AbilityData::Target::None) {
 		
 		/* ORDER IS EXECUTED */
-		agent->set_mob_idle(mob, false);
+		agent->mobH->set_mob_idle(mob, false);
 		agent->Actions()->UnitCommand(&mob->unit, ability);
 		if (have_bundle()) mob->bundle_directives(directive_bundle);
 		return true;
@@ -580,7 +580,7 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 	/* ORDER IS EXECUTED */
 	if (ability_data.is_building)
 		mob->set_flag(FLAGS::IS_BUILDING_STRUCTURE);
-	agent->set_mob_idle(mob, false);
+	agent->mobH->set_mob_idle(mob, false);
 	agent->Actions()->UnitCommand(&mob->unit, ability, location);
 	if (have_bundle()) mob->bundle_directives(directive_bundle);
 	return true;
@@ -673,7 +673,7 @@ std::unordered_set<Mob*> Directive::filter_not_building_structure(BotAgent* agen
 		[this, agent](Mob* m) { return !is_building_structure(agent, m); });
 		*/
 
-	filtered = agent->filter_by_flag(mobs_set, FLAGS::IS_BUILDING_STRUCTURE, false);
+	filtered = agent->mobH->filter_by_flag(mobs_set, FLAGS::IS_BUILDING_STRUCTURE, false);
 	return filtered;
 
 }
