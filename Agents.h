@@ -3,6 +3,7 @@
 #include "Directive.h"
 #include "Triggers.h"
 #include "Mob.h"
+#include "LocationHandler.h"
 #include "Base.h"
 #include "Strategy.h"
 #include "sc2api/sc2_api.h"
@@ -32,6 +33,7 @@ class BotAgent : public sc2::Agent {
 public:
 
 	MobHandler* mobH;
+	LocationHandler* locH;
 	// public functions
 	void setCurrentStrategy(Strategy* strategy_);
 	void BotAgent::addStrat(Precept strategy);

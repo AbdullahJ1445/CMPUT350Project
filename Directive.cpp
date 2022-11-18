@@ -2,6 +2,7 @@
 #include "sc2api/sc2_api.h"
 #include "Directive.h"
 #include "Agents.h"
+#include "Mob.h"
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D assignee_location_,
 	sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_) {
@@ -171,7 +172,7 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 		
 		if (mob->is_carrying_minerals()) {
 			// if unit is carrying minerals, return them to the townhall instead
-			const sc2::Unit* townhall = agent->FindNearestTownhall(target_location);
+			const sc2::Unit* townhall = agent->locH->getNearestTownhall(target_location);
 			if (!townhall)
 				return false;
 
@@ -180,7 +181,7 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 			/* * * * * * * * * * */
 		}
 
-		const sc2::Unit* mineral_target = agent->FindNearestMineralPatch(target_location);
+		const sc2::Unit* mineral_target = agent->locH->getNearestMineralPatch(target_location);
 
 		if (!mineral_target) {
 			return false;
@@ -198,7 +199,7 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 		
 		if (mob->is_carrying_gas()) {
 			// if unit is carrying gas, return them to the townhall instead
-			const sc2::Unit* townhall = agent->FindNearestTownhall(target_location);
+			const sc2::Unit* townhall = agent->locH->getNearestTownhall(target_location);
 			if (!townhall)
 				return false;
 
@@ -207,7 +208,7 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 			/* * * * * * * * * * */
 		}
 
-		const sc2::Unit* gas_target = agent->FindNearestGasStructure(target_location);
+		const sc2::Unit* gas_target = agent->locH->getNearestGasStructure(target_location);
 		if (!gas_target) {
 			return false;
 		}
@@ -266,7 +267,7 @@ bool Directive::execute_build_gas_structure(BotAgent* agent) {
 	bool found_valid_unit = false;
 
 	// find a vespene geyser near the location and build on it
-	const sc2::Unit* geyser_target = agent->FindNearestGeyser(target_location);
+	const sc2::Unit* geyser_target = agent->locH->getNearestGeyser(target_location);
 	sc2::Point2D location = geyser_target->pos;
 
 	if (assignee == UNIT_TYPE_NEAR_LOCATION) {

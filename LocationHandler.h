@@ -5,6 +5,7 @@
 #include "sc2api/sc2_unit_filters.h"
 #include "sc2api/sc2_interfaces.h"
 #include "sc2api/sc2_typeenums.h"
+#include "Base.h"
 
 class BotAgent;
 class LocationHandler {
