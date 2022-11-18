@@ -16,7 +16,7 @@ void Strategy::loadGameSettings(int* map_index, sc2::Race* bot_race, sc2::Race* 
 	*opp_race = sc2::Race::Protoss;
 	*human_player = false;
 	*fullscreen = false;
-	*realtime = false;
+	*realtime = true;
 }
 
 
@@ -50,6 +50,7 @@ void Strategy::loadStrategies() {
 		bot->addStrat(test);
 	} 
 	*/
+	/*
 	{
 		StrategyOrder base_scv(bot);
 		Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::TERRAN_COMMANDCENTER, sc2::ABILITY_ID::TRAIN_SCV);
@@ -66,7 +67,7 @@ void Strategy::loadStrategies() {
 		t2.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::TERRAN_REFINERY, bot->bases[0].get_townhall());
 		base_scv.addTrigger(t2);
 		bot->addStrat(base_scv);
-	}
+	}  */
 	{
 		StrategyOrder build_supply(bot);
 		Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::TERRAN_SCV, sc2::ABILITY_ID::BUILD_SUPPLYDEPOT, bot->bases[0].get_defend_point(0), 7.0f);
@@ -76,7 +77,7 @@ void Strategy::loadStrategies() {
 		build_supply.addTrigger(t);
 		bot->addStrat(build_supply);
 	}
-	
+	/*
 	{
 		StrategyOrder build_supply_and_barracks(bot);
 		Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::TERRAN_SCV, sc2::ABILITY_ID::BUILD_SUPPLYDEPOT, bot->bases[0].get_defend_point(0), 7.0f);
@@ -89,7 +90,7 @@ void Strategy::loadStrategies() {
 		build_supply_and_barracks.addTrigger(t);
 		bot->addStrat(build_supply_and_barracks);
 	}
-
+	*/
 	
 	
 	/*

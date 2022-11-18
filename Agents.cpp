@@ -59,6 +59,22 @@ bool BotAgent::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) 
 	return false;
 }
 
+void BotAgent::storeDirective(Directive directive_)
+{
+	if (directive_by_id[directive_.getID()])
+		return;
+
+	directive_storage.emplace_back(std::make_unique<Directive>(directive_));
+	Directive* created_dir = directive_storage.back().get();
+	stored_directives.insert(created_dir);
+	directive_by_id[directive_.getID()] = created_dir;
+}
+
+Directive* BotAgent::getLastStoredDirective()
+{
+	return directive_storage.back().get();
+}
+
 
 bool BotAgent::have_upgrade(const sc2::UpgradeID upgrade_) {
 	// return true if the bot has fully researched the specified upgrade
@@ -307,6 +323,23 @@ void BotAgent::OnStep() {
 	if (gameloop % 1000 == 0) {
 		OnStep_1000();
 	}
+
+	std::unordered_set<Mob*> busy_mobs = mobH->get_busy_mobs();
+	if (!busy_mobs.empty()) {
+		for (auto it = busy_mobs.begin(); it != busy_mobs.end(); ++it) {
+			Mob* m = *it;
+			Directive* dir = m->getCurrentDirective();
+
+			if (dir) {
+				// if a busy mob has changed orders
+				if (dir->getAbilityID() != (m->unit.orders).front().ability_id) {
+
+					// free up the directive it was previously assigned
+					dir->unassignMob(m);
+				}
+			}
+		}
+	}
 	
 	std::unordered_set<Mob*> idle_mobs = mobH->get_idle_mobs();
 	if (!idle_mobs.empty()) {
@@ -448,7 +481,34 @@ void BotAgent::OnUnitDamaged(const sc2::Unit* unit, float health, float shields)
 void BotAgent::OnUnitIdle(const sc2::Unit* unit) {
 	Mob* mob = &mobH->getMob(*unit);
 	mobH->set_mob_idle(mob, true);
+	
+	Directive* prev_dir = mob->getCurrentDirective();
+	if (prev_dir) {
+		prev_dir->unassignMob(mob);
+		mob->unassignDirective();
+	}
+	
+
 }
+
+void BotAgent::OnUnitDestroyed(const sc2::Unit* unit) {
+	if (unit->alliance == sc2::Unit::Alliance::Self) {
+		Mob* mob = &mobH->getMob(*unit);
+		mobH->set_mob_idle(mob, false);
+		mobH->set_mob_busy(mob, false);
+		for (auto f : mob->get_flags()) {
+			mob->remove_flag(f);
+		}
+
+		// if mob had directive assigned, free it up
+		Directive* dir = mob->getCurrentDirective();
+		if (dir) {
+			mob->unassignDirective();
+			dir->unassignMob(mob);
+		}
+	}
+}
+
 
 int BotAgent::getPlayerIDForMap(int map_index, sc2::Point2D location) {
 	location = getNearestStartLocation(location);

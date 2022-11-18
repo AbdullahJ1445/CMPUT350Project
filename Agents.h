@@ -36,6 +36,8 @@ public:
 	void setCurrentStrategy(Strategy* strategy_);
 	void BotAgent::addStrat(StrategyOrder strategy);
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
+	void storeDirective(Directive directive_);
+	Directive* getLastStoredDirective();
 
 	// various bool functions
 	bool have_upgrade(const sc2::UpgradeID upgrade_);
@@ -60,6 +62,7 @@ public:
 	sc2::Point2D proxy_location;
 	sc2::Point2D enemy_location;
 	Mob* proxy_worker;
+	std::unordered_map<size_t, Directive*> directive_by_id;
 
 private:
 
@@ -78,9 +81,13 @@ private:
 	virtual void OnUnitCreated(const sc2::Unit* unit);
 	virtual void OnUnitIdle(const sc2::Unit* unit) final;
 	virtual void OnUnitDamaged(const sc2::Unit* unit, float health, float shields);
+	virtual void OnUnitDestroyed(const sc2::Unit* unit);
+
 
 	// data containers
 	std::vector<StrategyOrder> strategies;
+	std::vector<std::unique_ptr<Directive>> directive_storage;
+	std::unordered_set<Directive*> stored_directives;
 
 	// private variables
 	int player_start_id;

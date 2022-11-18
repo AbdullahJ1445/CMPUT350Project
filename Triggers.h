@@ -104,6 +104,6 @@ public:
 private:
 	BotAgent* agent;
 	std::vector<Trigger> triggers;
-	std::vector<Directive> directives;
+	std::vector<Directive*> directives;
 	bool has_directive;
 };

@@ -322,7 +322,7 @@ StrategyOrder::~StrategyOrder() {
 bool StrategyOrder::execute() {
 	bool any_executed = false;
 	for (auto d : directives) {
-		if (d.execute(agent))
+		if (d->execute(agent))
 			any_executed = true;
 	}
 	return any_executed;
@@ -331,8 +331,11 @@ bool StrategyOrder::execute() {
 void StrategyOrder::addDirective(Directive directive_) {
 	// once a directive has been added to a StrategyOrder, it cannot be modified
 	// this ensures we can look up whether the same directive already exists for a unit
+
 	directive_.lock();
-	directives.push_back(directive_);
+	agent->storeDirective(directive_);
+	Directive* dir_ = agent->getLastStoredDirective();
+	directives.push_back(dir_);
 }
 
 void StrategyOrder::addTrigger(Trigger trigger_) {
@@ -346,3 +349,4 @@ bool StrategyOrder::checkTriggerConditions() {
 	}
 	return false;
 }
+
