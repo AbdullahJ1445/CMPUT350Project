@@ -19,7 +19,7 @@ void BotAgent::setCurrentStrategy(Strategy* strategy_) {
 	current_strategy = strategy_;
 }
 
-void BotAgent::addStrat(StrategyOrder strategy) {
+void BotAgent::addStrat(Precept strategy) {
 	strategies.push_back(strategy);
 }
 
@@ -356,7 +356,7 @@ void BotAgent::OnStep() {
 		}
 	}
 
-	for (StrategyOrder s : strategies) {
+	for (Precept s : strategies) {
 		if (s.checkTriggerConditions()) {
 			s.execute();
 		}

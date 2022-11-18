@@ -13,7 +13,7 @@
 #include "sc2utils/sc2_arg_parser.h"
 #include "MobHandler.h"
 
-class StrategyOrder;
+class Precept;
 class Mob;
 class Base;
 class Strategy;
@@ -34,7 +34,7 @@ public:
 	MobHandler* mobH;
 	// public functions
 	void setCurrentStrategy(Strategy* strategy_);
-	void BotAgent::addStrat(StrategyOrder strategy);
+	void BotAgent::addStrat(Precept strategy);
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
 	void storeDirective(Directive directive_);
 	Directive* getLastStoredDirective();
@@ -85,7 +85,7 @@ private:
 
 
 	// data containers
-	std::vector<StrategyOrder> strategies;
+	std::vector<Precept> strategies;
 	std::vector<std::unique_ptr<Directive>> directive_storage;
 	std::unordered_set<Directive*> stored_directives;
 
