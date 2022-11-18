@@ -308,8 +308,9 @@ void BotAgent::OnStep() {
 		OnStep_1000();
 	}
 	
-	if (mobH->get_idle_mobs().size() > 0) {
-		for (auto it = mobH->get_idle_mobs().begin(); it != mobH->get_idle_mobs().end(); ) {
+	std::unordered_set<Mob*> idle_mobs = mobH->get_idle_mobs();
+	if (!idle_mobs.empty()) {
+		for (auto it = idle_mobs.begin(); it != idle_mobs.end(); ) {
 			auto next = std::next(it);
 			if ((*it)->hasBundledDirective()) {
 				Directive bundled = (*it)->popBundledDirective();
