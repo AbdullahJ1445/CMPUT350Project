@@ -36,6 +36,7 @@ void Mob::initVars() {
 	birth_location = unit.pos;
 	home_location = unit.pos;
 	assigned_location = unit.pos;
+	current_directive = nullptr;
 	std::unordered_set<FLAGS> flags;
 }
 
@@ -55,6 +56,16 @@ void Mob::assignDefaultDirective(Directive directive_) {
 	default_directive = new Directive(directive_);
 	default_directive->lock();
 	has_default_directive = true;
+}
+
+void Mob::assignDirective(Directive* directive_) {
+	// set the mob's current directive
+	current_directive = directive_;
+}
+
+void Mob::unassignDirective() {
+	// unassign the mob's current directive
+	current_directive = nullptr;
 }
 
 bool Mob::hasDefaultDirective() {

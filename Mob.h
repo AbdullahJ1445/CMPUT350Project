@@ -42,6 +42,8 @@ public:
 	bool is_idle();
 	bool has_flag(FLAGS flag);
 	void assignDefaultDirective(Directive directive_);
+	void assignDirective(Directive* directive_);
+	void unassignDirective();
 	bool hasDefaultDirective();
 	bool hasBundledDirective();
 	bool executeDefaultDirective(BotAgent* agent);

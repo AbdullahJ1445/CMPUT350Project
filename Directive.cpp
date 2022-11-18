@@ -9,6 +9,8 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	// constructors which do not provide values for certain variables provide the listed default value instead
 
 	locked = false;
+	static size_t id_ = 0;
+	id = id_++;
 	assignee = assignee_;
 	action_type = action_type_;
 	unit_type = unit_type_;						// default: UNIT_TYPEID::INVALID
@@ -55,6 +57,43 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordere
 	sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) :
 	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, ability_, assignee_location_,
 		target_location_, assignee_proximity_, target_proximity_, flags_, nullptr) {}
+
+Directive::Directive(const Directive &d) {
+	locked = d.locked;
+	id = d.id;
+	assignee = d.assignee;
+	action_type = d.action_type;
+	unit_type = d.unit_type;					
+	ability = d.ability;							
+	assignee_location = d.assignee_location;		
+	target_location = d.target_location;			
+	assignee_proximity = d.assignee_proximity;   
+	proximity = d.proximity;				
+	flags = d.flags;								
+	target_unit = d.target_unit;		
+	directive_bundle = d.directive_bundle;
+	assigned_mobs = d.assigned_mobs;
+	allow_multiple = d.allow_multiple;
+}
+
+Directive& Directive::operator=(const Directive &d) {
+	locked = d.locked;
+	id = d.id;
+	assignee = d.assignee;
+	action_type = d.action_type;
+	unit_type = d.unit_type;
+	ability = d.ability;
+	assignee_location = d.assignee_location;
+	target_location = d.target_location;
+	assignee_proximity = d.assignee_proximity;
+	proximity = d.proximity;
+	flags = d.flags;
+	target_unit = d.target_unit;
+	directive_bundle = d.directive_bundle;
+	assigned_mobs = d.assigned_mobs;
+	allow_multiple = d.allow_multiple;
+	return *this;
+}
 
 bool Directive::bundleDirective(Directive directive_) {
 	if (!locked)
@@ -135,8 +174,8 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 			const sc2::Unit* townhall = agent->FindNearestTownhall(target_location);
 			if (!townhall)
 				return false;
+
 			/* ORDER IS EXECUTED */
-			agent->mobH->set_mob_idle(mob, false);
 			return issueOrder(agent, mob, false, sc2::ABILITY_ID::HARVEST_RETURN);
 			/* * * * * * * * * * */
 		}
@@ -148,7 +187,6 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 		}
 
 		/* ORDER IS EXECUTED */
-		agent->mobH->set_mob_idle(mob, false);
 		return issueOrder(agent, mob, mineral_target);
 		//agent->Actions()->UnitCommand(&mob->unit, ability, mineral_target);
 		/* * * * * * * * * * */
@@ -165,7 +203,6 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 				return false;
 
 			/* ORDER IS EXECUTED */
-			agent->mobH->set_mob_idle(mob, false);
 			return issueOrder(agent, mob, false, sc2::ABILITY_ID::HARVEST_RETURN);
 			/* * * * * * * * * * */
 		}
@@ -175,17 +212,12 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 			return false;
 		}
 		/* ORDER IS EXECUTED */
-		agent->mobH->set_mob_idle(mob, false);
 		return issueOrder(agent, mob, gas_target);
-		//agent->Actions()->UnitCommand(&mob->unit, sc2::ABILITY_ID::HARVEST_GATHER, gas_target);
 		/* * * * * * * * * * */
 	}
 	if (action_type == SIMPLE_ACTION) {
 
 		/* ORDER IS EXECUTED */
-		agent->mobH->set_mob_idle(mob, false);
-		//agent->Actions()->UnitCommand(&mob->unit, ability);
-		if (have_bundle()) mob->bundle_directives(directive_bundle);
 		return issueOrder(agent, mob);
 		/* * * * * * * * * * */
 	}
@@ -196,130 +228,10 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 			location = uniform_random_point_in_circle(target_location, proximity);
 
 		/* ORDER IS EXECUTED */
-		agent->mobH->set_mob_idle(mob, false);
-		//agent->Actions()->UnitCommand(&mob->unit, ability, location);
-		if (have_bundle()) mob->bundle_directives(directive_bundle);
 		return issueOrder(agent, mob, location);
 		/* * * * * * * * * * */
 	}
 	return false;
-}
-
-bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
-	
-	// if no ability override specified
-	if (ability_ == USE_DEFINED_ABILITY)
-		ability_ = ability;
-
-	// handle case where more than one mob is being assigned the order
-	if (mobs_.size() > 1) {
-		sc2::Units units;
-		for (auto m_ : mobs_) {
-			units.push_back(&(m_->unit));
-		}
-
-		// no target is specified
-		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
-			agent->Actions()->UnitCommand(units, ability, queued_);
-			return true;
-		}
-
-		// target location is specified
-		if (target_loc_ != sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
-			agent->Actions()->UnitCommand(units, ability, target_loc_, queued_);
-			return true;
-		}
-
-		// target unit is specified
-		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ != nullptr) {
-			agent->Actions()->UnitCommand(units, ability, target_unit_, queued_);
-			return true;
-		}
-	}
-	else {
-		// handle case where only one mob is being assigned the order
-				// no target is specified
-
-		const sc2::Unit* unit = &(*mobs_.begin())->unit;
-
-		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
-			agent->Actions()->UnitCommand(unit, ability, queued_);
-			return true;
-		}
-
-		// target location is specified
-		if (target_loc_ != sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
-			agent->Actions()->UnitCommand(unit, ability, target_loc_, queued_);
-			return true;
-		}
-
-		// target unit is specified
-		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ != nullptr) {
-			agent->Actions()->UnitCommand(unit, ability, target_unit_, queued_);
-			return true;
-		}
-	}
-	
-}
-
-bool Directive::issueOrder(BotAgent* agent, Mob* mob_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, sc2::Point2D(-1, -1), nullptr, queued_, ability_);
-}
-
-bool Directive::issueOrder(BotAgent* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, target_loc_, nullptr, queued_, ability_);
-}
-
-bool Directive::issueOrder(BotAgent* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, sc2::Point2D(-1, -1), target_unit_, queued_, ability_);
-}
-
-bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, mobs_, sc2::Point2D(-1, -1), nullptr, queued_, ability_);
-}
-
-bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, mobs_, target_loc_, nullptr, queued_, ability_);
-}
-
-bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, mobs_, sc2::Point2D(-1, -1), target_unit_, queued_, ability_);
-}
-
-bool Directive::setDefault() {
-	// a default directive is something that a unit performs when it has no actions
-	// usually used for workers to return to gathering after building/defending
-	if (!locked)
-		assignee = DEFAULT_DIRECTIVE;
-	return !locked;
-}
-
-std::unordered_set<sc2::Tag> Directive::getAssignedMobTags() {
-	return assigned_mob_tags;
-}
-
-bool Directive::hasAssignedMob() {
-	return !assigned_mob_tags.empty();
-}
-
-bool Directive::assignMob(Mob* mob_) {
-	// adds a mob to this directive's assigned mobs
-	// returns false if directive does not allow multiple mobs and already has one
-	if (!allow_multiple && !assigned_mob_tags.empty()) {
-		return false;
-	}
-	assigned_mob_tags.insert(mob_->get_tag());
-	return true;
-}
-
-sc2::Point2D Directive::uniform_random_point_in_circle(sc2::Point2D center, float radius) {
-	// given the center point and radius, return a uniform random point within the circle
-
-	float r = radius * sqrt(sc2::GetRandomScalar());
-	float theta = sc2::GetRandomScalar() * 2 * M_PI;
-	float x = center.x + r * cos(theta);
-	float y = center.y + r * sin(theta);
-	return sc2::Point2D(x, y);
 }
 
 bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
@@ -342,13 +254,8 @@ bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 	mob = get_random_mob_from_set(mobs);
 
 	/* ORDER IS EXECUTED */
-	agent->mobH->set_mob_idle(mob, false);
-	agent->Actions()->UnitCommand(&mob->unit, ability);
-	if (have_bundle()) mob->bundle_directives(directive_bundle);
-	return true;
+	return issueOrder(agent, mob);
 	/* * * * * * * * * * */
-
-
 }
 
 bool Directive::execute_build_gas_structure(BotAgent* agent) {
@@ -373,8 +280,8 @@ bool Directive::execute_build_gas_structure(BotAgent* agent) {
 		return false;
 
 	// check if any of this unit type are already building a gas structure
-	if (is_any_executing_order(mobs, ability))
-		return false;
+	//  if (is_any_executing_order(mobs, ability))
+	//	  return false;     *****
 	
 	// pick valid mob to execute order, closest to geyser
 	mob = get_closest_to_location(mobs, target_location);
@@ -383,12 +290,9 @@ bool Directive::execute_build_gas_structure(BotAgent* agent) {
 		return false;
 
 	/* ORDER IS EXECUTED */
-	agent->mobH->set_mob_idle(mob, false);
-	mob->set_flag(FLAGS::BUILDING_GAS);
+	mob->set_flag(FLAGS::BUILDING_GAS);  // flag is necessary to prevent protoss probe from staying frozen
 	mob->set_flag(FLAGS::IS_BUILDING_STRUCTURE);
-	agent->Actions()->UnitCommand(&(mob->unit), ability, geyser_target, true);
-	if (have_bundle()) mob->bundle_directives(directive_bundle);
-	return true;
+	return issueOrder(agent, mob, geyser_target);
 	/* * * * * * * * * * */
 
 
@@ -451,10 +355,7 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 	}
 
 	/* ORDER IS EXECUTED */
-	agent->mobH->set_mob_idle(mob, false);
-	agent->Actions()->UnitCommand(&mob->unit, ability, &chrono_target->unit, true);
-	if (have_bundle()) mob->bundle_directives(directive_bundle);
-	return true;
+	return issueOrder(agent, mob, &chrono_target->unit);
 	/* * * * * * * * * * */
 }
 
@@ -487,7 +388,6 @@ bool Directive::execute_match_flags(BotAgent* agent) {
 			if ((m->unit.orders).size() == 0) {
 				found_valid_unit = true;
 				filtered_mobs.insert(m);
-				units.push_back(&m->unit);
 			}
 		}
 	}
@@ -495,11 +395,7 @@ bool Directive::execute_match_flags(BotAgent* agent) {
 		return false;
 
 	/* ORDER IS EXECUTED */
-	for (auto m : filtered_mobs) agent->mobH->set_mob_idle(m, false);
-	Mob* mob_with_bundle = get_random_mob_from_set(filtered_mobs);
-	agent->Actions()->UnitCommand(units, ability, location);
-	if (have_bundle()) mob_with_bundle->bundle_directives(directive_bundle);
-	return true;
+	return issueOrder(agent, filtered_mobs, location);
 	/* * * * * * * * * * */
 }
 
@@ -517,9 +413,9 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 	mobs = filter_by_unit_type(mobs, unit_type);
 
 	// check if a unit of this type is already executing this order
-	if (is_any_executing_order(mobs, ability)) {
-		return false;
-	}
+	//if (is_any_executing_order(mobs, ability)) {
+	//	return false;
+	//}   *****
 
 	// unit of type does not exist
 	if (mobs.size() == 0) {
@@ -563,10 +459,8 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 	if (ability_data.target == sc2::AbilityData::Target::None) {
 		
 		/* ORDER IS EXECUTED */
-		agent->mobH->set_mob_idle(mob, false);
-		agent->Actions()->UnitCommand(&mob->unit, ability);
-		if (have_bundle()) mob->bundle_directives(directive_bundle);
-		return true;
+		return issueOrder(agent, mob);
+		/* * * * * * * * * * */
 	}
 
 	// if the ability requires a target unit
@@ -580,16 +474,18 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 	/* ORDER IS EXECUTED */
 	if (ability_data.is_building)
 		mob->set_flag(FLAGS::IS_BUILDING_STRUCTURE);
-	agent->mobH->set_mob_idle(mob, false);
-	agent->Actions()->UnitCommand(&mob->unit, ability, location);
-	if (have_bundle()) mob->bundle_directives(directive_bundle);
-	return true;
+	return issueOrder(agent, mob, location);
 	/* * * * * * * * * * */
 }
 
 bool Directive::have_bundle() {
 	// if this directive has other directives bundled with it
 	return (directive_bundle.size() > 0);
+}
+
+size_t Directive::getID()
+{
+	return id;
 }
 
 bool Directive::is_building_structure(BotAgent* agent, Mob* mob_) {
@@ -640,6 +536,11 @@ Mob* Directive::get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::
 		}
 	}
 	return closest_sm;
+}
+
+sc2::ABILITY_ID Directive::getAbilityID()
+{
+	return ability;
 }
 
 bool Directive::allowMultiple(bool is_true) {
@@ -722,3 +623,176 @@ bool Directive::allowsMultiple() {
 	return allow_multiple;
 }
 
+bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
+
+	// if no ability override specified
+	if (ability_ == USE_DEFINED_ABILITY)
+		ability_ = ability;
+
+	bool apply_bundle = have_bundle();
+	
+	// handle case where more than one mob is being assigned the order
+	if (mobs_.size() > 1) {
+		sc2::Units units;
+		for (auto m_ : mobs_) {
+			units.push_back(&(m_->unit));
+		}
+
+		bool action_success = false;
+
+		// no target is specified
+		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
+			agent->Actions()->UnitCommand(units, ability_, queued_);
+			action_success = true;
+		}
+
+		// target location is specified
+		if (target_loc_ != sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
+			agent->Actions()->UnitCommand(units, ability_, target_loc_, queued_);
+			action_success = true;
+		}
+
+		// target unit is specified
+		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ != nullptr) {
+			agent->Actions()->UnitCommand(units, ability_, target_unit_, queued_);
+			action_success = true;
+		}
+		if (action_success) {
+			for (auto m_ : mobs_) {
+				assignMob(m_);
+				agent->mobH->set_mob_busy(m_);
+				if (apply_bundle) {
+					m_->bundle_directives(directive_bundle);
+					apply_bundle = false;  // bundle is only given to one mob
+				}
+			}
+		}
+	} 
+	else {
+		// handle case where only one mob is being assigned the order
+
+		// this order already has a mob
+		if (!allow_multiple && hasAssignedMob()) {
+
+			return false;
+		}
+
+		Mob* mob_ = &agent->mobH->getMob((*mobs_.begin())->unit);
+		bool action_success = false;
+		
+		// no target is specified
+		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
+			agent->Actions()->UnitCommand(&mob_->unit, ability_, queued_);
+			action_success = true;
+		}
+
+		
+		// target location is specified
+		if (target_loc_ != sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
+			agent->Actions()->UnitCommand(&mob_->unit, ability_, target_loc_, queued_);
+			action_success = true;
+		}
+
+		// target unit is specified
+		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ != nullptr) {
+			agent->Actions()->UnitCommand(&mob_->unit, ability_, target_unit_, queued_);
+			action_success = true;
+		}
+
+		if (action_success) {
+			Directive* last_directive = mob_->getCurrentDirective();
+
+			// free up the previous directive from this mob
+			if (last_directive != nullptr) {
+				last_directive->unassignMob(mob_);
+			}
+			else {
+			}
+
+			assignMob(mob_);
+
+			agent->mobH->set_mob_busy(mob_);
+			mob_->assignDirective(this);
+
+			if (apply_bundle) 
+				mob_->bundle_directives(directive_bundle);
+
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+bool Directive::issueOrder(BotAgent* agent, Mob* mob_, bool queued_, sc2::ABILITY_ID ability_) {
+	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, sc2::Point2D(-1, -1), nullptr, queued_, ability_);
+}
+
+bool Directive::issueOrder(BotAgent* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_, sc2::ABILITY_ID ability_) {
+	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, target_loc_, nullptr, queued_, ability_);
+}
+
+bool Directive::issueOrder(BotAgent* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
+	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, sc2::Point2D(-1, -1), target_unit_, queued_, ability_);
+}
+
+bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, bool queued_, sc2::ABILITY_ID ability_) {
+	return _generic_issueOrder(agent, mobs_, sc2::Point2D(-1, -1), nullptr, queued_, ability_);
+}
+
+bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_, sc2::ABILITY_ID ability_) {
+	return _generic_issueOrder(agent, mobs_, target_loc_, nullptr, queued_, ability_);
+}
+
+bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
+	return _generic_issueOrder(agent, mobs_, sc2::Point2D(-1, -1), target_unit_, queued_, ability_);
+}
+
+bool Directive::setDefault() {
+	// a default directive is something that a unit performs when it has no actions
+	// usually used for workers to return to gathering after building/defending
+	if (!locked) {
+		assignee = DEFAULT_DIRECTIVE;
+		allow_multiple = true;
+	}
+	return !locked;
+}
+
+std::unordered_set<Mob*> Directive::getAssignedMobs() {
+	return assigned_mobs;
+}
+
+bool Directive::hasAssignedMob() {
+	return !assigned_mobs.empty();
+}
+
+bool Directive::assignMob(Mob* mob_) {
+	// adds a mob to this directive's assigned mobs
+	// returns false if directive does not allow multiple mobs and already has one
+	if (!allow_multiple && !assigned_mobs.empty()) {
+		return false;
+	}
+
+	assigned_mobs.insert(mob_);
+	return true;
+}
+
+void Directive::unassignMob(Mob* mob_) {
+	// unassigns the mob from list of assigned mobs
+	
+	//std::cout << " directive ability type: " << (int) ability << "directive id: " << getID() << std::endl;
+	if (!assigned_mobs.empty()) {
+		assigned_mobs.erase(mob_);
+	}
+	
+}
+
+sc2::Point2D Directive::uniform_random_point_in_circle(sc2::Point2D center, float radius) {
+	// given the center point and radius, return a uniform random point within the circle
+
+	float r = radius * sqrt(sc2::GetRandomScalar());
+	float theta = sc2::GetRandomScalar() * 2 * M_PI;
+	float x = center.x + r * cos(theta);
+	float y = center.y + r * sin(theta);
+	return sc2::Point2D(x, y);
+}

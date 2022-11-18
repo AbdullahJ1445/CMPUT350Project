@@ -92,10 +92,10 @@ private:
 
 };
 
-class StrategyOrder {
+class Precept {
 public:
-	StrategyOrder(BotAgent* agent_);
-	~StrategyOrder();
+	Precept(BotAgent* agent_);
+	~Precept();
 	bool execute();
 	bool checkTriggerConditions();
 	void addTrigger(Trigger trigger_);
@@ -104,6 +104,6 @@ public:
 private:
 	BotAgent* agent;
 	std::vector<Trigger> triggers;
-	std::vector<Directive> directives;
+	std::vector<Directive*> directives;
 	bool has_directive;
 };
