@@ -311,38 +311,42 @@ BotAgent* Trigger::getAgent() {
 	return agent;
 }
 
-StrategyOrder::StrategyOrder(BotAgent* agent_) {
+Precept::Precept(BotAgent* agent_) {
 	agent = agent_;
 }
 
-StrategyOrder::~StrategyOrder() {
+Precept::~Precept() {
 	directives.clear();
 }
 
-bool StrategyOrder::execute() {
+bool Precept::execute() {
 	bool any_executed = false;
 	for (auto d : directives) {
-		if (d.execute(agent))
+		if (d->execute(agent))
 			any_executed = true;
 	}
 	return any_executed;
 }
 
-void StrategyOrder::addDirective(Directive directive_) {
-	// once a directive has been added to a StrategyOrder, it cannot be modified
+void Precept::addDirective(Directive directive_) {
+	// once a directive has been added to a Precept, it cannot be modified
 	// this ensures we can look up whether the same directive already exists for a unit
+
 	directive_.lock();
-	directives.push_back(directive_);
+	agent->storeDirective(directive_);
+	Directive* dir_ = agent->getLastStoredDirective();
+	directives.push_back(dir_);
 }
 
-void StrategyOrder::addTrigger(Trigger trigger_) {
+void Precept::addTrigger(Trigger trigger_) {
 	triggers.push_back(trigger_);
 }
 
-bool StrategyOrder::checkTriggerConditions() {
+bool Precept::checkTriggerConditions() {
 	for (Trigger t_ : triggers) {
 		if (t_.check_conditions())
 			return true;
 	}
 	return false;
 }
+

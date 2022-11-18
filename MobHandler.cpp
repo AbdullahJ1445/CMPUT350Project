@@ -17,11 +17,26 @@ void MobHandler::set_mob_idle(Mob* mob_, bool is_true) {
 	if (is_true) {
 		mob_->set_flag(FLAGS::IS_IDLE);
 		mob_->remove_flag(FLAGS::IS_BUILDING_STRUCTURE);
+		set_mob_busy(mob_, false);
 		idle_mobs.insert(mob);
 	}
 	else {
 		mob_->remove_flag(FLAGS::IS_IDLE);
 		idle_mobs.erase(mob);
+	}
+}
+
+void MobHandler::set_mob_busy(Mob* mob_, bool is_true) {
+	// set a mob as busy
+	// a mob may be neither busy or idle (e.g. a worker harvesting minerals will be available to build)
+
+	Mob* mob = &getMob(mob_->unit); // ensure we are pointing to the mob in our storage
+	if (is_true) {
+		set_mob_idle(mob_, false);
+		busy_mobs.insert(mob);
+	}
+	else {
+		busy_mobs.erase(mob);
 	}
 }
 
@@ -83,4 +98,9 @@ std::unordered_set<Mob*> MobHandler::get_mobs() {
 
 std::unordered_set<Mob*> MobHandler::get_idle_mobs() {
     return idle_mobs;
+}
+
+std::unordered_set<Mob*> MobHandler::get_busy_mobs()
+{
+	return busy_mobs;
 }
