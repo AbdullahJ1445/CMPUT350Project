@@ -55,7 +55,6 @@ public:
 	const sc2::Unit* FindNearestTownhall(const sc2::Point2D location);
 
 	// public variables 
-	std::vector<Base> bases;
 	sc2::Point2D start_location;
 	sc2::Point2D proxy_location;
 	sc2::Point2D enemy_location;

@@ -21,4 +21,5 @@ public:
 
 private:
     BotAgent* agent;
+    std::vector<Base> bases;
 };
