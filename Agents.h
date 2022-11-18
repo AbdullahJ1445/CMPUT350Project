@@ -62,6 +62,7 @@ public:
 	sc2::Point2D enemy_location;
 	Mob* proxy_worker;
 	std::unordered_map<size_t, Directive*> directive_by_id;
+	std::vector<Base> bases;
 
 private:
 
