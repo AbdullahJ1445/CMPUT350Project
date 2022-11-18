@@ -324,6 +324,7 @@ void BotAgent::OnStep() {
 		OnStep_1000();
 	}
 
+	/*
 	std::unordered_set<Mob*> busy_mobs = mobH->get_busy_mobs();
 	if (!busy_mobs.empty()) {
 		for (auto it = busy_mobs.begin(); it != busy_mobs.end(); ++it) {
@@ -340,6 +341,7 @@ void BotAgent::OnStep() {
 			}
 		}
 	}
+	*/
 	
 	std::unordered_set<Mob*> idle_mobs = mobH->get_idle_mobs();
 	if (!idle_mobs.empty()) {
