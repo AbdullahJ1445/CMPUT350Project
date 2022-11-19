@@ -193,7 +193,7 @@ void BotAgent::initStartingUnits() {
 			u_type == sc2::UNIT_TYPEID::PROTOSS_PROBE) 
 		{
 			Mob worker (*u, MOB::MOB_WORKER);
-			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, u_type, sc2::ABILITY_ID::HARVEST_GATHER, start_location);
+			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, u_type, sc2::ABILITY_ID::HARVEST_GATHER, locH->getStartLocation());
 			storeDirective(directive_get_minerals_near_Base);
 			Directive* dir = getLastStoredDirective();
 			worker.assignDefaultDirective(*dir);
@@ -215,11 +215,13 @@ void BotAgent::initStartingUnits() {
 }
 
 void BotAgent::OnGameStart() {
-	start_location = Observation()->GetStartLocation();
+	//start_location = Observation()->GetStartLocation();
 	mobH = new MobHandler(this); // initialize mob handler 
 	locH = new LocationHandler(this);
-	BotAgent::initVariables();
+	BotAgent::initVariables(); // initialize this first
 	BotAgent::initStartingUnits();
+	sc2::Point2D start_location = locH->getStartLocation();
+	sc2::Point2D proxy_location = locH->getProxyLocation();
 	std::cout << "Start Location: " << start_location.x << "," << start_location.y << std::endl;
 	std::cout << "Build Area 0: " << locH->bases[0].get_build_area(0).x << "," << locH->bases[0].get_build_area(0).y << std::endl;
 	std::cout << "Proxy Location: " << proxy_location.x << "," << proxy_location.y << std::endl;
@@ -245,6 +247,9 @@ void BotAgent::OnStep() {
 	if (gameloop % 1000 == 0) {
 		OnStep_1000();
 	}
+
+	// update visibility data for chunks
+	locH->scanChunks(observation);
 
 	/*
 	std::unordered_set<Mob*> busy_mobs = mobH->get_busy_mobs();
@@ -334,6 +339,11 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 		}
 	}
 	Mob new_mob(*unit, mob_type);
+
+	if (new_mob.unit.is_flying) {
+		new_mob.set_flag(FLAGS::IS_FLYING);
+	}
+
 	new_mob.set_home_location(locH->bases[base_index].get_townhall());
 	if (is_worker) {
 		new_mob.set_assigned_location(new_mob.get_home_location());
