@@ -205,7 +205,7 @@ void BotAgent::OnGameStart() {
 	BotAgent::initVariables();
 	BotAgent::initStartingUnits();
 	std::cout << "Start Location: " << start_location.x << "," << start_location.y << std::endl;
-	std::cout << "Build Area 0: " << bases[0].get_build_area(0).x << "," << bases[0].get_build_area(0).y << std::endl;
+	std::cout << "Build Area 0: " << locH->bases[0].get_build_area(0).x << "," << locH->bases[0].get_build_area(0).y << std::endl;
 
 	current_strategy->loadStrategies();
 }
@@ -317,16 +317,16 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 		}
 	}
 	Mob new_mob(*unit, mob_type);
-	new_mob.set_home_location(bases[base_index].get_townhall());
+	new_mob.set_home_location(locH->bases[base_index].get_townhall());
 	if (is_worker) {
 		new_mob.set_assigned_location(new_mob.get_home_location());
 		Directive directive_get_minerals_near_birth(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION,
-			new_mob.unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, bases[base_index].get_townhall());
+			new_mob.unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, locH->bases[base_index].get_townhall());
 		new_mob.assignDefaultDirective(directive_get_minerals_near_birth);
 	}
 	else {
 		if (!structure) {
-			new_mob.set_assigned_location(bases[base_index].get_random_defend_point());
+			new_mob.set_assigned_location(locH->bases[base_index].get_random_defend_point());
 		}
 		else {
 			new_mob.set_assigned_location(new_mob.get_home_location());
@@ -348,7 +348,7 @@ void BotAgent::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 		unit_type == sc2::UNIT_TYPEID::ZERG_HATCHERY) {
 		int base_index = locH->getIndexOfClosestBase(unit->pos);
 		std::cout << "expansion " << base_index << " has been activated." << std::endl;
-		bases[base_index].set_active();
+		locH->bases[base_index].set_active();
 	}
 	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON ||
 		unit_type == sc2::UNIT_TYPEID::TERRAN_BUNKER ||
@@ -378,7 +378,7 @@ void BotAgent::OnUnitDamaged(const sc2::Unit* unit, float health, float shields)
 			if (unit->health / unit->health_max < .5f) {
 				// check if Blink is on cooldown
 				if (can_unit_use_ability(*unit, sc2::ABILITY_ID::EFFECT_BLINK)) {
-					Actions()->UnitCommand(unit, sc2::ABILITY_ID::EFFECT_BLINK, bases[0].get_townhall());
+					Actions()->UnitCommand(unit, sc2::ABILITY_ID::EFFECT_BLINK, locH->bases[0].get_townhall());
 				}
 			}
 		}

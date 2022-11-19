@@ -19,8 +19,8 @@ public:
     const sc2::Unit*  getNearestTownhall(const sc2::Point2D location);
     int getPlayerIDForMap(int map_index, sc2::Point2D location);
     void initLocations(int map_index, int p_id);
+    std::vector<Base> bases;
 
 private:
     BotAgent* agent;
-    std::vector<Base> bases;
 };

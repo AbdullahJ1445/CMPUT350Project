@@ -176,9 +176,9 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		return (num_units <= cond_value);
 	}
 	case COND::BASE_IS_ACTIVE:
-		if (agent->bases.size() <= cond_value || cond_value < 0)
+		if (agent->locH->bases.size() <= cond_value || cond_value < 0)
 			return false;
-		return agent->bases[cond_value].is_active();
+		return agent->locH->bases[cond_value].is_active();
 	case COND::HAVE_UPGRADE:
 		return agent->have_upgrade(upgrade_id) == is_true;
 	case COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION:

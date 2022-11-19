@@ -70,7 +70,7 @@ void Strategy::loadStrategies() {
 	}  */
 	{
 		Precept build_supply(bot);
-		Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::TERRAN_SCV, sc2::ABILITY_ID::BUILD_SUPPLYDEPOT, bot->bases[0].get_defend_point(0), 7.0f);
+		Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::TERRAN_SCV, sc2::ABILITY_ID::BUILD_SUPPLYDEPOT, bot->locH->bases[0].get_defend_point(0), 7.0f);
 		Trigger t(bot);
 		t.add_condition(COND::MIN_MINERALS, 100);
 		build_supply.addDirective(d);

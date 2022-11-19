@@ -51,12 +51,6 @@ public:
 	// various getters
 	std::vector<sc2::Attribute> get_attributes(const sc2::Unit* unit);
 	sc2::UnitTypeData getUnitTypeData(const sc2::Unit* unit);
-	int BotAgent::get_index_of_closest_base(sc2::Point2D location_);
-	sc2::Point2D getNearestStartLocation(sc2::Point2D spot);
-	const sc2::Unit* FindNearestMineralPatch(const sc2::Point2D location);
-	const sc2::Unit* FindNearestGeyser(const sc2::Point2D location);
-	const sc2::Unit* FindNearestGasStructure(const sc2::Point2D location);
-	const sc2::Unit* FindNearestTownhall(const sc2::Point2D location);
 
 	// public variables 
 	sc2::Point2D start_location;
@@ -64,7 +58,6 @@ public:
 	sc2::Point2D enemy_location;
 	Mob* proxy_worker;
 	std::unordered_map<size_t, Directive*> directive_by_id;
-	std::vector<Base> bases;
 
 private:
 
@@ -73,8 +66,6 @@ private:
 	void OnStep_1000();
 	void initVariables();
 	void initStartingUnits();
-	void initLocations(int map_index, int p_id);
-	int getPlayerIDForMap(int map_index, sc2::Point2D location);
 
 	// virtual functions 
 	virtual void OnGameStart() final;
