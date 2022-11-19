@@ -8,8 +8,49 @@
 #include "sc2api/sc2_typeenums.h"
 
 
+
+MapChunk::MapChunk(BotAgent* agent_, sc2::Point2D location_, bool pathable_) {
+    agent = agent_;
+    location = location_;
+    last_seen = -1;
+}
+
+sc2::Point2D MapChunk::getLocation() {
+    return location;
+}
+
+uint32_t MapChunk::seen_at() {
+    return last_seen;
+}
+
+bool MapChunk::wasSeen() {
+    return last_seen != -1;
+}
+
+bool MapChunk::isPathable() {
+    return pathable;
+}
+
+void MapChunk::checkVision(const sc2::ObservationInterface* obs) {
+    auto last_visibility = obs->GetVisibility(location);
+    last_seen = obs->GetGameLoop();
+}
+
+bool MapChunk::inVision(const sc2::ObservationInterface* obs) {
+
+    // sc2::Visibility enums
+    // Hidden = 0,
+    // Fogged = 1,
+    // Visible = 2,
+    // FullHidden = 3
+    
+    return (last_visibility == sc2::Visibility::Visible);
+}
+
+
 LocationHandler::LocationHandler(BotAgent* agent_){
     agent = agent_;
+    enemy_start_location_index = 0;
 }
     
 sc2::Point2D LocationHandler::getNearestStartLocation(sc2::Point2D spot) {
@@ -39,6 +80,12 @@ int LocationHandler::getIndexOfClosestBase(sc2::Point2D location_) {
         }
     }
     return lowest_index;
+}
+
+void LocationHandler::scanChunks(const sc2::ObservationInterface* obs) {
+    for (auto chunk : map_chunks) {
+        chunk.checkVision(obs);
+    }
 }
 
 const sc2::Unit* LocationHandler::getNearestMineralPatch(sc2::Point2D location) {
@@ -108,6 +155,106 @@ const sc2::Unit* LocationHandler::getNearestTownhall(const sc2::Point2D location
     return nullptr;
 }
 
+sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
+{
+    // first check if any locations were never seen
+    bool unseen = false;
+    for (auto chunk : map_chunks) {
+        if (pathable_ && !chunk.isPathable())
+            continue;
+        if (!chunk.wasSeen()) {
+            unseen = true;
+            break;
+        }
+    }
+    if (unseen)
+        return getClosestUnseenLocation(pathable_);
+
+    uint32_t lowest = -2;
+    sc2::Point2D lowest_loc(-1, -1);
+
+    std::vector<MapChunk> chunks;
+    if (pathable_) {
+        for (auto chunk : map_chunks) {
+            if (chunk.isPathable())
+                chunks.push_back(chunk);
+        }
+    }
+    else {
+        chunks = map_chunks;
+    }
+
+    for (auto chunk : chunks) {
+        if (chunk.seen_at() < lowest) {
+            lowest_loc = chunk.getLocation();
+            lowest = chunk.seen_at();
+        }
+    }
+
+    return lowest_loc;
+}
+
+sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
+    std::vector<MapChunk> unseen_chunks;
+    for (auto chunk : map_chunks) {
+        if (pathable_ && !chunk.isPathable())
+            continue;
+        if (!chunk.wasSeen()) {
+            unseen_chunks.push_back(chunk);
+        }
+    }
+
+    if (unseen_chunks.empty())
+        return sc2::Point2D(-1, -1);
+
+    float dist_to_mob;
+    std::unordered_set<Mob*> mobs = agent->mobH->get_mobs();
+    std::unordered_set<Mob*> flying_mobs = agent->mobH->filter_by_flag(mobs, FLAGS::IS_FLYING);
+
+    float closest_dist = std::numeric_limits<float>::max();
+    sc2::Point2D closest_loc(-1,-1);
+    if (pathable_) {
+        for (auto chunk : unseen_chunks) {
+            sc2::Point2D loc = chunk.getLocation();
+            if (mobs.empty())
+                break;
+            Mob* closest_mob = Directive::get_closest_to_location(mobs, loc);
+            float dist = sc2::DistanceSquared2D(closest_mob->unit.pos, loc);
+            if (dist < closest_dist) {
+                closest_loc = loc;
+                closest_dist = dist;
+            }
+        }
+    }
+    else {
+        // if we are checking all chunks, whether pathable or not
+
+        for (auto chunk : unseen_chunks) {
+            sc2::Point2D loc = chunk.getLocation();
+            Mob* closest_mob = nullptr;
+            if (!chunk.isPathable()) {
+
+                // for non pathable checks, only check distance to flying units
+                if (flying_mobs.empty())
+                    continue;
+                closest_mob = Directive::get_closest_to_location(flying_mobs, loc);
+            }
+            else {
+                if (mobs.empty())
+                    break;
+                closest_mob = Directive::get_closest_to_location(mobs, loc);
+            }
+
+            float dist = sc2::DistanceSquared2D(closest_mob->unit.pos, loc);
+            if (dist < closest_dist) {
+                closest_loc = loc;
+                closest_dist = dist;
+            }
+        }
+    }
+    return closest_loc;
+}
+
 int LocationHandler::getPlayerIDForMap(int map_index, sc2::Point2D location) {
     location = getNearestStartLocation(location);
     int p_id = 0;
@@ -159,6 +306,8 @@ int LocationHandler::getPlayerIDForMap(int map_index, sc2::Point2D location) {
 
 void LocationHandler::initLocations(int map_index, int p_id) {
     const sc2::ObservationInterface* observation = agent->Observation();
+    initSetStartLocation();
+
     std::cout << "map index: " << map_index << std::endl;
     std::cout << "p_id: " << p_id << std::endl;
 
@@ -221,8 +370,8 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         // BELSHIR VESTIGE
 
         if (p_id == 1) {
-            agent->proxy_location = sc2::Point2D(33.0, 98.0);
-            agent->enemy_location = sc2::Point2D(29.5, 134.5);
+            setProxyLocation(sc2::Point2D(33.0, 98.0));
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(29.5, 134.5));
             Base main_base(observation->GetStartLocation());
             bases.push_back(main_base);
 
@@ -253,8 +402,8 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         } 
         else if (p_id == 2) {
 
-            agent->proxy_location = sc2::Point2D(111.0, 62.0);
-            agent->enemy_location = sc2::Point2D(114.5, 25.5);
+            setProxyLocation(sc2::Point2D(111.0, 62.0));
+            initAddEnemyStartLocation(sc2::Point2D(114.5, 25.5));
             Base main_base(observation->GetStartLocation());
             bases.push_back(main_base);
 
@@ -288,8 +437,8 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         // PROXIMA STATION
 
         if (p_id == 1) {
-            agent->proxy_location = sc2::Point2D(28.0, 56.0);
-            agent->enemy_location = sc2::Point2D(62.5, 28.5);
+            setProxyLocation(sc2::Point2D(28.0, 56.0));
+            initAddEnemyStartLocation(sc2::Point2D(62.5, 28.5));
 
             Base main_base(observation->GetStartLocation());
             main_base.add_build_area(146.0, 128.0);
@@ -365,8 +514,8 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(exp_14);
         }
         else if (p_id == 2) {
-            agent->proxy_location = sc2::Point2D(172.0, 112.0);
-            agent->enemy_location = sc2::Point2D(137.5, 139.5);
+            setProxyLocation(sc2::Point2D(172.0, 112.0));
+            initAddEnemyStartLocation(sc2::Point2D(137.5, 139.5));
             Base main_base(observation->GetStartLocation());
             main_base.add_build_area(54.0, 40.0);
             main_base.add_build_area(68.0, 36.0);
@@ -441,4 +590,81 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(exp_14);
         }
     }
+}
+
+void LocationHandler::initAddEnemyStartLocation(sc2::Point2D location_) {
+    enemy_start_locations.push_back(location_);
+}
+
+void LocationHandler::initMapChunks()
+{
+    const sc2::ObservationInterface* obs = agent->Observation();
+    sc2::GameInfo game_info = obs->GetGameInfo();
+    float chunk_size = 4.0f;
+    float min_x = game_info.playable_min.x + chunk_size;
+    float min_y = game_info.playable_min.x + chunk_size;
+    float max_x;
+    float max_y;
+
+    // chunk matrix size
+    int width = 0;
+    int height = 0;   
+
+    // set maximums to correspond to chunk locations
+    for (float x_ = min_x; x_ < game_info.playable_max.x; x_ += chunk_size) { 
+        max_x = x_;
+        width++;
+    }
+    for (float y_ = min_y; y_ < game_info.playable_max.y; y_ += chunk_size) { 
+        max_y = y_; 
+        height++;
+    }
+
+    for (int j = 0; j < height; j++) {
+        for (int i = 0; i < width; i++) {
+            sc2::Point2D loc_ = sc2::Point2D(min_x + (i * chunk_size), min_y + (j * chunk_size));
+            map_chunks.push_back(MapChunk(agent, loc_, obs->IsPathable(loc_)));
+        }
+    }
+}
+
+void LocationHandler::setEnemyStartLocation(sc2::Point2D location_)
+{
+    sc2::Point2D enemy_loc = getNearestStartLocation(location_);
+
+    for (int i = 0; i < enemy_start_locations.size(); i++) {
+        if (enemy_start_locations[i] == enemy_loc) {
+            enemy_start_location_index = i;
+        }
+    }
+}
+
+sc2::Point2D LocationHandler::getProxyLocation() {
+    return proxy_location;
+}
+
+sc2::Point2D LocationHandler::getStartLocation()
+{
+    return start_location;
+}
+
+void LocationHandler::setProxyLocation(sc2::Point2D location_) {
+    proxy_location = location_;
+}
+
+void LocationHandler::initSetStartLocation()
+{
+    start_location = agent->Observation()->GetStartLocation();
+}
+
+sc2::Point2D LocationHandler::getEnemyStartLocationByIndex(int index_) {
+    // it is important to ensure this still functions with indices out of range
+    // as Strategy source files may not be able to know the number of indices
+
+    int num_locs = agent->Observation()->GetGameInfo().start_locations.size();
+    return enemy_start_locations.at(index_ % num_locs);
+}
+
+sc2::Point2D LocationHandler::getBestEnemyLocation() {
+    return enemy_start_locations.at(enemy_start_location_index);
 }

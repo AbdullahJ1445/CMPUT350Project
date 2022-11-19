@@ -55,9 +55,9 @@ public:
 	sc2::UnitTypeData getUnitTypeData(const sc2::Unit* unit);
 
 	// public variables 
-	sc2::Point2D start_location;
-	sc2::Point2D proxy_location;
-	sc2::Point2D enemy_location;
+	//sc2::Point2D start_location;
+	//sc2::Point2D proxy_location;
+	//sc2::Point2D enemy_location;
 	Mob* proxy_worker;
 	std::unordered_map<size_t, Directive*> directive_by_id;
 
