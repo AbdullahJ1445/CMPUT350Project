@@ -40,6 +40,8 @@ public:
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
 	void storeDirective(Directive directive_);
 	Directive* getLastStoredDirective();
+	void storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_type_);
+	sc2::UNIT_TYPEID getUnitType(std::string identifier_);
 
 	// various bool functions
 	bool have_upgrade(const sc2::UpgradeID upgrade_);
@@ -81,6 +83,7 @@ private:
 	std::vector<Precept> strategies;
 	std::vector<std::unique_ptr<Directive>> directive_storage;
 	std::unordered_set<Directive*> stored_directives;
+	std::unordered_map<std::string, sc2::UNIT_TYPEID> special_units;
 
 	// private variables
 	int player_start_id;

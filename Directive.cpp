@@ -310,6 +310,12 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 	Mob* chrono_target;
 	std::unordered_set<Mob*> mobs_filter1;
 	static const sc2::Unit* unit_to_target;
+	
+	
+	// allow a strategy to specify a specific target for chronoboost by invoking
+	// bot->storeUnitType("_CHRONOBOOST_TARGET", <sc2::UNIT_TYPEID>)
+	sc2::UNIT_TYPEID _chronotarget_type = agent->getUnitType("_CHRONOBOOST_TARGET");
+	bool _special_chronotarget = (_chronotarget_type != sc2::UNIT_TYPEID::INVALID);
 
 	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
 		mobs = filter_near_location(mobs, assignee_location, assignee_proximity);
@@ -338,8 +344,16 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 
 	// get all structures
 	std::unordered_set<Mob*> structures = agent->mobH->filter_by_flag(agent->mobH->get_mobs(), FLAGS::IS_STRUCTURE);
-	std::unordered_set<Mob*> structures_with_orders; 
 
+	// if a special chronotarget structure was specified in the strategy, filter by that structure
+	if (_special_chronotarget) {
+		std::unordered_set<Mob*> chrono_structures;
+		std::copy_if(structures.begin(), structures.end(), std::inserter(chrono_structures, chrono_structures.begin()),
+			[this, _chronotarget_type](Mob* m) { return (m->unit.unit_type == _chronotarget_type); });
+		structures = chrono_structures;
+	}
+
+	std::unordered_set<Mob*> structures_with_orders; 
 	// look for buildings that are doing something
 	std::copy_if(structures.begin(), structures.end(), std::inserter(structures_with_orders, structures_with_orders.begin()),
 		[this](Mob* m) { return (m->unit.orders).size() > 0; });

@@ -106,6 +106,13 @@ bool BotAgent::is_structure(const sc2::Unit* unit) {
 	return (std::find(attrs.begin(), attrs.end(), sc2::Attribute::Structure) != attrs.end());
 }
 
+void BotAgent::storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_type_)
+{
+	// store a special unit, used for certain functions
+	// e.g. "_CHRONOBOOST_TARGET" : the unit type of a building that chronoboost will exclusively target
+	special_units[identifier_] = unit_type_;
+}
+
 bool BotAgent::is_mineral_patch(const sc2::Unit* unit_) {
 	// check whether a given unit is a mineral patch
 
@@ -122,6 +129,12 @@ bool BotAgent::is_mineral_patch(const sc2::Unit* unit_) {
 		type_ == sc2::UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD ||
 		type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750 ||
 		type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD);
+}
+
+sc2::UNIT_TYPEID BotAgent::getUnitType(std::string identifier_)
+{
+	return special_units[identifier_];
+	
 }
 
 bool BotAgent::is_geyser(const sc2::Unit* unit_) {
