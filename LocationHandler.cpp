@@ -159,11 +159,13 @@ int LocationHandler::getPlayerIDForMap(int map_index, sc2::Point2D location) {
 
 void LocationHandler::initLocations(int map_index, int p_id) {
     const sc2::ObservationInterface* observation = agent->Observation();
-    switch (map_index) {
-    case 1:
-        switch (p_id) {
-        case 1:
-        {
+    std::cout << "map index: " << map_index << std::endl;
+    std::cout << "p_id: " << p_id << std::endl;
+
+    if (map_index == 1) {
+        // CACTUS VALLEY
+        if (p_id == 1) {
+
             Base main_base(observation->GetStartLocation());
             Base exp_1(66.5, 161.5);
             bases.push_back(exp_1);
@@ -203,15 +205,24 @@ void LocationHandler::initLocations(int map_index, int p_id) {
 
             Base exp_13(137.5, 59.5);
             bases.push_back(exp_13);
-            break;
         }
-        break;
+        else if (p_id == 2) {
+            //implement
         }
-    case 2:
-        switch (p_id) {
-        case 1:
-        {
-            agent->enemy_location = sc2::Point2D(114.5, 25.5);
+        else if (p_id == 3) {
+            //implement
+        }
+        else if (p_id == 4) {
+            //implement
+        }
+    }
+
+    else if (map_index == 2) {
+        // BELSHIR VESTIGE
+
+        if (p_id == 1) {
+            agent->proxy_location = sc2::Point2D(33.0, 98.0);
+            agent->enemy_location = sc2::Point2D(29.5, 134.5);
             Base main_base(observation->GetStartLocation());
             bases.push_back(main_base);
 
@@ -238,11 +249,12 @@ void LocationHandler::initLocations(int map_index, int p_id) {
 
             Base exp_8(61.5, 136.5);
             bases.push_back(exp_8);
-            break;
-        }
-        case 2:
-        {
-            agent->enemy_location = sc2::Point2D(29.5, 134.5);
+
+        } 
+        else if (p_id == 2) {
+
+            agent->proxy_location = sc2::Point2D(111.0, 62.0);
+            agent->enemy_location = sc2::Point2D(114.5, 25.5);
             Base main_base(observation->GetStartLocation());
             bases.push_back(main_base);
 
@@ -269,14 +281,13 @@ void LocationHandler::initLocations(int map_index, int p_id) {
 
             Base exp_8(82.5, 23.5);
             bases.push_back(exp_8);
-            break;
         }
-        break;
-        }
-    case 3:
-        switch (p_id) {
-        case 1:
-        {
+    }
+    else if (map_index == 3) {
+        
+        // PROXIMA STATION
+
+        if (p_id == 1) {
             agent->proxy_location = sc2::Point2D(28.0, 56.0);
             agent->enemy_location = sc2::Point2D(62.5, 28.5);
 
@@ -352,11 +363,8 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             exp_14.add_build_area(35.0, 33.0);
             exp_14.add_defend_point(32.0, 36.0);
             bases.push_back(exp_14);
-
-            break;
         }
-        case 2:
-        {
+        else if (p_id == 2) {
             agent->proxy_location = sc2::Point2D(172.0, 112.0);
             agent->enemy_location = sc2::Point2D(137.5, 139.5);
             Base main_base(observation->GetStartLocation());
@@ -431,10 +439,6 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             exp_14.add_build_area(165.0, 135.0);
             exp_14.add_defend_point(168.0, 132.0);
             bases.push_back(exp_14);
-
-            break;
-        }
-        break;
         }
     }
 }

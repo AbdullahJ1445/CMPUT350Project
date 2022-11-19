@@ -46,7 +46,9 @@ public:
 	void unassignDirective();
 	bool hasDefaultDirective();
 	bool hasBundledDirective();
+	bool hasCurrentDirective();
 	bool executeDefaultDirective(BotAgent* agent);
+	void disableDefaultDirective();
 	Directive popBundledDirective();
 	bool is_carrying_minerals();
 	bool is_carrying_gas();
@@ -73,6 +75,7 @@ private:
 	sc2::Tag tag; // a unique identifier given to units
 	bool has_default_directive;
 	bool has_bundled_directive;
+	bool has_current_directive;
 	Directive* default_directive;
 	Directive* bundled_directive;
 	Directive* current_directive;
