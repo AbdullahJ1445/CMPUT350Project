@@ -32,14 +32,13 @@ int main(int argc, char* argv[]) {
 	int map_index;
 	Race bot_race;
 	Race opp_race;
+	Difficulty difficulty;
 	bool human_player;
 	bool fullscreen;
 	bool realtime;
 
-	strategy.loadGameSettings(&map_index, &bot_race, &opp_race, &human_player, &fullscreen, &realtime);
-
+	strategy.loadGameSettings(&map_index, &bot_race, &opp_race, &difficulty, &human_player, &fullscreen, &realtime);
 	assert(map_index > 0 && map_index <= 3);
-
 	if (human_player) {
 		coordinator.SetParticipants({
 			CreateParticipant(opp_race, &human),
@@ -49,14 +48,13 @@ int main(int argc, char* argv[]) {
 	else {
 		coordinator.SetParticipants({
 			CreateParticipant(bot_race, &bot),
-			CreateComputer(opp_race)
+			CreateComputer(opp_race, difficulty)
 			});
 	}
-
 	coordinator.SetRealtime(realtime);
 	coordinator.SetFullScreen(fullscreen);
 	coordinator.LaunchStarcraft();
-	coordinator.StartGame(map_strings[map_index + 1]);
+	coordinator.StartGame(map_strings[map_index - 1]);
 
 	while (coordinator.Update()) {
 	}

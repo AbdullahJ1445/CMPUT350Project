@@ -177,6 +177,7 @@ void BotAgent::initVariables() {
 	player_start_id = locH->getPlayerIDForMap(map_index, observation->GetStartLocation());
 	locH->initLocations(map_index, player_start_id);
 
+	std::cout << "Map Index " << map_index << std::endl;
 	std::cout << "Map Name: " << map_name << std::endl;
 	std::cout << "Player Start ID: " << player_start_id << std::endl;
 }
@@ -193,7 +194,9 @@ void BotAgent::initStartingUnits() {
 		{
 			Mob worker (*u, MOB::MOB_WORKER);
 			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, u_type, sc2::ABILITY_ID::HARVEST_GATHER, start_location);
-			worker.assignDefaultDirective(directive_get_minerals_near_Base);
+			storeDirective(directive_get_minerals_near_Base);
+			Directive* dir = getLastStoredDirective();
+			worker.assignDefaultDirective(*dir);
 			mobH->addMob(worker);
 		}
 		if (u_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS ||
@@ -219,6 +222,7 @@ void BotAgent::OnGameStart() {
 	BotAgent::initStartingUnits();
 	std::cout << "Start Location: " << start_location.x << "," << start_location.y << std::endl;
 	std::cout << "Build Area 0: " << locH->bases[0].get_build_area(0).x << "," << locH->bases[0].get_build_area(0).y << std::endl;
+	std::cout << "Proxy Location: " << proxy_location.x << "," << proxy_location.y << std::endl;
 
 	current_strategy->loadStrategies();
 }
@@ -339,7 +343,7 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 	}
 	else {
 		if (!structure) {
-			new_mob.set_assigned_location(locH->bases[base_index].get_random_defend_point());
+			new_mob.set_assigned_location(Directive::uniform_random_point_in_circle(new_mob.get_home_location(), 2.5F));
 		}
 		else {
 			new_mob.set_assigned_location(new_mob.get_home_location());
@@ -347,10 +351,13 @@ void BotAgent::OnUnitCreated(const sc2::Unit* unit) {
 	}
 	mobH->addMob(new_mob);	
 	Mob* mob = &mobH->getMob(*unit);
+	/*
 	if (!is_worker && !structure) {
 		Directive atk_mv_to_defense(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, unit_type, sc2::ABILITY_ID::ATTACK_ATTACK, mob->get_assigned_location(), 2.0F);
-		atk_mv_to_defense.executeForMob(this, mob);
-	}
+		storeDirective(atk_mv_to_defense);
+		Directive* dir = getLastStoredDirective();
+		dir->executeForMob(this, mob);
+	} */
 }
 
 void BotAgent::OnBuildingConstructionComplete(const sc2::Unit* unit) {
@@ -401,9 +408,9 @@ void BotAgent::OnUnitDamaged(const sc2::Unit* unit, float health, float shields)
 void BotAgent::OnUnitIdle(const sc2::Unit* unit) {
 	Mob* mob = &mobH->getMob(*unit);
 	mobH->set_mob_idle(mob, true);
-	
-	Directive* prev_dir = mob->getCurrentDirective();
-	if (prev_dir) {
+	if (mob->hasCurrentDirective()) {
+		Directive* prev_dir = mob->getCurrentDirective();
+		size_t id = prev_dir->getID();
 		prev_dir->unassignMob(mob);
 		mob->unassignDirective();
 	}

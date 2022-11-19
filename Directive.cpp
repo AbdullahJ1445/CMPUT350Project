@@ -38,6 +38,10 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 }
 
 
+Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_) : 
+	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_,
+		sc2::Point2D(-1, -1), assignee_proximity_, -1.0f, std::unordered_set<FLAGS>(), nullptr) {}
+
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_) :
 	Directive(assignee_, action_type_, unit_type_, ability_, sc2::Point2D(-1, -1), 
 		sc2::Point2D(-1, -1), -1.0f, -1.0f, std::unordered_set<FLAGS>(), nullptr) {}
@@ -45,6 +49,12 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) :
 	Directive(assignee_, action_type_, unit_type_, ability_, sc2::Point2D(-1, -1),
 		location_, -1.0f, proximity_, std::unordered_set<FLAGS>(), nullptr) {}
+
+Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, float assignee_proximity_) :
+	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, sc2::Point2D(-1, -1), assignee_proximity_, -1.0f, std::unordered_set<FLAGS>(), nullptr) {}
+
+Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) :
+	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, target_location_, assignee_proximity_, target_proximity_, std::unordered_set<FLAGS>(), nullptr) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_) :
 	Directive(assignee_, action_type_, unit_type_, ability_, sc2::Point2D(-1, -1),
@@ -146,7 +156,7 @@ bool Directive::execute(BotAgent* agent) {
 
 			return execute_order_for_unit_type_with_location(agent);
 		}
-		if (action_type == SIMPLE_ACTION) {
+		if (action_type == SIMPLE_ACTION || action_type == DISABLE_DEFAULT_DIRECTIVE) {
 			return execute_simple_action_for_unit_type(agent);
 		}
 	}
@@ -241,11 +251,14 @@ bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // unordered_set of all friendly units
 	Mob* mob;
 
+
 	// filter idle units which match unit_type
 	mobs = filter_by_unit_type(mobs, unit_type);
 	mobs = filter_idle(mobs);
 
 	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
+		assert(assignee_location != sc2::Point2D(-1, -1));
+		assert(assignee_proximity != -1.0F);
 		mobs = filter_near_location(mobs, assignee_location, assignee_proximity);
 	}
 
@@ -253,6 +266,16 @@ bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 		return false;
 
 	mob = get_random_mob_from_set(mobs);
+
+	if (action_type == DISABLE_DEFAULT_DIRECTIVE) {
+		// since this is only used for proxy workers right now, going to use this flag until more functionality is implemented
+		if (!mob->has_flag(FLAGS::IS_PROXY)) {
+			mob->disableDefaultDirective();
+			issueOrder(agent, mob, false, sc2::ABILITY_ID::STOP); //override the ability to be STOP
+		}
+		mob->set_flag(FLAGS::IS_PROXY);
+		return true;
+	}
 
 	/* ORDER IS EXECUTED */
 	return issueOrder(agent, mob);
@@ -361,8 +384,36 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 	if (structures_with_orders.size() == 0)
 		return false;
 
+	std::unordered_set<Mob*> not_already_chronoboosted;
+	// make sure the target already isn't chronoboosted
+
+	/*
+	bool is_chronoboosted;
+	for (auto it = structures_with_orders.begin(); it != structures_with_orders.end(); ++it) {
+		std::vector<sc2::BuffID> buffs = (*it)->unit.buffs;
+		is_chronoboosted = false;
+		for (auto b : buffs) {
+			if (b == sc2::BUFF_ID::CHRONOBOOSTENERGYCOST)
+				is_chronoboosted = true;
+			if (!is_chronoboosted) {
+				std::cout << "added something to not_already_chronoboosted" << std::endl;
+				not_already_chronoboosted.insert(*it);
+			}
+		}
+	}
+	*/
+
+	
+	std::copy_if(structures_with_orders.begin(), structures_with_orders.end(), std::inserter(not_already_chronoboosted, not_already_chronoboosted.begin()),
+		[this](Mob* m) { return (std::find(m->unit.buffs.begin(), m->unit.buffs.end(), sc2::BUFF_ID::CHRONOBOOSTENERGYCOST) == m->unit.buffs.end()); }); 
+
+	if (not_already_chronoboosted.empty()) {
+		//std::cout << "there are no non-chronoboosted structures apparently" << std::endl;
+		return false;
+	}
+
 	// then pick one of THESE closest to location
-	chrono_target = get_closest_to_location(structures_with_orders, target_location);
+	chrono_target = get_closest_to_location(not_already_chronoboosted, target_location);
 
 	// return false if there is nothing worth casting chronoboost on
 	if (!chrono_target) {
@@ -456,7 +507,7 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 		}
 
 		// filter only those not currently building a structure
-		mobs = filter_not_building_structure(agent, mobs);
+		//mobs = filter_not_building_structure(agent, mobs);
 
 		if (mobs.size() == 0) {
 			return false;
@@ -672,7 +723,7 @@ bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mo
 			agent->Actions()->UnitCommand(units, ability_, target_unit_, queued_);
 			action_success = true;
 		}
-		if (action_success) {
+		if (action_success && assignee != DEFAULT_DIRECTIVE) {
 			for (auto m_ : mobs_) {
 				assignMob(m_);
 				agent->mobH->set_mob_busy(m_);
@@ -688,9 +739,9 @@ bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mo
 
 		// this order already has a mob
 		if (!allow_multiple && hasAssignedMob()) {
-
 			return false;
 		}
+
 
 		Mob* mob_ = &agent->mobH->getMob((*mobs_.begin())->unit);
 		bool action_success = false;
@@ -714,7 +765,7 @@ bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mo
 			action_success = true;
 		}
 
-		if (action_success) {
+		if (action_success && assignee != DEFAULT_DIRECTIVE) {
 			Directive* last_directive = mob_->getCurrentDirective();
 
 			// free up the previous directive from this mob

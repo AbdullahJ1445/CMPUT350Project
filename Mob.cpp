@@ -33,6 +33,7 @@ void Mob::initVars() {
 	tag = unit.tag;
 	has_default_directive = false;
 	has_bundled_directive = false;
+	has_current_directive = false;
 	birth_location = unit.pos;
 	home_location = unit.pos;
 	assigned_location = unit.pos;
@@ -61,11 +62,13 @@ void Mob::assignDefaultDirective(Directive directive_) {
 void Mob::assignDirective(Directive* directive_) {
 	// set the mob's current directive
 	current_directive = directive_;
+	has_current_directive = true;
 }
 
 void Mob::unassignDirective() {
 	// unassign the mob's current directive
 	current_directive = nullptr;
+	has_current_directive = false;
 }
 
 bool Mob::hasDefaultDirective() {
@@ -76,12 +79,21 @@ bool Mob::hasBundledDirective() {
 	return has_bundled_directive;
 }
 
+bool Mob::hasCurrentDirective() {
+	return has_current_directive;
+}
+
 
 bool Mob::executeDefaultDirective(BotAgent* agent) {
 	if (has_default_directive) {
 		return default_directive->executeForMob(agent, this);
 	}
 	return false;
+}
+
+void Mob::disableDefaultDirective()
+{
+	has_default_directive = false;
 }
 
 void Mob::bundle_directives(std::vector<Directive> dir_vec) {
@@ -178,7 +190,12 @@ bool Mob::setCurrentDirective(Directive* directive_) {
 }
 
 Directive* Mob::getCurrentDirective() {
-	return current_directive;
+	if (has_current_directive) {
+		return current_directive;
+	}
+	else {
+		return nullptr;
+	}
 }
 
 sc2::Tag Mob::get_tag() {
