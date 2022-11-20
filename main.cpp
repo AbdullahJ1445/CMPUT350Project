@@ -23,12 +23,15 @@ int main(int argc, char* argv[]) {
 	map_strings.push_back(sc2::kMapBelShirVestigeLE);
 	map_strings.push_back(kProximaStationLE);
 
-	BotAgent bot;
-	Strategy strategy(&bot);
+	BotAgent* bot = new BotAgent();
+	Strategy* strategy = new Strategy(bot);
+
 	Human human;
 	sc2::Agent* player_one;
 	player_one = &human;
-	bot.setCurrentStrategy(&strategy);
+	bot->setCurrentStrategy(strategy);
+	strategy = bot->current_strategy;
+	//std::cout << "the pointer at creation: " << strategy << std::endl;
 	int map_index;
 	Race bot_race;
 	Race opp_race;
@@ -37,17 +40,17 @@ int main(int argc, char* argv[]) {
 	bool fullscreen;
 	bool realtime;
 
-	strategy.loadGameSettings(&map_index, &bot_race, &opp_race, &difficulty, &human_player, &fullscreen, &realtime);
+	strategy->loadGameSettings(&map_index, &bot_race, &opp_race, &difficulty, &human_player, &fullscreen, &realtime);
 	assert(map_index > 0 && map_index <= 3);
 	if (human_player) {
 		coordinator.SetParticipants({
 			CreateParticipant(opp_race, &human),
-			CreateParticipant(bot_race, &bot)
+			CreateParticipant(bot_race, bot)
 			});
 	}
 	else {
 		coordinator.SetParticipants({
-			CreateParticipant(bot_race, &bot),
+			CreateParticipant(bot_race, bot),
 			CreateComputer(opp_race, difficulty)
 			});
 	}
@@ -58,6 +61,5 @@ int main(int argc, char* argv[]) {
 
 	while (coordinator.Update()) {
 	}
-
 	return 0;
 }

@@ -12,7 +12,7 @@ class BotAgent;
 class MapChunk {
 public:
     MapChunk(BotAgent* agent_, sc2::Point2D location_, bool pathable_);
-    uint32_t seen_at();
+    int seen_at();
     bool wasSeen();
     bool isPathable();
     bool inVision(const sc2::ObservationInterface* obs);
@@ -23,7 +23,7 @@ private:
     bool pathable;
     BotAgent* agent;
     sc2::Point2D location;
-    uint32_t last_seen;
+    int last_seen;
     sc2::Visibility last_visibility;
 };
 
@@ -37,7 +37,7 @@ public:
     const sc2::Unit* getNearestGeyser(sc2::Point2D location);
     const sc2::Unit* getNearestGasStructure(sc2::Point2D location);
     const sc2::Unit*  getNearestTownhall(const sc2::Point2D location);
-    sc2::Point2D getOldestLocation(bool pathable_);
+    sc2::Point2D getOldestLocation(bool pathable_=true);
     int getPlayerIDForMap(int map_index, sc2::Point2D location);
     void initLocations(int map_index, int p_id);
     void setEnemyStartLocation(sc2::Point2D location_);
@@ -46,13 +46,14 @@ public:
     sc2::Point2D getBestEnemyLocation();
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();
+    float pathDistFromStartLocation(sc2::QueryInterface* query_, sc2::Point2D location_);
     std::vector<Base> bases;
 
 private:
     void initSetStartLocation();
     void initAddEnemyStartLocation(sc2::Point2D location_);
     void initMapChunks();
-    sc2::Point2D getClosestUnseenLocation(bool pathable_);
+    sc2::Point2D getClosestUnseenLocation(bool pathable_=true);
 
     BotAgent* agent;
     std::vector<MapChunk> map_chunks;

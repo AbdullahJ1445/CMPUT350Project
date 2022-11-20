@@ -17,7 +17,7 @@ class MobHandler;
 
 void BotAgent::setCurrentStrategy(Strategy* strategy_) {
 	// set the current strategy
-	current_strategy = strategy_;
+	storeStrategy(*strategy_);
 }
 
 void BotAgent::addStrat(Precept strategy) {
@@ -71,6 +71,15 @@ void BotAgent::storeDirective(Directive directive_)
 	directive_by_id[directive_.getID()] = created_dir;
 }
 
+void BotAgent::storeStrategy(Strategy strategy_)
+{
+	// only one strategy can be stored
+	if (strategy_storage.empty()) {
+		strategy_storage.emplace_back(std::make_unique<Strategy>(strategy_));
+		current_strategy = strategy_storage.back().get();
+	}
+}
+
 Directive* BotAgent::getLastStoredDirective()
 {
 	return directive_storage.back().get();
@@ -98,6 +107,8 @@ bool BotAgent::can_unit_use_ability(const sc2::Unit& unit, const sc2::ABILITY_ID
 	}
 	return false;
 }
+
+
 
 bool BotAgent::is_structure(const sc2::Unit* unit) {
 	// check if unit is a structure
@@ -227,6 +238,7 @@ void BotAgent::OnGameStart() {
 	std::cout << "Proxy Location: " << proxy_location.x << "," << proxy_location.y << std::endl;
 
 	current_strategy->loadStrategies();
+	//std::cout << "the pointer at game start: " << current_strategy << std::endl;
 }
 
 void::BotAgent::OnStep_100() {

@@ -6,6 +6,8 @@
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
 #include "Mob.h"
+#include <functional>
+#include "Strategy.h"  // temp
 
 # define M_PI					3.14159265358979323846
 # define DEFAULT_RADIUS			12.0f 
@@ -14,6 +16,9 @@
 class BotAgent;
 class Mob;
 enum class FLAGS;
+class Strategy; // temp
+
+
 
 class Directive {
 	// An order which is executed upon a Trigger being met
@@ -48,8 +53,8 @@ public:
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_);
 
-	Directive(const Directive& d);
-	Directive& operator=(const Directive& d);
+	//Directive(const Directive& d);
+	//Directive& operator=(const Directive& d);
 
 	bool execute(BotAgent* agent);
 	bool executeForMob(BotAgent* agent, Mob* mob_);
@@ -59,6 +64,8 @@ public:
 	void lock();
 	bool assignMob(Mob* mob_);
 	void unassignMob(Mob* mob_);
+	void setTargetLocationFunction(Strategy* strat_, BotAgent* agent_, std::function<sc2::Point2D()> function_);
+	void setAssigneeLocationFunction(BotAgent* agent_, std::function<sc2::Point2D()> function_);
 	bool allowMultiple(bool is_true=true);
 	bool allowsMultiple();
 	bool hasAssignedMob();
@@ -66,6 +73,7 @@ public:
 	std::unordered_set<Mob*> getAssignedMobs();
 	static Mob* get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
 	size_t getID();
+	Strategy* strategy_ref;    // testing this pointer
 	
 private:
 
@@ -89,6 +97,9 @@ private:
 	std::unordered_set<Mob*> filter_idle(std::unordered_set<Mob*> mobs_set);
 	Mob* get_random_mob_from_set(std::unordered_set<Mob*> mob_set);
 
+	void updateTargetLocation(BotAgent* agent_);
+	void updateAssigneeLocation(BotAgent* agent_);
+
 	bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
 	bool Directive::issueOrder(BotAgent* agent, Mob* mob_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
 	bool Directive::issueOrder(BotAgent* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_= USE_DEFINED_ABILITY);
@@ -99,6 +110,15 @@ private:
 
 	bool locked;
 	bool allow_multiple;
+	bool update_target_location;
+	bool update_assignee_location;
+
+	std::function<sc2::Point2D(void)> target_location_function;
+	std::function<sc2::Point2D(void)> assignee_location_function;
+	std::function<Strategy* ()> test_function;
+
+	
+
 	ASSIGNEE assignee;
 	ACTION_TYPE action_type;
 	sc2::UNIT_TYPEID unit_type;

@@ -19,7 +19,7 @@ sc2::Point2D MapChunk::getLocation() {
     return location;
 }
 
-uint32_t MapChunk::seen_at() {
+int MapChunk::seen_at() {
     return last_seen;
 }
 
@@ -32,8 +32,11 @@ bool MapChunk::isPathable() {
 }
 
 void MapChunk::checkVision(const sc2::ObservationInterface* obs) {
-    auto last_visibility = obs->GetVisibility(location);
-    last_seen = obs->GetGameLoop();
+    last_visibility = obs->GetVisibility(location);
+    if (last_visibility == sc2::Visibility::Visible) {
+
+        last_seen = obs->GetGameLoop();
+    }
 }
 
 bool MapChunk::inVision(const sc2::ObservationInterface* obs) {
@@ -83,7 +86,7 @@ int LocationHandler::getIndexOfClosestBase(sc2::Point2D location_) {
 }
 
 void LocationHandler::scanChunks(const sc2::ObservationInterface* obs) {
-    for (auto chunk : map_chunks) {
+    for (auto& chunk : map_chunks) {
         chunk.checkVision(obs);
     }
 }
@@ -159,6 +162,7 @@ sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
 {
     // first check if any locations were never seen
     bool unseen = false;
+
     for (auto chunk : map_chunks) {
         if (pathable_ && !chunk.isPathable())
             continue;
@@ -172,7 +176,6 @@ sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
 
     uint32_t lowest = -2;
     sc2::Point2D lowest_loc(-1, -1);
-
     std::vector<MapChunk> chunks;
     if (pathable_) {
         for (auto chunk : map_chunks) {
@@ -590,14 +593,26 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(exp_14);
         }
     }
+    initMapChunks();
+    scanChunks(agent->Observation());
 }
 
 void LocationHandler::initAddEnemyStartLocation(sc2::Point2D location_) {
     enemy_start_locations.push_back(location_);
 }
 
+float LocationHandler::pathDistFromStartLocation(sc2::QueryInterface* query_, sc2::Point2D location_) {
+    return query_->PathingDistance(start_location, location_);
+}
+
 void LocationHandler::initMapChunks()
 {
+    sc2::QueryInterface* query_interface = agent->Query();
+    auto dist = query_interface->PathingDistance(sc2::Point2D(64, 27), sc2::Point2D(114.5, 25.5));
+    auto dist2 = query_interface->PathingDistance(sc2::Point2D(114.5, 25.5), sc2::Point2D(75, 75));
+    auto dist3 = pathDistFromStartLocation(query_interface, sc2::Point2D(75, 75));
+    auto dist4 = pathDistFromStartLocation(query_interface, sc2::Point2D(64, 27));
+    std::cout << "dist: " << dist << "dist: " << dist2 << "dist3: " << dist3 << "dist4: " << dist4 << std::endl;
     const sc2::ObservationInterface* obs = agent->Observation();
     sc2::GameInfo game_info = obs->GetGameInfo();
     float chunk_size = 4.0f;
@@ -623,7 +638,11 @@ void LocationHandler::initMapChunks()
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
             sc2::Point2D loc_ = sc2::Point2D(min_x + (i * chunk_size), min_y + (j * chunk_size));
-            map_chunks.push_back(MapChunk(agent, loc_, obs->IsPathable(loc_)));
+            bool pathable_ = false;
+            if (obs->IsPathable(loc_) && pathDistFromStartLocation(query_interface, loc_) != 0)
+                pathable_ = true;
+            MapChunk chunk(agent, loc_, pathable_);
+            map_chunks.push_back(chunk);
         }
     }
 }
