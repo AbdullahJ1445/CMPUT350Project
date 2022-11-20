@@ -39,6 +39,7 @@ public:
 	void BotAgent::addStrat(Precept strategy);
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
 	void storeDirective(Directive directive_);
+	void storeStrategy(Strategy strategy_);
 	Directive* getLastStoredDirective();
 	void storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_type_);
 	sc2::UNIT_TYPEID getUnitType(std::string identifier_);
@@ -60,6 +61,7 @@ public:
 	//sc2::Point2D enemy_location;
 	Mob* proxy_worker;
 	std::unordered_map<size_t, Directive*> directive_by_id;
+	Strategy* current_strategy;
 
 private:
 
@@ -84,11 +86,11 @@ private:
 	std::vector<std::unique_ptr<Directive>> directive_storage;
 	std::unordered_set<Directive*> stored_directives;
 	std::unordered_map<std::string, sc2::UNIT_TYPEID> special_units;
+	std::vector<std::unique_ptr<Strategy>> strategy_storage;
 
 	// private variables
 	int player_start_id;
 	int enemy_start_id;
 	std::string map_name;
 	int map_index; // 1 = CactusValleyLE,  2 = BelShirVestigeLE,  3 = ProximaStationLE
-	Strategy* current_strategy;
 };

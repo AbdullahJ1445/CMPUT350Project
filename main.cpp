@@ -24,6 +24,8 @@ int main(int argc, char* argv[]) {
 	map_strings.push_back(kProximaStationLE);
 
 	BotAgent bot;
+
+
 	Strategy strategy(&bot);
 	Human human;
 	sc2::Agent* player_one;

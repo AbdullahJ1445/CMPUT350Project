@@ -37,7 +37,7 @@ public:
     const sc2::Unit* getNearestGeyser(sc2::Point2D location);
     const sc2::Unit* getNearestGasStructure(sc2::Point2D location);
     const sc2::Unit*  getNearestTownhall(const sc2::Point2D location);
-    sc2::Point2D getOldestLocation(bool pathable_);
+    sc2::Point2D getOldestLocation(bool pathable_=true);
     int getPlayerIDForMap(int map_index, sc2::Point2D location);
     void initLocations(int map_index, int p_id);
     void setEnemyStartLocation(sc2::Point2D location_);
@@ -52,7 +52,7 @@ private:
     void initSetStartLocation();
     void initAddEnemyStartLocation(sc2::Point2D location_);
     void initMapChunks();
-    sc2::Point2D getClosestUnseenLocation(bool pathable_);
+    sc2::Point2D getClosestUnseenLocation(bool pathable_=true);
 
     BotAgent* agent;
     std::vector<MapChunk> map_chunks;

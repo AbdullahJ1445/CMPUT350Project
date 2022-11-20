@@ -22,6 +22,8 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	proximity = target_proximity_;				// default: -1.0f
 	flags = flags_;								// default: empty
 	target_unit = unit_;						// default: nullptr
+	update_assignee_location = false;
+	update_target_location = false;
 
 	// assignee using match flags assigns multiple units, so force `allow_multiple = true`
 	if (assignee == ASSIGNEE::MATCH_FLAGS || assignee == ASSIGNEE::MATCH_FLAGS_NEAR_LOCATION) {
@@ -85,6 +87,8 @@ Directive::Directive(const Directive &d) {
 	directive_bundle = d.directive_bundle;
 	assigned_mobs = d.assigned_mobs;
 	allow_multiple = d.allow_multiple;
+	update_assignee_location = d.update_assignee_location;
+	update_target_location = d.update_target_location;
 }
 
 Directive& Directive::operator=(const Directive &d) {
@@ -103,6 +107,8 @@ Directive& Directive::operator=(const Directive &d) {
 	directive_bundle = d.directive_bundle;
 	assigned_mobs = d.assigned_mobs;
 	allow_multiple = d.allow_multiple;
+	update_assignee_location = d.update_assignee_location;
+	update_target_location = d.update_target_location;
 	return *this;
 }
 
@@ -119,6 +125,11 @@ bool Directive::execute(BotAgent* agent) {
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
 	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // unordered_set of all friendly units
 	Mob* mob; // used to store temporary mob
+	if (update_assignee_location)
+		updateAssigneeLocation(agent);
+
+	if (update_target_location)
+		updateTargetLocation(agent);
 
 	// ensure proper variables are set for the specified ASSIGNEE and ACTION_TYPE
 
@@ -174,6 +185,13 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 	if (!mob) {
 		return false;
 	}
+	if (update_assignee_location)
+		updateAssigneeLocation(agent);
+
+	if (update_target_location) {
+		updateTargetLocation(agent);
+	}
+		
 
 	if (action_type == GET_MINERALS_NEAR_LOCATION) {
 
@@ -851,6 +869,38 @@ void Directive::unassignMob(Mob* mob_) {
 		assigned_mobs.erase(mob_);
 	}
 	
+}
+
+//void Directive::setTargetLocationFunction(std::function<sc2::Point2D(void)> function_) {
+void Directive::setTargetLocationFunction(Strategy* strat_, BotAgent* agent_, std::function<sc2::Point2D ()> function_) {
+
+	update_target_location = true;
+	target_location_function = function_;
+	
+}
+
+void Directive::setAssigneeLocationFunction(BotAgent* agent_, std::function<sc2::Point2D()> function_) {
+	update_assignee_location = true;
+	BotAgent* bot = agent_;
+	assignee_location_function = function_;
+}
+
+void Directive::updateAssigneeLocation(BotAgent* agent_) {
+	BotAgent* bot = agent_;
+	assignee_location = assignee_location_function();
+}
+
+void Directive::updateTargetLocation(BotAgent* agent_) {
+	std::cout << " test1 ";
+	BotAgent* bot = agent_;
+	sc2::Point2D test = bot->locH->getBestEnemyLocation();
+	//sc2::Point2D test = target_location_function();
+	
+	//std::cout << " part1 passed .. ";
+	//sc2::Point2D temp_loc = the_strat->bot->locH->getNearestStartLocation(sc2::Point2D(1,1));
+	//std::cout << " part2 passed: " << temp_loc.x << "," << temp_loc.y << std::endl;
+	//target_location = target_location_function();
+	//std::cout << " it passed: " << target_location.x << "," << target_location.y << std::endl;
 }
 
 sc2::Point2D Directive::uniform_random_point_in_circle(sc2::Point2D center, float radius) {
