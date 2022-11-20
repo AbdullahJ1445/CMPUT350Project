@@ -2,6 +2,7 @@
 
 Strategy::Strategy(BotAgent* bot_) {
 	bot = bot_;
+	strategy_ptr = this;
 }
 
 void Strategy::loadGameSettings(int* map_index, sc2::Race* bot_race, sc2::Race* opp_race, sc2::Difficulty* difficulty, bool* human_player, bool* fullscreen, bool* realtime) {
@@ -14,10 +15,10 @@ void Strategy::loadGameSettings(int* map_index, sc2::Race* bot_race, sc2::Race* 
 	*map_index = 2;
 	*bot_race = sc2::Race::Protoss;
 	*opp_race = sc2::Race::Terran;
-	*difficulty = sc2::Difficulty::VeryEasy;
+	*difficulty = sc2::Difficulty::VeryHard;
 	*human_player = false;
 	*fullscreen = false;
-	*realtime = false;
+	*realtime = true;
 }
 
 
@@ -34,7 +35,6 @@ void Strategy::loadStrategies() {
 	
 	
 	bot->storeUnitType("_CHRONOBOOST_TARGET", sc2::UNIT_TYPEID::PROTOSS_GATEWAY);   // special tag to specify a unit that chronoboost will only target
-	/*
 	{
 		Precept send_proxy(bot);
 		Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::GENERAL_MOVE, bot->locH->getProxyLocation());
@@ -193,15 +193,13 @@ void Strategy::loadStrategies() {
 		send_attack_exp.addTrigger(t);
 		bot->addStrat(send_attack_exp);
 	}
-	*/
+	/*
 	{
 		Precept probe_explore(bot);
-		Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::ATTACK, bot->locH->getBestEnemyLocation());
+		Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::ATTACK, bot->locH->getOldestLocation());
 		Strategy* strat = this;
-
-		// this functionality does not work
-		auto func = [this]() { return bot->locH->getBestEnemyLocation();  };
-		d.setTargetLocationFunction(this, bot, func);
+		auto func = [this]() { return bot->locH->getOldestLocation();  };
+		d.setTargetLocationFunction(strategy_ptr, bot, func);
 
 
 		Trigger t(bot);
@@ -210,6 +208,7 @@ void Strategy::loadStrategies() {
 		probe_explore.addTrigger(t);
 		bot->addStrat(probe_explore);
 	}
+	*/
 
 	/*
 	{

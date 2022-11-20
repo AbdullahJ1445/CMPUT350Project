@@ -71,6 +71,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordere
 	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, ability_, assignee_location_,
 		target_location_, assignee_proximity_, target_proximity_, flags_, nullptr) {}
 
+/*
 Directive::Directive(const Directive &d) {
 	locked = d.locked;
 	id = d.id;
@@ -111,6 +112,7 @@ Directive& Directive::operator=(const Directive &d) {
 	update_target_location = d.update_target_location;
 	return *this;
 }
+*/
 
 bool Directive::bundleDirective(Directive directive_) {
 	if (!locked)
@@ -873,7 +875,7 @@ void Directive::unassignMob(Mob* mob_) {
 
 //void Directive::setTargetLocationFunction(std::function<sc2::Point2D(void)> function_) {
 void Directive::setTargetLocationFunction(Strategy* strat_, BotAgent* agent_, std::function<sc2::Point2D ()> function_) {
-
+	strategy_ref = strat_;
 	update_target_location = true;
 	target_location_function = function_;
 	
@@ -891,10 +893,12 @@ void Directive::updateAssigneeLocation(BotAgent* agent_) {
 }
 
 void Directive::updateTargetLocation(BotAgent* agent_) {
-	std::cout << " test1 ";
-	BotAgent* bot = agent_;
-	sc2::Point2D test = bot->locH->getBestEnemyLocation();
-	//sc2::Point2D test = target_location_function();
+
+	//std::cout << "Getting the pointer from agent_->current_strategy: " << agent_->current_strategy << std::endl;
+	//std::cout << "The pointer inside Directive.cpp: " << strategy_ref << std::endl;
+	//BotAgent* bot = strategy_ref->bot;
+	//sc2::Point2D test = agent_->locH->getBestEnemyLocation();
+	target_location = target_location_function();
 	
 	//std::cout << " part1 passed .. ";
 	//sc2::Point2D temp_loc = the_strat->bot->locH->getNearestStartLocation(sc2::Point2D(1,1));

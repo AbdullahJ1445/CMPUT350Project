@@ -9,4 +9,5 @@ struct Strategy {
 	BotAgent* bot;
 private:
 	std::vector<const char*> maps;
+	Strategy* strategy_ptr;
 };

@@ -337,6 +337,8 @@ void Precept::addDirective(Directive directive_) {
 	agent->storeDirective(directive_);
 	Directive* dir_ = agent->getLastStoredDirective();
 	directives.push_back(dir_);
+	//std::cout << "the pointer inside the provided directive at as it's added: " << directive_.strategy_ref << std::endl;
+	//std::cout << "the pointer inside the stored directive at as it's added: " << dir_->strategy_ref << std::endl;
 }
 
 void Precept::addTrigger(Trigger trigger_) {

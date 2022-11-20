@@ -12,7 +12,7 @@ class BotAgent;
 class MapChunk {
 public:
     MapChunk(BotAgent* agent_, sc2::Point2D location_, bool pathable_);
-    uint32_t seen_at();
+    int seen_at();
     bool wasSeen();
     bool isPathable();
     bool inVision(const sc2::ObservationInterface* obs);
@@ -23,7 +23,7 @@ private:
     bool pathable;
     BotAgent* agent;
     sc2::Point2D location;
-    uint32_t last_seen;
+    int last_seen;
     sc2::Visibility last_visibility;
 };
 
@@ -46,6 +46,7 @@ public:
     sc2::Point2D getBestEnemyLocation();
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();
+    float pathDistFromStartLocation(sc2::QueryInterface* query_, sc2::Point2D location_);
     std::vector<Base> bases;
 
 private:

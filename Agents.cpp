@@ -238,6 +238,7 @@ void BotAgent::OnGameStart() {
 	std::cout << "Proxy Location: " << proxy_location.x << "," << proxy_location.y << std::endl;
 
 	current_strategy->loadStrategies();
+	//std::cout << "the pointer at game start: " << current_strategy << std::endl;
 }
 
 void::BotAgent::OnStep_100() {

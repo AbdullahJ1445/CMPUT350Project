@@ -53,8 +53,8 @@ public:
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_);
 
-	Directive(const Directive& d);
-	Directive& operator=(const Directive& d);
+	//Directive(const Directive& d);
+	//Directive& operator=(const Directive& d);
 
 	bool execute(BotAgent* agent);
 	bool executeForMob(BotAgent* agent, Mob* mob_);
@@ -73,6 +73,7 @@ public:
 	std::unordered_set<Mob*> getAssignedMobs();
 	static Mob* get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
 	size_t getID();
+	Strategy* strategy_ref;    // testing this pointer
 	
 private:
 
@@ -115,6 +116,8 @@ private:
 	std::function<sc2::Point2D(void)> target_location_function;
 	std::function<sc2::Point2D(void)> assignee_location_function;
 	std::function<Strategy* ()> test_function;
+
+	
 
 	ASSIGNEE assignee;
 	ACTION_TYPE action_type;
