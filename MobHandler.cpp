@@ -6,7 +6,7 @@
 #include "sc2api/sc2_interfaces.h"
 #include "sc2api/sc2_typeenums.h"
 
-MobHandler::MobHandler(BotAgent* agent) {
+MobHandler::MobHandler(BasicSc2Bot* agent) {
     this->agent = agent;
 }
 
@@ -65,6 +65,17 @@ Mob& MobHandler::getMob(const sc2::Unit& unit) {
 	// get the correct mob from storage
 
 	return *mob_by_tag[unit.tag];
+}
+
+void MobHandler::mobDeath(Mob* mob_)
+{
+	Mob* mob = &getMob(mob_->unit);
+	set_mob_idle(mob, false);
+	set_mob_busy(mob, false);
+	for (auto f : mob->get_flags()) {
+		mob->remove_flag(f);
+	}
+	mobs.erase(mob);
 }
 
 std::unordered_set<Mob*> MobHandler::getIdleWorkers() {

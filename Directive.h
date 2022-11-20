@@ -8,12 +8,16 @@
 #include "Mob.h"
 #include <functional>
 #include "Strategy.h"  // temp
+//#include "LocationHandler.h"
 
 # define M_PI					3.14159265358979323846
 # define DEFAULT_RADIUS			12.0f 
 # define USE_DEFINED_ABILITY	sc2::ABILITY_ID::EXPERIMENTALPLASMAGUN
+# define INVALID_POINT			sc2::Point2D(-1.11, -1.11)
+# define INVALID_RADIUS			-1.1F
+# define NO_POINT_FOUND			sc2::Point2D(-2.5252, -2.5252)
 
-class BotAgent;
+class BasicSc2Bot;
 class Mob;
 enum class FLAGS;
 class Strategy; // temp
@@ -56,16 +60,16 @@ public:
 	//Directive(const Directive& d);
 	//Directive& operator=(const Directive& d);
 
-	bool execute(BotAgent* agent);
-	bool executeForMob(BotAgent* agent, Mob* mob_);
+	bool execute(BasicSc2Bot* agent);
+	bool executeForMob(BasicSc2Bot* agent, Mob* mob_);
 	static sc2::Point2D uniform_random_point_in_circle(sc2::Point2D center, float radius);
 	bool setDefault();
 	bool bundleDirective(Directive directive_);
 	void lock();
 	bool assignMob(Mob* mob_);
 	void unassignMob(Mob* mob_);
-	void setTargetLocationFunction(Strategy* strat_, BotAgent* agent_, std::function<sc2::Point2D()> function_);
-	void setAssigneeLocationFunction(BotAgent* agent_, std::function<sc2::Point2D()> function_);
+	void setTargetLocationFunction(Strategy* strat_, BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_);
+	void setAssigneeLocationFunction(BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_);
 	bool allowMultiple(bool is_true=true);
 	bool allowsMultiple();
 	bool hasAssignedMob();
@@ -81,32 +85,33 @@ private:
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D assignee_location_,
 		sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_);
 
-	bool execute_simple_action_for_unit_type(BotAgent* agent);
-	bool execute_build_gas_structure(BotAgent* agent);
-	bool execute_protoss_nexus_chronoboost(BotAgent* agent);
-	bool execute_match_flags(BotAgent* agent);
-	bool execute_order_for_unit_type_with_location(BotAgent* agent);
+	bool execute_simple_action_for_unit_type(BasicSc2Bot* agent);
+	bool execute_build_gas_structure(BasicSc2Bot* agent);
+	bool execute_protoss_nexus_chronoboost(BasicSc2Bot* agent);
+	bool execute_match_flags(BasicSc2Bot* agent);
+	bool execute_order_for_unit_type_with_location(BasicSc2Bot* agent);
 	bool have_bundle();
-	bool is_building_structure(BotAgent* agent, Mob* mob_);
+	bool is_building_structure(BasicSc2Bot* agent, Mob* mob_);
 	bool has_build_order(Mob* mob_);
-	std::unordered_set<Mob*> filter_by_has_ability(BotAgent* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
+	std::unordered_set<Mob*> filter_by_has_ability(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
 	bool is_any_executing_order(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
 	std::unordered_set<Mob*> filter_near_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_);
 	std::unordered_set<Mob*> filter_by_unit_type(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_);
-	std::unordered_set<Mob*> filter_not_building_structure(BotAgent* agent, std::unordered_set<Mob*> mobs_set);
+	std::unordered_set<Mob*> filter_not_building_structure(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set);
 	std::unordered_set<Mob*> filter_idle(std::unordered_set<Mob*> mobs_set);
+	std::unordered_set<Mob*> filter_not_assigned_to_this(std::unordered_set<Mob*> mobs_set);
 	Mob* get_random_mob_from_set(std::unordered_set<Mob*> mob_set);
 
-	void updateTargetLocation(BotAgent* agent_);
-	void updateAssigneeLocation(BotAgent* agent_);
+	void updateTargetLocation(BasicSc2Bot* agent_);
+	void updateAssigneeLocation(BasicSc2Bot* agent_);
 
-	bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BotAgent* agent, Mob* mob_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BotAgent* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_= USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BotAgent* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_= USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
 
 	bool locked;
 	bool allow_multiple;

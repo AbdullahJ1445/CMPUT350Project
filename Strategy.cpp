@@ -1,6 +1,6 @@
 #include "Strategy.h"
 
-Strategy::Strategy(BotAgent* bot_) {
+Strategy::Strategy(BasicSc2Bot* bot_) {
 	bot = bot_;
 	strategy_ptr = this;
 }
@@ -15,10 +15,10 @@ void Strategy::loadGameSettings(int* map_index, sc2::Race* bot_race, sc2::Race* 
 	*map_index = 2;
 	*bot_race = sc2::Race::Protoss;
 	*opp_race = sc2::Race::Terran;
-	*difficulty = sc2::Difficulty::VeryHard;
+	*difficulty = sc2::Difficulty::VeryEasy;
 	*human_player = false;
 	*fullscreen = false;
-	*realtime = true;
+	*realtime = false;
 }
 
 
@@ -193,22 +193,23 @@ void Strategy::loadStrategies() {
 		send_attack_exp.addTrigger(t);
 		bot->addStrat(send_attack_exp);
 	}
-	/*
-	{
+	
+	
+    /*    
+	{   // This will cause a probe to explore all pathable mapchunk locations
 		Precept probe_explore(bot);
 		Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::ATTACK, bot->locH->getOldestLocation());
+		//d.allowMultiple();
 		Strategy* strat = this;
 		auto func = [this]() { return bot->locH->getOldestLocation();  };
 		d.setTargetLocationFunction(strategy_ptr, bot, func);
-
-
 		Trigger t(bot);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_PROBE);
 		probe_explore.addDirective(d);
 		probe_explore.addTrigger(t);
 		bot->addStrat(probe_explore);
-	}
-	*/
+	} */
+	
 
 	/*
 	{
