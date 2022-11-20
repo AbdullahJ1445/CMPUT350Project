@@ -1,7 +1,7 @@
 #include <cassert>
 #include "sc2api/sc2_api.h"
 #include "Directive.h"
-#include "Agents.h"
+#include "BasicSc2Bot.h"
 #include "Mob.h"
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D assignee_location_,
@@ -16,10 +16,10 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	action_type = action_type_;
 	unit_type = unit_type_;						// default: UNIT_TYPEID::INVALID
 	ability = ability_;							// default: ABILITY_TYPE::INVALID
-	assignee_location = assignee_location_;		// default: (-1, -1)
-	target_location = target_location_;			// default: (-1, -1)
-	assignee_proximity = assignee_proximity_;   // default: -1.0f
-	proximity = target_proximity_;				// default: -1.0f
+	assignee_location = assignee_location_;		// default: INVALID_POINT
+	target_location = target_location_;			// default: INVALID_POINT
+	assignee_proximity = assignee_proximity_;   // default: INVALID_RADIUS
+	proximity = target_proximity_;				// default: INVALID_RADIUS
 	flags = flags_;								// default: empty
 	target_unit = unit_;						// default: nullptr
 	update_assignee_location = false;
@@ -42,29 +42,29 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_) : 
 	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_,
-		sc2::Point2D(-1, -1), assignee_proximity_, -1.0f, std::unordered_set<FLAGS>(), nullptr) {}
+		INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_) :
-	Directive(assignee_, action_type_, unit_type_, ability_, sc2::Point2D(-1, -1), 
-		sc2::Point2D(-1, -1), -1.0f, -1.0f, std::unordered_set<FLAGS>(), nullptr) {}
+	Directive(assignee_, action_type_, unit_type_, ability_, INVALID_POINT, 
+		INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) :
-	Directive(assignee_, action_type_, unit_type_, ability_, sc2::Point2D(-1, -1),
-		location_, -1.0f, proximity_, std::unordered_set<FLAGS>(), nullptr) {}
+	Directive(assignee_, action_type_, unit_type_, ability_, INVALID_POINT,
+		location_, INVALID_RADIUS, proximity_, std::unordered_set<FLAGS>(), nullptr) {}
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, float assignee_proximity_) :
-	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, sc2::Point2D(-1, -1), assignee_proximity_, -1.0f, std::unordered_set<FLAGS>(), nullptr) {}
+	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr) {}
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) :
 	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, target_location_, assignee_proximity_, target_proximity_, std::unordered_set<FLAGS>(), nullptr) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_) :
-	Directive(assignee_, action_type_, unit_type_, ability_, sc2::Point2D(-1, -1),
-		sc2::Point2D(-1, -1), -1.0f, -1.0f, std::unordered_set<FLAGS>(), target_) {}
+	Directive(assignee_, action_type_, unit_type_, ability_, INVALID_POINT,
+		INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), target_) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) :
-	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, ability_, sc2::Point2D(-1, -1),
-		location_, -1.0f, proximity_, flags_, nullptr) {}
+	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, ability_, INVALID_POINT,
+		location_, INVALID_RADIUS, proximity_, flags_, nullptr) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_,
 	sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) :
@@ -120,18 +120,21 @@ bool Directive::bundleDirective(Directive directive_) {
 	return !locked;
 }
 
-bool Directive::execute(BotAgent* agent) {
+bool Directive::execute(BasicSc2Bot* agent) {
 	const sc2::ObservationInterface* obs = agent->Observation();
 	bool found_valid_unit = false; // ensure unit has been assigned before issuing order
 	const sc2::AbilityData ability_data = obs->GetAbilityData()[(int)ability]; // various info about the ability
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
 	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // unordered_set of all friendly units
 	Mob* mob; // used to store temporary mob
-	if (update_assignee_location)
+	if (update_assignee_location) {
 		updateAssigneeLocation(agent);
+	}
 
-	if (update_target_location)
+	if (update_target_location) {
 		updateTargetLocation(agent);
+		//std::cout << "order targetting " << target_location.x << "," << target_location.y << std::endl;
+	}
 
 	// ensure proper variables are set for the specified ASSIGNEE and ACTION_TYPE
 
@@ -144,13 +147,25 @@ bool Directive::execute(BotAgent* agent) {
 	}
 
 	if (assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION || assignee == ASSIGNEE::MATCH_FLAGS_NEAR_LOCATION) {
-		assert(assignee_location != sc2::Point2D(-1, -1));
+		assert(assignee_location != INVALID_POINT);
+
+		// when a point is dynamically specified, it will provide NO_POINT_FOUND
+		// in cases a function could not produce a valid point
+		if (assignee_location == NO_POINT_FOUND) {
+			return false;
+		}
 	}
 
 	if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION ||
 		action_type == ACTION_TYPE::GET_GAS_NEAR_LOCATION || action_type == ACTION_TYPE::GET_MINERALS_NEAR_LOCATION ||
 		action_type == ACTION_TYPE::TARGET_UNIT_NEAR_LOCATION) {
-		assert(target_location != sc2::Point2D(-1, -1));
+		assert(target_location != INVALID_POINT);
+
+		// when a point is dynamically specified, it will provide NO_POINT_FOUND
+		// in cases a function could not produce a valid point
+		if (target_location == NO_POINT_FOUND) {
+			return false;
+		}
 	}
 
 	if (assignee == ASSIGNEE::UNIT_TYPE || assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION) {
@@ -181,7 +196,7 @@ bool Directive::execute(BotAgent* agent) {
 	return false;
 }
 
-bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
+bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 	// used to assign an order to a specific unit
 	Mob* mob = &agent->mobH->getMob(mob_->unit);
 	if (!mob) {
@@ -265,7 +280,7 @@ bool Directive::executeForMob(BotAgent* agent, Mob* mob_) {
 	return false;
 }
 
-bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
+bool Directive::execute_simple_action_for_unit_type(BasicSc2Bot* agent) {
 	// perform an action that does not require a target unit or point
 
 	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // unordered_set of all friendly units
@@ -277,8 +292,8 @@ bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 	mobs = filter_idle(mobs);
 
 	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
-		assert(assignee_location != sc2::Point2D(-1, -1));
-		assert(assignee_proximity != -1.0F);
+		assert(assignee_location != INVALID_POINT);
+		assert(assignee_proximity != INVALID_RADIUS);
 		mobs = filter_near_location(mobs, assignee_location, assignee_proximity);
 	}
 
@@ -302,7 +317,7 @@ bool Directive::execute_simple_action_for_unit_type(BotAgent* agent) {
 	/* * * * * * * * * * */
 }
 
-bool Directive::execute_build_gas_structure(BotAgent* agent) {
+bool Directive::execute_build_gas_structure(BasicSc2Bot* agent) {
 	// perform the necessary actions to have a gas structure built closest to the specified target_location
 
 	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // vector of all friendly units
@@ -342,7 +357,7 @@ bool Directive::execute_build_gas_structure(BotAgent* agent) {
 
 }
 
-bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
+bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 	// this is more complex than it originally seemed
 	// must find the clostest nexus to the given location
 	// that has the chronoboost ability ready
@@ -445,7 +460,7 @@ bool Directive::execute_protoss_nexus_chronoboost(BotAgent* agent) {
 	/* * * * * * * * * * */
 }
 
-bool Directive::execute_match_flags(BotAgent* agent) {
+bool Directive::execute_match_flags(BasicSc2Bot* agent) {
 	// issue an order to units matching the provided flags
 
 	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // vector of all friendly units
@@ -485,7 +500,7 @@ bool Directive::execute_match_flags(BotAgent* agent) {
 	/* * * * * * * * * * */
 }
 
-bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
+bool Directive::execute_order_for_unit_type_with_location(BasicSc2Bot* agent) {
 	const sc2::AbilityData ability_data = agent->Observation()->GetAbilityData()[(int)ability]; // various info about the ability
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
 	sc2::Point2D location = target_location;
@@ -534,6 +549,14 @@ bool Directive::execute_order_for_unit_type_with_location(BotAgent* agent) {
 		}
 	}
 
+	if (allow_multiple) {
+		mobs = filter_not_assigned_to_this(mobs);
+	}
+
+	if (mobs.size() == 0) {
+		return false;
+	}
+
 	// get closest matching unit to target location
 	mob = get_closest_to_location(mobs, target_location);
 
@@ -574,7 +597,7 @@ size_t Directive::getID()
 	return id;
 }
 
-bool Directive::is_building_structure(BotAgent* agent, Mob* mob_) {
+bool Directive::is_building_structure(BasicSc2Bot* agent, Mob* mob_) {
 	sc2::QueryInterface* query_interface = agent->Query();
 	const sc2::ObservationInterface* obs = agent->Observation();
 	std::vector<sc2::AbilityData> ability_data = obs->GetAbilityData();
@@ -650,7 +673,7 @@ std::unordered_set<Mob*> Directive::filter_near_location(std::unordered_set<Mob*
 	return filtered_mobs;
 }
 
-std::unordered_set<Mob*> Directive::filter_not_building_structure(BotAgent* agent, std::unordered_set<Mob*> mobs_set) {
+std::unordered_set<Mob*> Directive::filter_not_building_structure(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set) {
 	// returns only units that are not currently constructing a structure
 	
 	std::unordered_set<Mob*> filtered;
@@ -665,7 +688,7 @@ std::unordered_set<Mob*> Directive::filter_not_building_structure(BotAgent* agen
 
 }
 
-std::unordered_set<Mob*> Directive::filter_by_has_ability(BotAgent* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
+std::unordered_set<Mob*> Directive::filter_by_has_ability(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
 	// get only mobs from set that have a specified ability
 
 	std::unordered_set<Mob*> mobs_filter;
@@ -689,6 +712,19 @@ std::unordered_set<Mob*> Directive::filter_idle(std::unordered_set<Mob*> mobs_se
 	return filtered;
 }
 
+std::unordered_set<Mob*> Directive::filter_not_assigned_to_this(std::unordered_set<Mob*> mobs_set) {
+	std::unordered_set<Mob*> filtered;
+	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
+		[this](Mob* m) { 
+			if (!m->hasCurrentDirective())
+				return true;
+			if (m->getCurrentDirective()->getID() == getID())
+				return false;
+			return true;
+		});
+	return filtered;
+}
+
 Mob* Directive::get_random_mob_from_set(std::unordered_set<Mob*> mob_set) {
 	int index = rand() % mob_set.size();
 	auto it = mob_set.begin();
@@ -709,7 +745,7 @@ bool Directive::allowsMultiple() {
 	return allow_multiple;
 }
 
-bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
+bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
 
 	// if no ability override specified
 	if (ability_ == USE_DEFINED_ABILITY)
@@ -727,19 +763,19 @@ bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mo
 		bool action_success = false;
 
 		// no target is specified
-		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
+		if (target_loc_ == INVALID_POINT && target_unit_ == nullptr) {
 			agent->Actions()->UnitCommand(units, ability_, queued_);
 			action_success = true;
 		}
 
 		// target location is specified
-		if (target_loc_ != sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
+		if (target_loc_ != INVALID_POINT && target_unit_ == nullptr) {
 			agent->Actions()->UnitCommand(units, ability_, target_loc_, queued_);
 			action_success = true;
 		}
 
 		// target unit is specified
-		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ != nullptr) {
+		if (target_loc_ == INVALID_POINT && target_unit_ != nullptr) {
 			agent->Actions()->UnitCommand(units, ability_, target_unit_, queued_);
 			action_success = true;
 		}
@@ -767,20 +803,20 @@ bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mo
 		bool action_success = false;
 		
 		// no target is specified
-		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
+		if (target_loc_ == INVALID_POINT && target_unit_ == nullptr) {
 			agent->Actions()->UnitCommand(&mob_->unit, ability_, queued_);
 			action_success = true;
 		}
 
 		
 		// target location is specified
-		if (target_loc_ != sc2::Point2D(-1, -1) && target_unit_ == nullptr) {
+		if (target_loc_ != INVALID_POINT && target_unit_ == nullptr) {
 			agent->Actions()->UnitCommand(&mob_->unit, ability_, target_loc_, queued_);
 			action_success = true;
 		}
 
 		// target unit is specified
-		if (target_loc_ == sc2::Point2D(-1, -1) && target_unit_ != nullptr) {
+		if (target_loc_ == INVALID_POINT && target_unit_ != nullptr) {
 			agent->Actions()->UnitCommand(&mob_->unit, ability_, target_unit_, queued_);
 			action_success = true;
 		}
@@ -810,28 +846,28 @@ bool Directive::_generic_issueOrder(BotAgent* agent, std::unordered_set<Mob*> mo
 	return false;
 }
 
-bool Directive::issueOrder(BotAgent* agent, Mob* mob_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, sc2::Point2D(-1, -1), nullptr, queued_, ability_);
+bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, bool queued_, sc2::ABILITY_ID ability_) {
+	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, INVALID_POINT, nullptr, queued_, ability_);
 }
 
-bool Directive::issueOrder(BotAgent* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_, sc2::ABILITY_ID ability_) {
+bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_, sc2::ABILITY_ID ability_) {
 	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, target_loc_, nullptr, queued_, ability_);
 }
 
-bool Directive::issueOrder(BotAgent* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, sc2::Point2D(-1, -1), target_unit_, queued_, ability_);
+bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
+	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, INVALID_POINT, target_unit_, queued_, ability_);
 }
 
-bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, mobs_, sc2::Point2D(-1, -1), nullptr, queued_, ability_);
+bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, bool queued_, sc2::ABILITY_ID ability_) {
+	return _generic_issueOrder(agent, mobs_, INVALID_POINT, nullptr, queued_, ability_);
 }
 
-bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_, sc2::ABILITY_ID ability_) {
+bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_, sc2::ABILITY_ID ability_) {
 	return _generic_issueOrder(agent, mobs_, target_loc_, nullptr, queued_, ability_);
 }
 
-bool Directive::issueOrder(BotAgent* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, mobs_, sc2::Point2D(-1, -1), target_unit_, queued_, ability_);
+bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
+	return _generic_issueOrder(agent, mobs_, INVALID_POINT, target_unit_, queued_, ability_);
 }
 
 bool Directive::setDefault() {
@@ -874,29 +910,29 @@ void Directive::unassignMob(Mob* mob_) {
 }
 
 //void Directive::setTargetLocationFunction(std::function<sc2::Point2D(void)> function_) {
-void Directive::setTargetLocationFunction(Strategy* strat_, BotAgent* agent_, std::function<sc2::Point2D ()> function_) {
+void Directive::setTargetLocationFunction(Strategy* strat_, BasicSc2Bot* agent_, std::function<sc2::Point2D ()> function_) {
 	strategy_ref = strat_;
 	update_target_location = true;
 	target_location_function = function_;
 	
 }
 
-void Directive::setAssigneeLocationFunction(BotAgent* agent_, std::function<sc2::Point2D()> function_) {
+void Directive::setAssigneeLocationFunction(BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_) {
 	update_assignee_location = true;
-	BotAgent* bot = agent_;
+	BasicSc2Bot* bot = agent_;
 	assignee_location_function = function_;
 }
 
-void Directive::updateAssigneeLocation(BotAgent* agent_) {
-	BotAgent* bot = agent_;
+void Directive::updateAssigneeLocation(BasicSc2Bot* agent_) {
+	BasicSc2Bot* bot = agent_;
 	assignee_location = assignee_location_function();
 }
 
-void Directive::updateTargetLocation(BotAgent* agent_) {
+void Directive::updateTargetLocation(BasicSc2Bot* agent_) {
 
 	//std::cout << "Getting the pointer from agent_->current_strategy: " << agent_->current_strategy << std::endl;
 	//std::cout << "The pointer inside Directive.cpp: " << strategy_ref << std::endl;
-	//BotAgent* bot = strategy_ref->bot;
+	//BasicSc2Bot* bot = strategy_ref->bot;
 	//sc2::Point2D test = agent_->locH->getBestEnemyLocation();
 	target_location = target_location_function();
 	

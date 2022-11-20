@@ -1,19 +1,22 @@
 #pragma once
 #include "sc2api/sc2_api.h"
-#include "Agents.h"
+#include "BasicSc2Bot.h"
 #include "sc2api/sc2_unit.h"
 #include "sc2api/sc2_unit_filters.h"
 #include "sc2api/sc2_interfaces.h"
 #include "sc2api/sc2_typeenums.h"
 #include "Base.h"
 
-class BotAgent;
+# define NO_POINT_FOUND sc2::Point2D(-2.5252, -2.5252)
+
+class BasicSc2Bot;
 
 class MapChunk {
 public:
-    MapChunk(BotAgent* agent_, sc2::Point2D location_, bool pathable_);
+    MapChunk(BasicSc2Bot* agent_, sc2::Point2D location_, bool pathable_);
     int seen_at();
     bool wasSeen();
+    size_t getID();
     bool isPathable();
     bool inVision(const sc2::ObservationInterface* obs);
     void checkVision(const sc2::ObservationInterface* obs);
@@ -21,15 +24,16 @@ public:
 
 private:
     bool pathable;
-    BotAgent* agent;
+    BasicSc2Bot* agent;
     sc2::Point2D location;
     int last_seen;
+    size_t id;
     sc2::Visibility last_visibility;
 };
 
 class LocationHandler {
 public:
-    LocationHandler(BotAgent* agent_);
+    LocationHandler(BasicSc2Bot* agent_);
     sc2::Point2D getNearestStartLocation(sc2::Point2D spot);
     int getIndexOfClosestBase(sc2::Point2D location_);
     void scanChunks(const sc2::ObservationInterface* obs);
@@ -47,6 +51,7 @@ public:
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();
     float pathDistFromStartLocation(sc2::QueryInterface* query_, sc2::Point2D location_);
+    bool spotReachable(const sc2::ObservationInterface* obs_, sc2::QueryInterface* query_, sc2::Point2D from_loc_, sc2::Point2D to_loc_);
     std::vector<Base> bases;
 
 private:
@@ -55,8 +60,11 @@ private:
     void initMapChunks();
     sc2::Point2D getClosestUnseenLocation(bool pathable_=true);
 
-    BotAgent* agent;
-    std::vector<MapChunk> map_chunks;
+    BasicSc2Bot* agent;
+    std::vector<std::unique_ptr<MapChunk>> map_chunk_storage;
+    std::unordered_set<MapChunk*> map_chunks;
+    std::unordered_set<MapChunk*> pathable_map_chunks;
+    std::unordered_map<int, MapChunk*> map_chunk_by_id;
     std::vector<sc2::Point2D> enemy_start_locations;
     sc2::Point2D enemy_start_location;
     sc2::Point2D proxy_location;

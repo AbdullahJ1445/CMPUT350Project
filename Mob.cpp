@@ -84,7 +84,7 @@ bool Mob::hasCurrentDirective() {
 }
 
 
-bool Mob::executeDefaultDirective(BotAgent* agent) {
+bool Mob::executeDefaultDirective(BasicSc2Bot* agent) {
 	if (has_default_directive) {
 		return default_directive->executeForMob(agent, this);
 	}

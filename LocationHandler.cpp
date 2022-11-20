@@ -1,6 +1,6 @@
 #pragma once
 #include "sc2api/sc2_api.h"
-#include "Agents.h"
+#include "BasicSc2Bot.h"
 #include "LocationHandler.h"
 #include "sc2api/sc2_unit.h"
 #include "sc2api/sc2_unit_filters.h"
@@ -9,7 +9,9 @@
 
 
 
-MapChunk::MapChunk(BotAgent* agent_, sc2::Point2D location_, bool pathable_) {
+MapChunk::MapChunk(BasicSc2Bot* agent_, sc2::Point2D location_, bool pathable_) {
+    static size_t id_ = 0;
+    id = id_++;
     agent = agent_;
     location = location_;
     last_seen = -1;
@@ -23,6 +25,10 @@ int MapChunk::seen_at() {
     return last_seen;
 }
 
+size_t MapChunk::getID() {
+    return id;
+}
+
 bool MapChunk::wasSeen() {
     return last_seen != -1;
 }
@@ -34,8 +40,9 @@ bool MapChunk::isPathable() {
 void MapChunk::checkVision(const sc2::ObservationInterface* obs) {
     last_visibility = obs->GetVisibility(location);
     if (last_visibility == sc2::Visibility::Visible) {
-
+        //std::cout << "[visible](" << location.x << "," << location.y << ")";
         last_seen = obs->GetGameLoop();
+        //std::cout << "<" << last_seen << ">";
     }
 }
 
@@ -51,7 +58,7 @@ bool MapChunk::inVision(const sc2::ObservationInterface* obs) {
 }
 
 
-LocationHandler::LocationHandler(BotAgent* agent_){
+LocationHandler::LocationHandler(BasicSc2Bot* agent_){
     agent = agent_;
     enemy_start_location_index = 0;
 }
@@ -86,8 +93,10 @@ int LocationHandler::getIndexOfClosestBase(sc2::Point2D location_) {
 }
 
 void LocationHandler::scanChunks(const sc2::ObservationInterface* obs) {
-    for (auto& chunk : map_chunks) {
-        chunk.checkVision(obs);
+    //std::cout << "(scan:" << map_chunks.size() << ")";
+    //std::cout << // 76 92
+    for (auto it = map_chunks.begin(); it != map_chunks.end(); ++it) {
+        (*it)->checkVision(obs);
     }
 }
 
@@ -163,98 +172,93 @@ sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
     // first check if any locations were never seen
     bool unseen = false;
 
-    for (auto chunk : map_chunks) {
-        if (pathable_ && !chunk.isPathable())
-            continue;
-        if (!chunk.wasSeen()) {
+    //std::cout << "getting oldest location ";
+
+    std::unordered_set<MapChunk*> chunkset;
+    if (pathable_)
+        chunkset = pathable_map_chunks;
+    else
+        chunkset = map_chunks;
+
+    //std::cout << "<" << chunkset.size() << ">";
+    for (auto it = chunkset.begin(); it != chunkset.end(); ++it) {
+        if (!(*it)->wasSeen()) {
             unseen = true;
             break;
         }
     }
-    if (unseen)
+
+    if (unseen) {
+        //std::cout << "(unseen)";
         return getClosestUnseenLocation(pathable_);
+    }
+    //std::cout << "(no-unseen)";
 
-    uint32_t lowest = -2;
-    sc2::Point2D lowest_loc(-1, -1);
-    std::vector<MapChunk> chunks;
-    if (pathable_) {
-        for (auto chunk : map_chunks) {
-            if (chunk.isPathable())
-                chunks.push_back(chunk);
+    int lowest = std::numeric_limits<int>::max();
+    sc2::Point2D lowest_loc = NO_POINT_FOUND;
+
+    for (auto it = chunkset.begin(); it != chunkset.end(); ++it) {
+        if ((*it)->seen_at() < lowest) {
+            lowest_loc = (*it)->getLocation();
+            lowest = (*it)->seen_at();
         }
     }
-    else {
-        chunks = map_chunks;
-    }
 
-    for (auto chunk : chunks) {
-        if (chunk.seen_at() < lowest) {
-            lowest_loc = chunk.getLocation();
-            lowest = chunk.seen_at();
-        }
-    }
+    //std::cout << "(return[" << lowest_loc.x << "," << lowest_loc.y << "])";
 
     return lowest_loc;
 }
 
 sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
-    std::vector<MapChunk> unseen_chunks;
-    for (auto chunk : map_chunks) {
-        if (pathable_ && !chunk.isPathable())
-            continue;
-        if (!chunk.wasSeen()) {
-            unseen_chunks.push_back(chunk);
+    std::unordered_set<MapChunk*> chunkset;
+    std::unordered_set<MapChunk*> unseen_chunks;
+    if (pathable_)
+        chunkset = pathable_map_chunks;
+    else
+        chunkset = map_chunks;
+
+    for (auto it = chunkset.begin(); it != chunkset.end(); ++it) {
+        if (!(*it)->wasSeen()) {
+            unseen_chunks.insert(*it);
         }
     }
 
-    if (unseen_chunks.empty())
-        return sc2::Point2D(-1, -1);
+    if (unseen_chunks.empty()) {
+        std::cout << "unseen_chunks.empty() ";
+        return NO_POINT_FOUND;
+    }
 
-    float dist_to_mob;
     std::unordered_set<Mob*> mobs = agent->mobH->get_mobs();
     std::unordered_set<Mob*> flying_mobs = agent->mobH->filter_by_flag(mobs, FLAGS::IS_FLYING);
+    
+    // should not happen, but lets make sure... this would mean game over
+    if (mobs.empty())
+        return NO_POINT_FOUND;
 
     float closest_dist = std::numeric_limits<float>::max();
-    sc2::Point2D closest_loc(-1,-1);
-    if (pathable_) {
-        for (auto chunk : unseen_chunks) {
-            sc2::Point2D loc = chunk.getLocation();
-            if (mobs.empty())
-                break;
-            Mob* closest_mob = Directive::get_closest_to_location(mobs, loc);
-            float dist = sc2::DistanceSquared2D(closest_mob->unit.pos, loc);
-            if (dist < closest_dist) {
-                closest_loc = loc;
-                closest_dist = dist;
-            }
+    sc2::Point2D closest_loc = NO_POINT_FOUND;
+
+    for (auto it = unseen_chunks.begin(); it != unseen_chunks.end(); ++it) {
+        sc2::Point2D loc = (*it)->getLocation();
+        Mob* closest_mob = nullptr;
+        if (!pathable_ && !(*it)->isPathable()) {
+            // if a chunk can only be reached by flying units
+            closest_mob = Directive::get_closest_to_location(flying_mobs , loc);
+        }
+        else {
+            closest_mob = Directive::get_closest_to_location(mobs, loc);
+        }
+
+        if (closest_mob == nullptr)
+            continue;
+
+        float dist = sc2::DistanceSquared2D(closest_mob->unit.pos, loc);
+        if (dist < closest_dist) {
+            closest_loc = loc;
+            closest_dist = dist;
         }
     }
-    else {
-        // if we are checking all chunks, whether pathable or not
 
-        for (auto chunk : unseen_chunks) {
-            sc2::Point2D loc = chunk.getLocation();
-            Mob* closest_mob = nullptr;
-            if (!chunk.isPathable()) {
-
-                // for non pathable checks, only check distance to flying units
-                if (flying_mobs.empty())
-                    continue;
-                closest_mob = Directive::get_closest_to_location(flying_mobs, loc);
-            }
-            else {
-                if (mobs.empty())
-                    break;
-                closest_mob = Directive::get_closest_to_location(mobs, loc);
-            }
-
-            float dist = sc2::DistanceSquared2D(closest_mob->unit.pos, loc);
-            if (dist < closest_dist) {
-                closest_loc = loc;
-                closest_dist = dist;
-            }
-        }
-    }
     return closest_loc;
 }
 
@@ -605,17 +609,24 @@ float LocationHandler::pathDistFromStartLocation(sc2::QueryInterface* query_, sc
     return query_->PathingDistance(start_location, location_);
 }
 
+bool LocationHandler::spotReachable(const sc2::ObservationInterface* obs_, sc2::QueryInterface* query_, sc2::Point2D from_loc_, sc2::Point2D to_loc_) {
+    bool reachable = true;
+    if (!obs_->IsPathable(to_loc_))
+        return false;
+    if (query_->PathingDistance(from_loc_, to_loc_) == 0)
+        return false;
+    return true;
+}
+
 void LocationHandler::initMapChunks()
 {
-    sc2::QueryInterface* query_interface = agent->Query();
-    auto dist = query_interface->PathingDistance(sc2::Point2D(64, 27), sc2::Point2D(114.5, 25.5));
-    auto dist2 = query_interface->PathingDistance(sc2::Point2D(114.5, 25.5), sc2::Point2D(75, 75));
-    auto dist3 = pathDistFromStartLocation(query_interface, sc2::Point2D(75, 75));
-    auto dist4 = pathDistFromStartLocation(query_interface, sc2::Point2D(64, 27));
-    std::cout << "dist: " << dist << "dist: " << dist2 << "dist3: " << dist3 << "dist4: " << dist4 << std::endl;
+    std::cout << "initializing map chunks";
+    int pathable_count = 0;
+
     const sc2::ObservationInterface* obs = agent->Observation();
+
     sc2::GameInfo game_info = obs->GetGameInfo();
-    float chunk_size = 4.0f;
+    float chunk_size = 6.0f;
     float min_x = game_info.playable_min.x + chunk_size;
     float min_y = game_info.playable_min.x + chunk_size;
     float max_x;
@@ -635,16 +646,51 @@ void LocationHandler::initMapChunks()
         height++;
     }
 
-    for (int j = 0; j < height; j++) {
-        for (int i = 0; i < width; i++) {
-            sc2::Point2D loc_ = sc2::Point2D(min_x + (i * chunk_size), min_y + (j * chunk_size));
-            bool pathable_ = false;
-            if (obs->IsPathable(loc_) && pathDistFromStartLocation(query_interface, loc_) != 0)
-                pathable_ = true;
-            MapChunk chunk(agent, loc_, pathable_);
-            map_chunks.push_back(chunk);
+    sc2::QueryInterface* query = agent->Query();
+
+
+    
+    // offsets to ensure a spot is fully reachable
+    std::vector<sc2::Point2D> offsets;
+
+    offsets.push_back(sc2::Point2D(0, 0));
+    for (float x_off = -1.0; x_off <= 1.0; x_off += 2.0) {
+        for (float y_off = -1.0; y_off <= 1.0; y_off += 2.0) {
+            offsets.push_back(sc2::Point2D(x_off, y_off));
         }
     }
+    
+    assert(offsets.size() == 5);
+
+    for (int j = 0; j < height; j++) {
+        if (j % 2 == 0)
+            std::cout << ".";
+        for (int i = 0; i < width; i++) {
+            sc2::Point2D loc_ = sc2::Point2D(min_x + (i * chunk_size), min_y + (j * chunk_size));
+            bool pathable_ = true;
+
+           
+            for (auto off_ : offsets) {
+                if (!spotReachable(obs, query, start_location, loc_ + off_)) {
+                    pathable_ = false;
+                    break;
+                }
+            }
+
+            if (pathable_)
+                pathable_count++;
+                
+            MapChunk chunk(agent, loc_, pathable_);
+            map_chunk_storage.emplace_back(std::make_unique<MapChunk>(chunk));
+            MapChunk* chunk_ptr = map_chunk_storage.back().get();
+            map_chunks.insert(chunk_ptr);
+            if (pathable_) {
+                pathable_map_chunks.insert(chunk_ptr);
+            }
+            map_chunk_by_id[chunk_ptr->getID()] = chunk_ptr;
+        }
+    }
+    std::cout << std::endl << map_chunks.size() << " chunks initialized (" << pathable_count << " pathable)" << std::endl;
 }
 
 void LocationHandler::setEnemyStartLocation(sc2::Point2D location_)

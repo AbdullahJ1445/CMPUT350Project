@@ -1,10 +1,10 @@
 #pragma once
 #include "sc2api/sc2_api.h"
 #include "Directive.h"
-#include "Agents.h"
+#include "BasicSc2Bot.h"
 
 class Directive;
-class BotAgent;
+class BasicSc2Bot;
 
 enum class MOB {
 	MOB_STRUCTURE,
@@ -47,7 +47,7 @@ public:
 	bool hasDefaultDirective();
 	bool hasBundledDirective();
 	bool hasCurrentDirective();
-	bool executeDefaultDirective(BotAgent* agent);
+	bool executeDefaultDirective(BasicSc2Bot* agent);
 	void disableDefaultDirective();
 	Directive popBundledDirective();
 	bool is_carrying_minerals();

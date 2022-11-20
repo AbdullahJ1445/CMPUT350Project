@@ -4,13 +4,13 @@
 #include "Triggers.h"
 #include "sc2api/sc2_api.h"
 
-Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_) {
 	cond_type = cond_type_;
 	cond_value = cond_value_;
 	agent = agent_;
 }
 
-Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_) {
 	assert(cond_type_ == COND::HAS_ABILITY_READY);
 	cond_type = cond_type_;
 	ability_id = ability_id_;
@@ -19,7 +19,7 @@ Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, s
 	unit_of_type = unit_of_type_;
 }
 
-Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_) {
 	assert(cond_type_ == COND::HAVE_UPGRADE);
 	cond_type = cond_type_;
 	upgrade_id = upgrade_id_;
@@ -27,7 +27,7 @@ Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, s
 	agent = agent_;
 }
 
-Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_) {
 	assert(cond_type_ == COND::MIN_UNIT_WITH_FLAGS ||
 		cond_type == COND::MAX_UNIT_WITH_FLAGS);
 	cond_type = cond_type_;
@@ -36,7 +36,7 @@ Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, i
 	agent = agent_;
 }
 
-Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_) {
 	assert(cond_type_ == COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION || 
 		cond_type == COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION);
 	cond_type = cond_type_;
@@ -47,7 +47,7 @@ Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, i
 	location_for_counting_units = location_;
 }
 
-Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
 	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE || cond_type_ == COND::MIN_UNIT_OF_TYPE || 
 		cond_type_ == COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION || cond_type_ == COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION);
 	cond_type = cond_type_;
@@ -56,7 +56,7 @@ Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, i
 	agent = agent_;
 }
 
-Trigger::TriggerCondition::TriggerCondition(BotAgent* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
 	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION);
 	cond_type = cond_type_;
 	cond_value = cond_value_;
@@ -253,7 +253,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	return false;
 }
 
-Trigger::Trigger(BotAgent* agent_) {
+Trigger::Trigger(BasicSc2Bot* agent_) {
 	agent = agent_;
 };
 
@@ -308,11 +308,11 @@ bool Trigger::check_conditions() {
 	return true;
 }
 
-BotAgent* Trigger::getAgent() {
+BasicSc2Bot* Trigger::getAgent() {
 	return agent;
 }
 
-Precept::Precept(BotAgent* agent_) {
+Precept::Precept(BasicSc2Bot* agent_) {
 	agent = agent_;
 }
 
