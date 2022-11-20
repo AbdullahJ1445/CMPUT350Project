@@ -32,7 +32,7 @@ bool MapChunk::isPathable() {
 }
 
 void MapChunk::checkVision(const sc2::ObservationInterface* obs) {
-    auto last_visibility = obs->GetVisibility(location);
+    last_visibility = obs->GetVisibility(location);
     last_seen = obs->GetGameLoop();
 }
 
