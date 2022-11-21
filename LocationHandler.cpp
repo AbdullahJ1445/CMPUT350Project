@@ -323,6 +323,8 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         if (p_id == 1) {
 
             Base main_base(observation->GetStartLocation());
+            bases.push_back(main_base);
+
             Base exp_1(66.5, 161.5);
             bases.push_back(exp_1);
 
@@ -363,12 +365,30 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(exp_13);
         }
         else if (p_id == 2) {
+            Base main_base(observation->GetStartLocation());
+            bases.push_back(main_base);
+
+            Base exp_1(161.5, 125.5);
+            bases.push_back(exp_1);
             //implement
         }
         else if (p_id == 3) {
+            Base main_base(observation->GetStartLocation());
+            bases.push_back(main_base);
+
+            Base exp_1(125.5, 30.5);
+            bases.push_back(exp_1);
+
+
             //implement
         }
         else if (p_id == 4) {
+            Base main_base(observation->GetStartLocation());
+            bases.push_back(main_base);
+
+            Base exp_1(30.5, 66.5);
+            bases.push_back(exp_1);
+
             //implement
         }
     }

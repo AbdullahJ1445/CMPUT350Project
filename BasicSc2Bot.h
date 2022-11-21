@@ -42,7 +42,10 @@ public:
 	void storeStrategy(Strategy strategy_);
 	Directive* getLastStoredDirective();
 	void storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_type_);
+	void storeLocation(std::string identifier_, sc2::Point2D location_);
 	sc2::UNIT_TYPEID getUnitType(std::string identifier_);
+	sc2::Point2D getStoredLocation(std::string identifier_);
+	int getMapIndex();
 
 	// various bool functions
 	bool have_upgrade(const sc2::UpgradeID upgrade_);
@@ -86,6 +89,7 @@ private:
 	std::vector<std::unique_ptr<Directive>> directive_storage;
 	std::unordered_set<Directive*> stored_directives;
 	std::unordered_map<std::string, sc2::UNIT_TYPEID> special_units;
+	std::unordered_map<std::string, sc2::Point2D> special_locations;
 	std::vector<std::unique_ptr<Strategy>> strategy_storage;
 
 	// private variables

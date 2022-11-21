@@ -124,6 +124,12 @@ void BasicSc2Bot::storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_t
 	special_units[identifier_] = unit_type_;
 }
 
+void BasicSc2Bot::storeLocation(std::string identifier_, sc2::Point2D location_) {
+	// store a special location
+	// can be used in strategies to assign specific locations to later reference
+	special_locations[identifier_] = location_;
+}
+
 bool BasicSc2Bot::is_mineral_patch(const sc2::Unit* unit_) {
 	// check whether a given unit is a mineral patch
 
@@ -146,6 +152,19 @@ sc2::UNIT_TYPEID BasicSc2Bot::getUnitType(std::string identifier_)
 {
 	return special_units[identifier_];
 	
+}
+
+sc2::Point2D BasicSc2Bot::getStoredLocation(std::string identifier_)
+{
+	return special_locations[identifier_];
+}
+
+int BasicSc2Bot::getMapIndex()
+{
+	// 1: cactus
+	// 2: belshir
+	// 3: proxima
+	return map_index;
 }
 
 bool BasicSc2Bot::is_geyser(const sc2::Unit* unit_) {
