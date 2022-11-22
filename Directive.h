@@ -35,7 +35,7 @@ public:
 		MATCH_FLAGS,
 		MATCH_FLAGS_NEAR_LOCATION,
 		UNITS_IN_GROUP,
-		UNIT_TYPE_IN_GROUP,
+		UNIT_TYPE_IN_GROUP
 	};
 	enum ACTION_TYPE {
 		// types of action to be performed
@@ -47,6 +47,8 @@ public:
 		GET_MINERALS_NEAR_LOCATION,
 		GET_GAS_NEAR_LOCATION,
 		DISABLE_DEFAULT_DIRECTIVE,
+		ADD_TO_GROUP,
+		REMOVE_FROM_GROUP
 	};
 
 	Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_=DEFAULT_RADIUS);
@@ -58,6 +60,8 @@ public:
 		sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_=DEFAULT_RADIUS, float target_proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_);
+	Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, std::string group_name_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_=DEFAULT_RADIUS);
+
 
 	//Directive(const Directive& d);
 	//Directive& operator=(const Directive& d);
@@ -85,7 +89,7 @@ private:
 
 	// generic constructor delegated by others
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D assignee_location_,
-		sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_);
+		sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_, std::string group_name_);
 
 	bool execute_simple_action_for_unit_type(BasicSc2Bot* agent);
 	bool execute_build_gas_structure(BasicSc2Bot* agent);
@@ -140,4 +144,5 @@ private:
 	std::unordered_set<FLAGS> flags;
 	std::vector<Directive> directive_bundle;
 	std::unordered_set<Mob*> assigned_mobs;
+	std::string group_name;
 };

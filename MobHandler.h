@@ -25,16 +25,18 @@ public:
     std::unordered_set<Mob*> get_mobs();
     std::unordered_set<Mob*> get_idle_mobs();
     std::unordered_set<Mob*> get_busy_mobs();
+    std::unordered_set<Mob*> getMobGroupByName(std::string mobName);
     
 private:
     BasicSc2Bot* agent;
     //data containers
     std::vector<std::shared_ptr<Mob>> mobs_storage; 
+    std::unordered_map<std::string, std::unordered_set<Mob*>> mob_group_by_name;
+    std::set<std::unordered_set<Mob*>> mob_groups;
 	std::unordered_set<Mob*> mobs; 
 	std::unordered_set<Mob*> idle_mobs;
     std::unordered_set<Mob*> busy_mobs;
 	std::unordered_map<sc2::Tag, Mob*> mob_by_tag; 
-
 };
 
 

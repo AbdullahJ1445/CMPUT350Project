@@ -111,7 +111,10 @@ std::unordered_set<Mob*> MobHandler::get_idle_mobs() {
     return idle_mobs;
 }
 
-std::unordered_set<Mob*> MobHandler::get_busy_mobs()
-{
+std::unordered_set<Mob*> MobHandler::get_busy_mobs() {
 	return busy_mobs;
+}
+
+std::unordered_set<Mob*> MobHandler::getMobGroupByName(std::string mobName) {
+	return mob_group_by_name[mobName];
 }
