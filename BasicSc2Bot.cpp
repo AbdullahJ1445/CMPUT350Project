@@ -20,8 +20,8 @@ void BasicSc2Bot::setCurrentStrategy(Strategy* strategy_) {
 	storeStrategy(*strategy_);
 }
 
-void BasicSc2Bot::addStrat(Precept strategy) {
-	strategies.push_back(strategy);
+void BasicSc2Bot::addStrat(Precept precept_) {
+	precepts_onstep.push_back(precept_);
 }
 
 bool BasicSc2Bot::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) {
@@ -124,6 +124,12 @@ void BasicSc2Bot::storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_t
 	special_units[identifier_] = unit_type_;
 }
 
+void BasicSc2Bot::storeLocation(std::string identifier_, sc2::Point2D location_) {
+	// store a special location
+	// can be used in strategies to assign specific locations to later reference
+	special_locations[identifier_] = location_;
+}
+
 bool BasicSc2Bot::is_mineral_patch(const sc2::Unit* unit_) {
 	// check whether a given unit is a mineral patch
 
@@ -146,6 +152,19 @@ sc2::UNIT_TYPEID BasicSc2Bot::getUnitType(std::string identifier_)
 {
 	return special_units[identifier_];
 	
+}
+
+sc2::Point2D BasicSc2Bot::getStoredLocation(std::string identifier_)
+{
+	return special_locations[identifier_];
+}
+
+int BasicSc2Bot::getMapIndex()
+{
+	// 1: cactus
+	// 2: belshir
+	// 3: proxima
+	return map_index;
 }
 
 bool BasicSc2Bot::is_geyser(const sc2::Unit* unit_) {
@@ -176,12 +195,12 @@ sc2::UnitTypeData BasicSc2Bot::getUnitTypeData(const sc2::Unit* unit) {
 void BasicSc2Bot::initVariables() {
 	const sc2::ObservationInterface* observation = Observation();
 	map_name = observation->GetGameInfo().map_name;
-
-	if (map_name == "Proxima Station LE")
+	std::cout << "map_name: " << map_name;
+	if (map_name == "Proxima Station LE" || map_name == "Proxim Station LE (Void)")
 		map_index = 3; else
-		if (map_name == "Bel'Shir Vestige LE (Void)" || map_name == "Bel'Shir Vestige LE")
+		if (map_name == "Bel'Shir Vestige LE" || map_name == "Bel'Shir Vestige LE (Void)")
 			map_index = 2; else
-			if (map_name == "Cactus Valley LE")
+			if (map_name == "Cactus Valley LE" || map_name == "Cactus Valley LE (Void)")
 				map_index = 1; else
 				map_index = 0;
 
@@ -265,6 +284,11 @@ void BasicSc2Bot::OnStep() {
 	// update visibility data for chunks
 	locH->scanChunks(observation);
 
+	//sc2::Point2D high_threat = locH->getHighestThreatLocation();
+	//if (high_threat != INVALID_POINT) {
+	//	std::cout << "HIGH THREAT LOCATION: (" << high_threat.x << ", " << high_threat.y << ")" << std::endl;
+	//}
+
 	/*
 	std::unordered_set<Mob*> busy_mobs = mobH->get_busy_mobs();
 	if (!busy_mobs.empty()) {
@@ -299,7 +323,7 @@ void BasicSc2Bot::OnStep() {
 		}
 	}
 
-	for (Precept s : strategies) {
+	for (Precept s : precepts_onstep) {
 		if (s.checkTriggerConditions()) {
 			s.execute();
 		}

@@ -15,6 +15,7 @@ MapChunk::MapChunk(BasicSc2Bot* agent_, sc2::Point2D location_, bool pathable_) 
     agent = agent_;
     location = location_;
     last_seen = -1;
+    threat = -1;
 }
 
 sc2::Point2D MapChunk::getLocation() {
@@ -37,13 +38,47 @@ bool MapChunk::isPathable() {
     return pathable;
 }
 
+bool MapChunk::hasEnemyUnits() {
+    return enemy_unit_count > 0;
+}
+
+bool MapChunk::hasEnemyStructures() {
+    return enemy_structure_count > 0;
+}
+
+float MapChunk::getThreat() {
+    return threat;
+}
+
 void MapChunk::checkVision(const sc2::ObservationInterface* obs) {
+
+    // checks the status of the chunk. If the chunk is visible, it updates the data for nearby enemy units.
+
     last_visibility = obs->GetVisibility(location);
     if (last_visibility == sc2::Visibility::Visible) {
-        //std::cout << "[visible](" << location.x << "," << location.y << ")";
         last_seen = obs->GetGameLoop();
-        //std::cout << "<" << last_seen << ">";
+
+        // Scanning each chunk for enemies was too inefficient. Have to find a better way.
+        /*
+        sc2::Units enemies_near;
+        std::copy_if(enemies.begin(), enemies.end(), std::back_inserter(enemies_near),
+            [this](const sc2::Unit* u) { return sc2::Distance2D(u->pos, location) < pow(CHUNK_SIZE, 2); });
+        if (!enemies_near.empty()) {
+            enemy_units_last_seen_at = last_seen;
+        }
+        enemy_unit_count = enemies_near.size();
+        sc2::Units enemy_structures_near;
+        std::copy_if(enemies_near.begin(), enemies_near.end(), std::back_inserter(enemy_structures_near),
+            [this, utd, atd](const sc2::Unit* u) { return (atd[utd[u->unit_type].ability_id].is_building); });
+        enemy_structure_count = enemy_structures_near.size();
+        threat = calculateThreat(enemies_near.size(), enemy_structures_near.size());
+        */
     }
+}
+
+float MapChunk::calculateThreat(int num_enemy_units, int num_enemy_structures)
+{
+    return (num_enemy_units * 1.0 + num_enemy_structures * 3.0);
 }
 
 bool MapChunk::inVision(const sc2::ObservationInterface* obs) {
@@ -93,8 +128,9 @@ int LocationHandler::getIndexOfClosestBase(sc2::Point2D location_) {
 }
 
 void LocationHandler::scanChunks(const sc2::ObservationInterface* obs) {
-    //std::cout << "(scan:" << map_chunks.size() << ")";
-    //std::cout << // 76 92
+    //auto utd = obs->GetUnitTypeData();
+    //auto atd = obs->GetAbilityData();
+    //sc2::Units enemies = obs->GetUnits(sc2::Unit::Alliance::Enemy);
     for (auto it = map_chunks.begin(); it != map_chunks.end(); ++it) {
         (*it)->checkVision(obs);
     }
@@ -165,6 +201,42 @@ const sc2::Unit* LocationHandler::getNearestTownhall(const sc2::Point2D location
         return &(m->unit);
     }
     return nullptr;
+}
+
+sc2::Point2D LocationHandler::getHighestThreatLocation(bool pathable_) {
+    std::unordered_set<MapChunk*> chunkset;
+
+    if (pathable_)
+        chunkset = pathable_map_chunks;
+    else
+        chunkset = map_chunks;
+
+    float highest_threat = -1.0f;
+    int highest_id = -99;
+
+    for (auto chunk : chunkset) {
+        if (chunk->getThreat() > highest_threat) {
+            highest_threat = chunk->getThreat();
+            highest_id = chunk->getID();
+        }
+    }
+    if (highest_id != -99) {
+        return map_chunk_by_id[highest_id]->getLocation();
+    }
+    else {
+        return INVALID_POINT;
+    }
+}
+
+sc2::Point2D LocationHandler::smartAttackLocation(bool pathable_) {
+    // first returns the highest threat location
+    // if none found, then returns the oldest location, meaning the location
+    // which was visited the least recently
+
+    sc2::Point2D high_threat = getHighestThreatLocation(pathable_);
+    if (high_threat != INVALID_POINT)
+        return high_threat;
+    return getOldestLocation(pathable_);
 }
 
 sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
@@ -276,7 +348,7 @@ int LocationHandler::getPlayerIDForMap(int map_index, sc2::Point2D location) {
             // top right
             p_id = 2;
         }
-        if (location == sc2::Point2D(158.5, 158.5)) {
+        if (location == sc2::Point2D(158.5, 33.5)) {
             // bottom right
             p_id = 3;
         }
@@ -323,8 +395,11 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         if (p_id == 1) {
 
             Base main_base(observation->GetStartLocation());
+            bases.push_back(main_base);
+
             Base exp_1(66.5, 161.5);
-            bases.push_back(exp_1);
+            exp_1.add_defend_point(64, 152);
+            bases.push_back(exp_1); // radius 6.0F
 
             Base exp_2(54.5, 132.5);
             bases.push_back(exp_2);
@@ -363,13 +438,28 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(exp_13);
         }
         else if (p_id == 2) {
-            //implement
+            Base main_base(observation->GetStartLocation());
+            bases.push_back(main_base);
+
+            Base exp_1(161.5, 125.5);
+            exp_1.add_defend_point(152, 128); // radius 6.0F
+            bases.push_back(exp_1);
         }
         else if (p_id == 3) {
-            //implement
+            Base main_base(observation->GetStartLocation());
+            bases.push_back(main_base);
+
+            Base exp_1(125.5, 30.5);
+            exp_1.add_defend_point(128, 40); // radius 6.0F
+            bases.push_back(exp_1);
         }
         else if (p_id == 4) {
-            //implement
+            Base main_base(observation->GetStartLocation());
+            bases.push_back(main_base);
+
+            Base exp_1(30.5, 66.5);
+            exp_1.add_defend_point(40, 64);  // radius 6.0F
+            bases.push_back(exp_1);
         }
     }
 
@@ -626,7 +716,7 @@ void LocationHandler::initMapChunks()
     const sc2::ObservationInterface* obs = agent->Observation();
 
     sc2::GameInfo game_info = obs->GetGameInfo();
-    float chunk_size = 6.0f;
+    float chunk_size = CHUNK_SIZE;
     float min_x = game_info.playable_min.x + chunk_size;
     float min_y = game_info.playable_min.x + chunk_size;
     float max_x;

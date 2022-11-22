@@ -535,12 +535,26 @@ bool Directive::execute_order_for_unit_type_with_location(BasicSc2Bot* agent) {
     
 	// if order is a build structure order, ensure a valid placement location
 	if (ability_data.is_building) {
+		
+		// if any unit is currently already on route to build this structure
+		if (if_any_on_route_to_build(agent, mobs)) {
+			return false;
+		}
+
 		int i = 0;
-		while (!query_interface->Placement(ability, location)) {
-			location = uniform_random_point_in_circle(target_location, proximity);
-			i++;
-			if (i > 20) {
-				// can't find a suitable spot to build
+		if (action_type == ACTION_TYPE::NEAR_LOCATION) {
+			while (!query_interface->Placement(ability, location)) {
+				location = uniform_random_point_in_circle(target_location, proximity);
+				i++;
+				if (i > 20) {
+					// can't find a suitable spot to build
+					return false;
+				}
+			}
+		}
+		else {
+			if (!query_interface->Placement(ability, location)) {
+				//std::cout << "%";
 				return false;
 			}
 		}
@@ -599,6 +613,19 @@ bool Directive::have_bundle() {
 size_t Directive::getID()
 {
 	return id;
+}
+
+bool Directive::if_any_on_route_to_build(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_) {
+	const sc2::ObservationInterface* obs = agent->Observation();
+
+	for (auto it = mobs_.begin(); it != mobs_.end(); ++it) {
+		for (const auto& order : (*it)->unit.orders) {
+			if (order.ability_id == ability && order.progress == 0) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 bool Directive::is_building_structure(BasicSc2Bot* agent, Mob* mob_) {

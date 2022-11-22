@@ -57,7 +57,8 @@ Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_
 }
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
-	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION);
+	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION ||
+	cond_type_ == COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION);
 	cond_type = cond_type_;
 	cond_value = cond_value_;
 	unit_of_type = unit_of_type_;
@@ -187,7 +188,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		std::vector<const sc2::Unit*> filtered_units;
 		std::copy_if(units.begin(), units.end(), std::back_inserter(filtered_units),
-			[this](const sc2::Unit* u) { return (u->unit_type == unit_of_type) && (u->build_progress != 1.0); });
+			[this](const sc2::Unit* u) { return (u->unit_type == unit_of_type) && (u->build_progress < 1.0 && u->build_progress > 0); });
 		int num_units = filtered_units.size();
 		return (num_units >= cond_value);
 	}
@@ -196,9 +197,35 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 			std::vector<const sc2::Unit*> filtered_units;
 			std::copy_if(units.begin(), units.end(), std::back_inserter(filtered_units),
-				[this, equivalent_type](const sc2::Unit* u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) && (u->build_progress != 1.0); });
+				[this, equivalent_type](const sc2::Unit* u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) && (u->build_progress < 1.0 && u->build_progress > 0); });
 			int num_units = filtered_units.size();
+			
 			return (num_units <= cond_value);
+		}
+
+	case COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION:
+		{
+			sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+			int num_units = count_if(units.begin(), units.end(),
+				[this](const sc2::Unit* u) {
+					return (u->unit_type == unit_of_type
+						&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
+						&& (u->build_progress > 0 && u->build_progress < 1.0F);
+				});
+
+			return (num_units <= cond_value);
+		}
+	case COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION:
+		{
+			sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+			int num_units = count_if(units.begin(), units.end(),
+				[this](const sc2::Unit* u) {
+					return (u->unit_type == unit_of_type
+						&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
+						&& (u->build_progress > 0 && u->build_progress < 1.0F);
+				});
+
+			return (num_units >= cond_value);
 		}
 	case COND::HAS_ABILITY_READY:
 		std::unordered_set<Mob*> structures = agent->mobH->filter_by_flag(agent->mobH->get_mobs(), FLAGS::IS_STRUCTURE);
@@ -213,16 +240,16 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	}
 	
 	if (cond_type == COND::MAX_UNIT_OF_TYPE) {
-		// for maximum units we consider units under construction as well, as
-		// when it is done it will put the count over the maximum
+		// only consider units that have completed construction
 		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+
 		int num_units = count_if(units.begin(), units.end(),
-			[this, equivalent_type](const sc2::Unit* u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) ; });
+			[this, equivalent_type](const sc2::Unit* u) { 
+				return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) && (u->build_progress == 1.0); });
 		return (num_units <= cond_value);
 	}
 	if (cond_type == COND::MIN_UNIT_OF_TYPE) {
-		// for minimum units we want to ensure the units have completed construction
-		// as this is used to consider whether pre-requisite structures are met
+		// only consider units that have completed construction
 		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		std::vector<const sc2::Unit*> filtered_units;
 		std::copy_if(units.begin(), units.end(), std::back_inserter(filtered_units),
@@ -236,8 +263,10 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		int num_units = count_if(units.begin(), units.end(),
 			[this](const sc2::Unit* u) { 
 				return (u->unit_type == unit_of_type
-					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared); 
+					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
+					&& (u->build_progress == 1.0);
 			});
+
 		return (num_units <= cond_value);
 	}
 	if (cond_type == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION) {
@@ -248,6 +277,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared) 
 					&& (u->build_progress == 1.0);
 			});
+
 		return (num_units >= cond_value);
 	}
 	return false;
@@ -320,6 +350,7 @@ Precept::~Precept() {
 	directives.clear();
 }
 
+
 bool Precept::execute() {
 	bool any_executed = false;
 	for (auto d : directives) {
@@ -352,4 +383,3 @@ bool Precept::checkTriggerConditions() {
 	}
 	return false;
 }
-
