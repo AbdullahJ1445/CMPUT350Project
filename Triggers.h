@@ -108,7 +108,7 @@ public:
 	void addTrigger(Trigger trigger_);
 	void addDirective(Directive directive_);
 
-private:
+protected:
 	BasicSc2Bot* agent;
 	std::vector<Trigger> triggers;
 	std::vector<Directive*> directives;

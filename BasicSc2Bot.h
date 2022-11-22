@@ -36,7 +36,7 @@ public:
 	LocationHandler* locH;
 	// public functions
 	void setCurrentStrategy(Strategy* strategy_);
-	void BasicSc2Bot::addStrat(Precept strategy);
+	void BasicSc2Bot::addStrat(Precept precept_);
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
 	void storeDirective(Directive directive_);
 	void storeStrategy(Strategy strategy_);
@@ -85,7 +85,7 @@ private:
 
 
 	// data containers
-	std::vector<Precept> strategies;
+	std::vector<Precept> precepts_onstep;
 	std::vector<std::unique_ptr<Directive>> directive_storage;
 	std::unordered_set<Directive*> stored_directives;
 	std::unordered_map<std::string, sc2::UNIT_TYPEID> special_units;

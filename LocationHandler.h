@@ -8,6 +8,7 @@
 #include "Base.h"
 
 # define NO_POINT_FOUND sc2::Point2D(-2.5252, -2.5252)
+# define CHUNK_SIZE 6.0f
 
 class BasicSc2Bot;
 
@@ -17,9 +18,13 @@ public:
     int seen_at();
     bool wasSeen();
     size_t getID();
+    bool hasEnemyUnits();
+    bool hasEnemyStructures();
     bool isPathable();
+    float getThreat();
     bool inVision(const sc2::ObservationInterface* obs);
     void checkVision(const sc2::ObservationInterface* obs);
+    static float calculateThreat(int num_enemy_units, int num_enemy_structures);
     sc2::Point2D getLocation();
 
 private:
@@ -29,6 +34,10 @@ private:
     int last_seen;
     size_t id;
     sc2::Visibility last_visibility;
+    int enemy_units_last_seen_at;        // the last time step when enemy units were seen here
+    int enemy_unit_count;
+    int enemy_structure_count;
+    float threat;                          // the calculated threat of this chunk
 };
 
 class LocationHandler {
@@ -40,8 +49,10 @@ public:
     const sc2::Unit* getNearestMineralPatch(sc2::Point2D location);
     const sc2::Unit* getNearestGeyser(sc2::Point2D location);
     const sc2::Unit* getNearestGasStructure(sc2::Point2D location);
-    const sc2::Unit*  getNearestTownhall(const sc2::Point2D location);
+    const sc2::Unit* getNearestTownhall(const sc2::Point2D location);
     sc2::Point2D getOldestLocation(bool pathable_=true);
+    sc2::Point2D getHighestThreatLocation(bool pathable_=true);
+    sc2::Point2D smartAttackLocation(bool pathable_=true);
     int getPlayerIDForMap(int map_index, sc2::Point2D location);
     void initLocations(int map_index, int p_id);
     void setEnemyStartLocation(sc2::Point2D location_);

@@ -20,8 +20,8 @@ void BasicSc2Bot::setCurrentStrategy(Strategy* strategy_) {
 	storeStrategy(*strategy_);
 }
 
-void BasicSc2Bot::addStrat(Precept strategy) {
-	strategies.push_back(strategy);
+void BasicSc2Bot::addStrat(Precept precept_) {
+	precepts_onstep.push_back(precept_);
 }
 
 bool BasicSc2Bot::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) {
@@ -284,6 +284,11 @@ void BasicSc2Bot::OnStep() {
 	// update visibility data for chunks
 	locH->scanChunks(observation);
 
+	//sc2::Point2D high_threat = locH->getHighestThreatLocation();
+	//if (high_threat != INVALID_POINT) {
+	//	std::cout << "HIGH THREAT LOCATION: (" << high_threat.x << ", " << high_threat.y << ")" << std::endl;
+	//}
+
 	/*
 	std::unordered_set<Mob*> busy_mobs = mobH->get_busy_mobs();
 	if (!busy_mobs.empty()) {
@@ -318,7 +323,7 @@ void BasicSc2Bot::OnStep() {
 		}
 	}
 
-	for (Precept s : strategies) {
+	for (Precept s : precepts_onstep) {
 		if (s.checkTriggerConditions()) {
 			s.execute();
 		}

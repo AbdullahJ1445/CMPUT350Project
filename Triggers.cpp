@@ -199,8 +199,10 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::copy_if(units.begin(), units.end(), std::back_inserter(filtered_units),
 				[this, equivalent_type](const sc2::Unit* u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) && (u->build_progress < 1.0 && u->build_progress > 0); });
 			int num_units = filtered_units.size();
+			
 			return (num_units <= cond_value);
 		}
+
 	case COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION:
 		{
 			sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
@@ -222,6 +224,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 						&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
 						&& (u->build_progress > 0 && u->build_progress < 1.0F);
 				});
+
 			return (num_units >= cond_value);
 		}
 	case COND::HAS_ABILITY_READY:
@@ -263,6 +266,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
 					&& (u->build_progress == 1.0);
 			});
+
 		return (num_units <= cond_value);
 	}
 	if (cond_type == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION) {
@@ -273,6 +277,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared) 
 					&& (u->build_progress == 1.0);
 			});
+
 		return (num_units >= cond_value);
 	}
 	return false;
@@ -345,6 +350,7 @@ Precept::~Precept() {
 	directives.clear();
 }
 
+
 bool Precept::execute() {
 	bool any_executed = false;
 	for (auto d : directives) {
@@ -377,4 +383,3 @@ bool Precept::checkTriggerConditions() {
 	}
 	return false;
 }
-

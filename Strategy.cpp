@@ -53,9 +53,9 @@ void Strategy::loadStrategies() {
 		}
 		if (p_id == 3) {
 			bot->storeLocation("FORGE_1", sc2::Point2D(123.5, 43.5));
-			bot->storeLocation("PYLON_1", sc2::Point2D(124.5,39));
-			bot->storeLocation("PYLON_2", sc2::Point2D(124.5, 37));
-			bot->storeLocation("CANNON_1", sc2::Point2D(125,41));
+			bot->storeLocation("PYLON_1", sc2::Point2D(124, 39));
+			bot->storeLocation("PYLON_2", sc2::Point2D(124, 37));
+			bot->storeLocation("CANNON_1", sc2::Point2D(125, 41));
 			bot->storeLocation("GATEWAY_1", sc2::Point2D(120.5,41.5));
 			bot->storeLocation("CYBER_1", sc2::Point2D(124.5,34.5));
 		}
