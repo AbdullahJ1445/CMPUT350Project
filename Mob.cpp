@@ -33,9 +33,11 @@ void Mob::initVars() {
 	tag = unit.tag;
 	has_default_directive = false;
 	has_bundled_directive = false;
+	has_current_directive = false;
 	birth_location = unit.pos;
 	home_location = unit.pos;
 	assigned_location = unit.pos;
+	current_directive = nullptr;
 	std::unordered_set<FLAGS> flags;
 }
 
@@ -47,7 +49,7 @@ bool Mob::has_flag(FLAGS flag) {
 	return (flags.find(flag) != flags.end());
 }
 
-void Mob::assignDirective(Directive directive_) {
+void Mob::assignDefaultDirective(Directive directive_) {
 	if (has_default_directive) {
 		delete default_directive;
 	}
@@ -55,6 +57,18 @@ void Mob::assignDirective(Directive directive_) {
 	default_directive = new Directive(directive_);
 	default_directive->lock();
 	has_default_directive = true;
+}
+
+void Mob::assignDirective(Directive* directive_) {
+	// set the mob's current directive
+	current_directive = directive_;
+	has_current_directive = true;
+}
+
+void Mob::unassignDirective() {
+	// unassign the mob's current directive
+	current_directive = nullptr;
+	has_current_directive = false;
 }
 
 bool Mob::hasDefaultDirective() {
@@ -65,12 +79,21 @@ bool Mob::hasBundledDirective() {
 	return has_bundled_directive;
 }
 
+bool Mob::hasCurrentDirective() {
+	return has_current_directive;
+}
 
-bool Mob::executeDefaultDirective(BotAgent* agent) {
+
+bool Mob::executeDefaultDirective(BasicSc2Bot* agent) {
 	if (has_default_directive) {
-		return default_directive->executeForUnit(agent, unit);
+		return default_directive->executeForMob(agent, this);
 	}
 	return false;
+}
+
+void Mob::disableDefaultDirective()
+{
+	has_default_directive = false;
 }
 
 void Mob::bundle_directives(std::vector<Directive> dir_vec) {
@@ -155,6 +178,24 @@ sc2::Point2D Mob::get_assigned_location() {
 
 std::unordered_set<FLAGS> Mob::get_flags() {
 	return flags;
+}
+
+bool Mob::setCurrentDirective(Directive* directive_) {
+	if (!directive_->allowsMultiple() && directive_->hasAssignedMob()) {
+		return false;
+	}
+	current_directive = directive_;
+	directive_->assignMob(this);
+	return true;
+}
+
+Directive* Mob::getCurrentDirective() {
+	if (has_current_directive) {
+		return current_directive;
+	}
+	else {
+		return nullptr;
+	}
 }
 
 sc2::Tag Mob::get_tag() {

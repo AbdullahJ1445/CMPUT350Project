@@ -1,10 +1,10 @@
 #pragma once
 #include "sc2api/sc2_api.h"
 #include "Directive.h"
-#include "Agents.h"
+#include "BasicSc2Bot.h"
 
 class Directive;
-class BotAgent;
+class BasicSc2Bot;
 
 enum class MOB {
 	MOB_STRUCTURE,
@@ -41,10 +41,14 @@ public:
 	void initVars();
 	bool is_idle();
 	bool has_flag(FLAGS flag);
-	void assignDirective(Directive directive_);
+	void assignDefaultDirective(Directive directive_);
+	void assignDirective(Directive* directive_);
+	void unassignDirective();
 	bool hasDefaultDirective();
 	bool hasBundledDirective();
-	bool executeDefaultDirective(BotAgent* agent);
+	bool hasCurrentDirective();
+	bool executeDefaultDirective(BasicSc2Bot* agent);
+	void disableDefaultDirective();
 	Directive popBundledDirective();
 	bool is_carrying_minerals();
 	bool is_carrying_gas();
@@ -58,6 +62,8 @@ public:
 	void bundle_directives(std::vector<Directive> dir_vec);
 	std::unordered_set<FLAGS> get_flags();
 	sc2::Tag get_tag();
+	bool setCurrentDirective(Directive* directive_);
+	Directive* getCurrentDirective();
 	bool operator<(const Mob& mob) const { return tag < mob.tag; }
 	const sc2::Unit& unit;
 	
@@ -69,6 +75,8 @@ private:
 	sc2::Tag tag; // a unique identifier given to units
 	bool has_default_directive;
 	bool has_bundled_directive;
+	bool has_current_directive;
 	Directive* default_directive;
 	Directive* bundled_directive;
+	Directive* current_directive;
 };

@@ -5,12 +5,8 @@
 #include "sc2api/sc2_unit_filters.h"
 #include "sc2api/sc2_interfaces.h"
 #include "sc2api/sc2_typeenums.h"
-#include "sc2api/sc2_unit_types.h"
 
-class Mob;
-class BotAgent;
-
-MobHandler::MobHandler(BotAgent* agent) {
+MobHandler::MobHandler(BasicSc2Bot* agent) {
     this->agent = agent;
 }
 
@@ -21,6 +17,7 @@ void MobHandler::set_mob_idle(Mob* mob_, bool is_true) {
 	if (is_true) {
 		mob_->set_flag(FLAGS::IS_IDLE);
 		mob_->remove_flag(FLAGS::IS_BUILDING_STRUCTURE);
+		set_mob_busy(mob_, false);
 		idle_mobs.insert(mob);
 	}
 	else {
@@ -29,7 +26,21 @@ void MobHandler::set_mob_idle(Mob* mob_, bool is_true) {
 	}
 }
 
-bool MobHandler::(Mob mob_) {
+void MobHandler::set_mob_busy(Mob* mob_, bool is_true) {
+	// set a mob as busy
+	// a mob may be neither busy or idle (e.g. a worker harvesting minerals will be available to build)
+
+	Mob* mob = &getMob(mob_->unit); // ensure we are pointing to the mob in our storage
+	if (is_true) {
+		set_mob_idle(mob_, false);
+		busy_mobs.insert(mob);
+	}
+	else {
+		busy_mobs.erase(mob);
+	}
+}
+
+bool MobHandler::addMob(Mob mob_) {
 	// add a mob to the game
 
 	if (mob_exists(mob_.unit))
@@ -54,6 +65,17 @@ Mob& MobHandler::getMob(const sc2::Unit& unit) {
 	// get the correct mob from storage
 
 	return *mob_by_tag[unit.tag];
+}
+
+void MobHandler::mobDeath(Mob* mob_)
+{
+	Mob* mob = &getMob(mob_->unit);
+	set_mob_idle(mob, false);
+	set_mob_busy(mob, false);
+	for (auto f : mob->get_flags()) {
+		mob->remove_flag(f);
+	}
+	mobs.erase(mob);
 }
 
 std::unordered_set<Mob*> MobHandler::getIdleWorkers() {
@@ -85,6 +107,14 @@ std::unordered_set<Mob*> MobHandler::get_mobs() {
 	return mobs;
 }
 
+std::unordered_set<Mob*> MobHandler::get_idle_mobs() {
+    return idle_mobs;
+}
 
+std::unordered_set<Mob*> MobHandler::get_busy_mobs() {
+	return busy_mobs;
+}
 
-
+std::unordered_set<Mob*> MobHandler::getMobGroupByName(std::string mobName) {
+	return mob_group_by_name[mobName];
+}
