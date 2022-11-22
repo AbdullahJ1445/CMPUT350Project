@@ -28,7 +28,6 @@ void Base::add_defend_point(float x, float y) {
 
 sc2::Point2D Base::get_build_area(int index) {
 	// Get the build area with the specified index, or the best alternative
-
 	int num_build_areas = get_num_build_areas();
 	int num_defend_points = get_num_defend_points();
 	if (num_build_areas == 0) {
@@ -41,8 +40,9 @@ sc2::Point2D Base::get_build_area(int index) {
 		return location_townhall;	
 	}
 	// if index is higher than last, get the last index instead
-	if (index > num_build_areas || index < 0)
+	if (index >= num_build_areas || index < 0) {
 		index = num_build_areas - 1;
+	}
 
 	return build_areas[index];
 }

@@ -36,6 +36,8 @@ enum class COND {
 	MIN_UNIT_OF_TYPE_NEAR_LOCATION,
 	MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION,
 	MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION,
+	MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION,
+	MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION,
 	MIN_UNIT_WITH_FLAGS,
 	MAX_UNIT_WITH_FLAGS,
 	MIN_UNIT_WITH_FLAGS_NEAR_LOCATION,
@@ -61,19 +63,15 @@ public:
 	bool check_conditions();
 	BasicSc2Bot* getAgent();
 
-private:
-	std::vector<TriggerCondition> conditions;
-	BasicSc2Bot* agent;
-
 	class TriggerCondition {
 	public:
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_);
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
-		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_=true);
-		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_=true);
+		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_ = true);
+		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_ = true);
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_);
-		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
-		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
+		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_ = DEFAULT_RADIUS);
+		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_ = DEFAULT_RADIUS);
 		bool is_met(const sc2::ObservationInterface* obs);
 
 
@@ -90,6 +88,9 @@ private:
 		std::unordered_set<FLAGS> filter_flags;
 	};
 
+private:
+	std::vector<TriggerCondition> conditions;
+	BasicSc2Bot* agent;
 };
 
 class Precept {

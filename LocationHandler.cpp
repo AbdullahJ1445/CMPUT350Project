@@ -276,7 +276,7 @@ int LocationHandler::getPlayerIDForMap(int map_index, sc2::Point2D location) {
             // top right
             p_id = 2;
         }
-        if (location == sc2::Point2D(158.5, 158.5)) {
+        if (location == sc2::Point2D(158.5, 33.5)) {
             // bottom right
             p_id = 3;
         }
@@ -326,7 +326,8 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(main_base);
 
             Base exp_1(66.5, 161.5);
-            bases.push_back(exp_1);
+            exp_1.add_defend_point(64, 152);
+            bases.push_back(exp_1); // radius 6.0F
 
             Base exp_2(54.5, 132.5);
             bases.push_back(exp_2);
@@ -369,27 +370,24 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(main_base);
 
             Base exp_1(161.5, 125.5);
+            exp_1.add_defend_point(152, 128); // radius 6.0F
             bases.push_back(exp_1);
-            //implement
         }
         else if (p_id == 3) {
             Base main_base(observation->GetStartLocation());
             bases.push_back(main_base);
 
             Base exp_1(125.5, 30.5);
+            exp_1.add_defend_point(128, 40); // radius 6.0F
             bases.push_back(exp_1);
-
-
-            //implement
         }
         else if (p_id == 4) {
             Base main_base(observation->GetStartLocation());
             bases.push_back(main_base);
 
             Base exp_1(30.5, 66.5);
+            exp_1.add_defend_point(40, 64);  // radius 6.0F
             bases.push_back(exp_1);
-
-            //implement
         }
     }
 

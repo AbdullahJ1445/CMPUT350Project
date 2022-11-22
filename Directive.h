@@ -91,6 +91,7 @@ private:
 	bool execute_match_flags(BasicSc2Bot* agent);
 	bool execute_order_for_unit_type_with_location(BasicSc2Bot* agent);
 	bool have_bundle();
+	bool if_any_on_route_to_build(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_);
 	bool is_building_structure(BasicSc2Bot* agent, Mob* mob_);
 	bool has_build_order(Mob* mob_);
 	std::unordered_set<Mob*> filter_by_has_ability(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);

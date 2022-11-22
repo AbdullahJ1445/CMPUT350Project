@@ -195,12 +195,12 @@ sc2::UnitTypeData BasicSc2Bot::getUnitTypeData(const sc2::Unit* unit) {
 void BasicSc2Bot::initVariables() {
 	const sc2::ObservationInterface* observation = Observation();
 	map_name = observation->GetGameInfo().map_name;
-
-	if (map_name == "Proxima Station LE")
+	std::cout << "map_name: " << map_name;
+	if (map_name == "Proxima Station LE" || map_name == "Proxim Station LE (Void)")
 		map_index = 3; else
-		if (map_name == "Bel'Shir Vestige LE (Void)" || map_name == "Bel'Shir Vestige LE")
+		if (map_name == "Bel'Shir Vestige LE" || map_name == "Bel'Shir Vestige LE (Void)")
 			map_index = 2; else
-			if (map_name == "Cactus Valley LE")
+			if (map_name == "Cactus Valley LE" || map_name == "Cactus Valley LE (Void)")
 				map_index = 1; else
 				map_index = 0;
 
