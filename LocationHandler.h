@@ -10,6 +10,7 @@
 # define NO_POINT_FOUND sc2::Point2D(-2.5252, -2.5252) // value indicating no point found
 # define CHUNK_SIZE 6.0f // the distance between adjacent chunks
 # define THREAT_DECAY 0.50 // the amount threat decays for a chunk when in vision
+# define NEARBY_THREAT_MODIFIER 0.05 // how much threat should increase for nearby chunks when enemies near
 
 class BasicSc2Bot;
 
@@ -49,7 +50,7 @@ public:
     void scanChunks(const sc2::ObservationInterface* obs);
     const sc2::Unit* getNearestMineralPatch(sc2::Point2D location);
     const sc2::Unit* getNearestGeyser(sc2::Point2D location);
-    const sc2::Unit* getNearestGasStructure(sc2::Point2D location);
+    const sc2::Unit* getNearestGasStructure(sc2::Point2D location, bool allied=true);
     const sc2::Unit* getNearestTownhall(const sc2::Point2D location);
     sc2::Point2D getOldestLocation(bool pathable_=true);
     sc2::Point2D getHighestThreatLocation(bool pathable_=true);

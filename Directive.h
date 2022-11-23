@@ -78,8 +78,11 @@ public:
 	void setTargetLocationFunction(Strategy* strat_, BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_);
 	void setAssigneeLocationFunction(BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_);
 	bool allowMultiple(bool is_true=true);
+	void setContinuous(bool is_true=true);
 	bool allowsMultiple();
 	bool hasAssignedMob();
+	int getTargetUpdateIterationID();
+	int getAssigneeUpdateIterationID();
 	sc2::ABILITY_ID getAbilityID();
 	std::unordered_set<Mob*> getAssignedMobs();
 	static Mob* get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
@@ -113,18 +116,21 @@ private:
 	void updateTargetLocation(BasicSc2Bot* agent_);
 	void updateAssigneeLocation(BasicSc2Bot* agent_);
 
-	bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_= USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool _generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, Mob* mob_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_= USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
 
 	bool locked;
 	bool allow_multiple;
 	bool update_target_location;
 	bool update_assignee_location;
+	bool continuous_update;
+	int target_update_iter_id;		// increments by one whenever target location updates to a new value
+	int assignee_update_iter_id;	// increments by one whenever target location updates to a new value
 
 	std::function<sc2::Point2D(void)> target_location_function;
 	std::function<sc2::Point2D(void)> assignee_location_function;

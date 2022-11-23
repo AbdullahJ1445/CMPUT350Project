@@ -332,10 +332,10 @@ void::BasicSc2Bot::OnStep_100(const sc2::ObservationInterface* obs) {
 		sc2::Point2D threat_spot = locH->getHighestThreatLocation();
 		MapChunk* threat_chunk = locH->getChunkByCoords(std::pair<float, float>(threat_spot.x, threat_spot.y));
 		if (threat_spot == NO_POINT_FOUND) {
-			std::cout << "no high threat location found" << std::endl;
+			//std::cout << "no high threat location found" << std::endl;
 		}
 		else {
-			std::cout << "highest threat location is " << threat_spot.x << "," << threat_spot.y << " with a threat value of " << threat_chunk->getThreat() << std::endl;
+			std::cout << "threat at " << threat_spot.x << "," << threat_spot.y << " = " << threat_chunk->getThreat() << std::endl;;
 		}
 	}
 }
@@ -372,12 +372,13 @@ void BasicSc2Bot::OnStep() {
 				std::vector<MapChunk*> chunks = locH->getLocalChunks((*it)->pos);
 				chunks[0]->increaseThreat(this, *it, 1.0);
 				for (int i = 1; i < 4; i++) {
-					chunks[i]->increaseThreat(this, *it, .5);
+					chunks[i]->increaseThreat(this, *it, NEARBY_THREAT_MODIFIER);
 				}
 			}
 			++it;
 		}
 	}
+	
 
 	//sc2::Point2D high_threat = locH->getHighestThreatLocation();
 	//if (high_threat != INVALID_POINT) {

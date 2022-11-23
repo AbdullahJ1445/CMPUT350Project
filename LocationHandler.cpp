@@ -148,11 +148,21 @@ const sc2::Unit* LocationHandler::getNearestMineralPatch(sc2::Point2D location) 
 
 const sc2::Unit* LocationHandler::getNearestGeyser(sc2::Point2D location) {
     const sc2::ObservationInterface* obs = agent->Observation();
-    sc2::Units units = agent->Observation()->GetUnits(sc2::Unit::Alliance::Neutral);
+    sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Neutral);
     float distance = std::numeric_limits<float>::max();
     const sc2::Unit* target = nullptr;
     for (const auto& u : units) {
         if (agent->is_geyser(u)) {
+            sc2::Point2D geyser_loc = u->pos;
+            // check if geyser already is being mined
+            const sc2::Unit* nearest_gas = getNearestGasStructure(geyser_loc);
+            if (nearest_gas) {
+                sc2::Point2D gas_structure_loc = nearest_gas->pos;
+                // do not consider geyser with structure already built on it
+                if (geyser_loc == gas_structure_loc) {
+                    continue;
+                }
+            }
             float d = sc2::DistanceSquared2D(u->pos, location);
             if (d < distance) {
                 distance = d;
@@ -163,9 +173,16 @@ const sc2::Unit* LocationHandler::getNearestGeyser(sc2::Point2D location) {
     return target;
 }    
 
-const sc2::Unit* LocationHandler::getNearestGasStructure(sc2::Point2D location) {
+const sc2::Unit* LocationHandler::getNearestGasStructure(sc2::Point2D location, bool allied) {
     const sc2::ObservationInterface* obs = agent->Observation();
-    sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+    sc2::Units units;
+    if (allied) {
+        units = obs->GetUnits(sc2::Unit::Alliance::Self);
+    }
+    else {
+        units = obs->GetUnits(sc2::Unit::Alliance::Self);
+    }
+    
     float distance = std::numeric_limits<float>::max();
     const sc2::Unit* target = nullptr;
     for (const auto& u : units) {
@@ -446,7 +463,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         }
         else if (p_id == 3) {
             Base main_base(observation->GetStartLocation());
-            main_base.add_build_area(128, 40);
+            main_base.add_build_area(160, 45);
             bases.push_back(main_base);
 
             Base exp_1(125.5, 30.5);

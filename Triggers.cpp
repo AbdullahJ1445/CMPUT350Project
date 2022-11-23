@@ -248,12 +248,12 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 					&& (u->build_progress >= 0);
 			});
 
-		//if (unit_of_type == sc2::UNIT_TYPEID::PROTOSS_PYLON) {
-		//	if (num_units > cond_value) {
-		//		std::cout << "(" << num_units << "<=" << cond_value << ":" << location_for_counting_units.x << "," << 
-		//			location_for_counting_units.y << "/" << distance_squared << ")";
-		//	}
-		//}
+		if (unit_of_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR) {
+			if (num_units <= cond_value) {
+				std::cout << "(" << num_units << "<=" << cond_value << ":" << location_for_counting_units.x << "," << 
+					location_for_counting_units.y << "/" << distance_squared << ")";
+			}
+		}
 		return (num_units <= cond_value);
 	}
 	case COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION:
