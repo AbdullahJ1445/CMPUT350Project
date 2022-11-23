@@ -7,8 +7,9 @@
 #include "sc2api/sc2_typeenums.h"
 #include "Base.h"
 
-# define NO_POINT_FOUND sc2::Point2D(-2.5252, -2.5252)
-# define CHUNK_SIZE 6.0f
+# define NO_POINT_FOUND sc2::Point2D(-2.5252, -2.5252) // value indicating no point found
+# define CHUNK_SIZE 6.0f // the distance between adjacent chunks
+# define THREAT_DECAY 0.50 // the amount threat decays for a chunk when in vision
 
 class BasicSc2Bot;
 
@@ -21,10 +22,10 @@ public:
     bool hasEnemyUnits();
     bool hasEnemyStructures();
     bool isPathable();
-    float getThreat();
+    double getThreat();
     bool inVision(const sc2::ObservationInterface* obs);
     void checkVision(const sc2::ObservationInterface* obs);
-    static float calculateThreat(int num_enemy_units, int num_enemy_structures);
+    void increaseThreat(BasicSc2Bot* agent_, const sc2::Unit* unit, float modifier_);
     sc2::Point2D getLocation();
 
 private:
@@ -37,7 +38,7 @@ private:
     int enemy_units_last_seen_at;        // the last time step when enemy units were seen here
     int enemy_unit_count;
     int enemy_structure_count;
-    float threat;                          // the calculated threat of this chunk
+    double threat;                          // the calculated threat of this chunk
 };
 
 class LocationHandler {
@@ -59,11 +60,15 @@ public:
     void setProxyLocation(sc2::Point2D);
     sc2::Point2D getEnemyStartLocationByIndex(int index_);
     sc2::Point2D getBestEnemyLocation();
+    std::vector<MapChunk*> getLocalChunks(sc2::Point2D loc_);
+    MapChunk* getNearestChunk(sc2::Point2D loc_);
+    MapChunk* getChunkByCoords(std::pair<float, float> coords);
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();
     float pathDistFromStartLocation(sc2::QueryInterface* query_, sc2::Point2D location_);
     bool spotReachable(const sc2::ObservationInterface* obs_, sc2::QueryInterface* query_, sc2::Point2D from_loc_, sc2::Point2D to_loc_);
     std::vector<Base> bases;
+    bool chunksInitialized();
 
 private:
     void initSetStartLocation();
@@ -76,10 +81,19 @@ private:
     std::unordered_set<MapChunk*> map_chunks;
     std::unordered_set<MapChunk*> pathable_map_chunks;
     std::unordered_map<int, MapChunk*> map_chunk_by_id;
+    std::map<std::pair<float, float>, MapChunk*> map_chunk_by_coords;
     std::vector<sc2::Point2D> enemy_start_locations;
     sc2::Point2D enemy_start_location;
     sc2::Point2D proxy_location;
     sc2::Point2D start_location;
     int enemy_start_location_index;
+    bool chunks_initialized;
+    int chunk_rows;
+    int chunk_cols;
+    float chunk_spread;
+    float chunk_min_x;
+    float chunk_min_y;
+    float chunk_max_x;
+    float chunk_max_y;
     
 };

@@ -57,6 +57,10 @@ public:
 	// various getters
 	std::vector<sc2::Attribute> get_attributes(const sc2::Unit* unit);
 	sc2::UnitTypeData getUnitTypeData(const sc2::Unit* unit);
+	int getMineralCost(const sc2::Unit* unit);
+	int getGasCost(const sc2::Unit* unit);
+	int getFoodCost(const sc2::Unit* unit);
+	float getValue(const sc2::Unit* unit);
 
 	// public variables 
 	//sc2::Point2D start_location;
@@ -69,10 +73,11 @@ public:
 private:
 
 	// private functions
-	void OnStep_100();
-	void OnStep_1000();
+	void OnStep_100(const sc2::ObservationInterface* obs);
+	void OnStep_1000(const sc2::ObservationInterface* obs);
 	void initVariables();
 	void initStartingUnits();
+	bool addEnemyUnit(const sc2::Unit* unit);
 
 	// virtual functions 
 	virtual void OnGameStart();
@@ -82,6 +87,7 @@ private:
 	virtual void OnUnitIdle(const sc2::Unit* unit);
 	virtual void OnUnitDamaged(const sc2::Unit* unit, float health, float shields);
 	virtual void OnUnitDestroyed(const sc2::Unit* unit);
+	virtual void OnUnitEnterVision(const sc2::Unit* unit);
 
 
 	// data containers
@@ -91,6 +97,12 @@ private:
 	std::unordered_map<std::string, sc2::UNIT_TYPEID> special_units;
 	std::unordered_map<std::string, sc2::Point2D> special_locations;
 	std::vector<std::unique_ptr<Strategy>> strategy_storage;
+	std::vector<sc2::UNIT_TYPEID> data_buildings;
+	std::unordered_set<const sc2::Unit*> enemy_units;
+	std::unordered_map<sc2::Tag, const sc2::Unit*> enemy_unit_by_tag;
+	std::unordered_map<int, int> mineral_cost;
+	std::unordered_map<int, int> gas_cost;
+	std::unordered_map<int, int> food_cost;
 
 	// private variables
 	int player_start_id;

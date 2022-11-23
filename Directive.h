@@ -10,12 +10,13 @@
 #include "Strategy.h"  // temp
 //#include "LocationHandler.h"
 
-# define M_PI					3.14159265358979323846
-# define DEFAULT_RADIUS			12.0f 
-# define USE_DEFINED_ABILITY	sc2::ABILITY_ID::EXPERIMENTALPLASMAGUN
-# define INVALID_POINT			sc2::Point2D(-1.11, -1.11)
-# define INVALID_RADIUS			-1.1F
-# define NO_POINT_FOUND			sc2::Point2D(-2.5252, -2.5252)
+# define M_PI					3.14159265358979323846 // pi
+# define DEFAULT_RADIUS			12.0f // maximum distance for operation
+# define USE_DEFINED_ABILITY	sc2::ABILITY_ID::EXPERIMENTALPLASMAGUN // value passed to issueOrder when no ability override specified
+# define INVALID_POINT			sc2::Point2D(-1.11, -1.11) // value understood to mean a point is invalid, or uninitialized
+# define SEND_HOME				sc2::Point2D(-9.64727, -9.64727) // value understood to mean the unit's home location
+# define INVALID_RADIUS			-1.1F // value understood to mean a radius is invalid, or uninitialized
+# define NO_POINT_FOUND			sc2::Point2D(-2.5252, -2.5252) // value understood to mean no valid point was found
 
 class BasicSc2Bot;
 class Mob;

@@ -75,48 +75,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordere
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, std::string group_name_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_) :
 	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, group_name_) {}
 
-/*
-Directive::Directive(const Directive &d) {
-	locked = d.locked;
-	id = d.id;
-	assignee = d.assignee;
-	action_type = d.action_type;
-	unit_type = d.unit_type;					
-	ability = d.ability;							
-	assignee_location = d.assignee_location;		
-	target_location = d.target_location;			
-	assignee_proximity = d.assignee_proximity;   
-	proximity = d.proximity;				
-	flags = d.flags;								
-	target_unit = d.target_unit;		
-	directive_bundle = d.directive_bundle;
-	assigned_mobs = d.assigned_mobs;
-	allow_multiple = d.allow_multiple;
-	update_assignee_location = d.update_assignee_location;
-	update_target_location = d.update_target_location;
-}
 
-Directive& Directive::operator=(const Directive &d) {
-	locked = d.locked;
-	id = d.id;
-	assignee = d.assignee;
-	action_type = d.action_type;
-	unit_type = d.unit_type;
-	ability = d.ability;
-	assignee_location = d.assignee_location;
-	target_location = d.target_location;
-	assignee_proximity = d.assignee_proximity;
-	proximity = d.proximity;
-	flags = d.flags;
-	target_unit = d.target_unit;
-	directive_bundle = d.directive_bundle;
-	assigned_mobs = d.assigned_mobs;
-	allow_multiple = d.allow_multiple;
-	update_assignee_location = d.update_assignee_location;
-	update_target_location = d.update_target_location;
-	return *this;
-}
-*/
 
 bool Directive::bundleDirective(Directive directive_) {
 	if (!locked)
@@ -801,6 +760,10 @@ bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*>
 
 		// target location is specified
 		if (target_loc_ != INVALID_POINT && target_unit_ == nullptr) {
+			// if point is SEND_HOME, grab the first unit's home location instead
+			if (target_loc_ == SEND_HOME) {
+				target_loc_ = agent->mobH->getMob(*units.front()).get_home_location();
+			}
 			agent->Actions()->UnitCommand(units, ability_, target_loc_, queued_);
 			action_success = true;
 		}
@@ -842,6 +805,9 @@ bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*>
 		
 		// target location is specified
 		if (target_loc_ != INVALID_POINT && target_unit_ == nullptr) {
+			if (target_loc_ == SEND_HOME) {
+				target_loc_ = mob_->get_home_location();
+			}
 			agent->Actions()->UnitCommand(&mob_->unit, ability_, target_loc_, queued_);
 			action_success = true;
 		}
@@ -955,23 +921,16 @@ void Directive::setAssigneeLocationFunction(BasicSc2Bot* agent_, std::function<s
 }
 
 void Directive::updateAssigneeLocation(BasicSc2Bot* agent_) {
-	BasicSc2Bot* bot = agent_;
 	assignee_location = assignee_location_function();
 }
 
 void Directive::updateTargetLocation(BasicSc2Bot* agent_) {
 
-	//std::cout << "Getting the pointer from agent_->current_strategy: " << agent_->current_strategy << std::endl;
-	//std::cout << "The pointer inside Directive.cpp: " << strategy_ref << std::endl;
-	//BasicSc2Bot* bot = strategy_ref->bot;
-	//sc2::Point2D test = agent_->locH->getBestEnemyLocation();
 	target_location = target_location_function();
-	
-	//std::cout << " part1 passed .. ";
-	//sc2::Point2D temp_loc = the_strat->bot->locH->getNearestStartLocation(sc2::Point2D(1,1));
-	//std::cout << " part2 passed: " << temp_loc.x << "," << temp_loc.y << std::endl;
-	//target_location = target_location_function();
-	//std::cout << " it passed: " << target_location.x << "," << target_location.y << std::endl;
+	//std::cout << "target location updated to be (" << target_location.x << ", " << target_location.y << ")" << std::endl;
+	if (target_location == NO_POINT_FOUND) {
+		target_location == SEND_HOME;
+	}
 }
 
 sc2::Point2D Directive::uniform_random_point_in_circle(sc2::Point2D center, float radius) {
