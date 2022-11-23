@@ -15,7 +15,7 @@ MapChunk::MapChunk(BasicSc2Bot* agent_, sc2::Point2D location_, bool pathable_) 
     agent = agent_;
     location = location_;
     last_seen = -1;
-    threat = -1;
+    threat = 0;
 }
 
 sc2::Point2D MapChunk::getLocation() {
@@ -46,7 +46,7 @@ bool MapChunk::hasEnemyStructures() {
     return enemy_structure_count > 0;
 }
 
-float MapChunk::getThreat() {
+double MapChunk::getThreat() {
     return threat;
 }
 
@@ -58,27 +58,14 @@ void MapChunk::checkVision(const sc2::ObservationInterface* obs) {
     if (last_visibility == sc2::Visibility::Visible) {
         last_seen = obs->GetGameLoop();
 
-        // Scanning each chunk for enemies was too inefficient. Have to find a better way.
-        /*
-        sc2::Units enemies_near;
-        std::copy_if(enemies.begin(), enemies.end(), std::back_inserter(enemies_near),
-            [this](const sc2::Unit* u) { return sc2::Distance2D(u->pos, location) < pow(CHUNK_SIZE, 2); });
-        if (!enemies_near.empty()) {
-            enemy_units_last_seen_at = last_seen;
+        // decay threat when in vision
+        if (threat > 0) {
+            threat *= (1.0 - THREAT_DECAY);
+            threat -= .1;
+            if (threat < 0)
+                threat = 0.0f;
         }
-        enemy_unit_count = enemies_near.size();
-        sc2::Units enemy_structures_near;
-        std::copy_if(enemies_near.begin(), enemies_near.end(), std::back_inserter(enemy_structures_near),
-            [this, utd, atd](const sc2::Unit* u) { return (atd[utd[u->unit_type].ability_id].is_building); });
-        enemy_structure_count = enemy_structures_near.size();
-        threat = calculateThreat(enemies_near.size(), enemy_structures_near.size());
-        */
     }
-}
-
-float MapChunk::calculateThreat(int num_enemy_units, int num_enemy_structures)
-{
-    return (num_enemy_units * 1.0 + num_enemy_structures * 3.0);
 }
 
 bool MapChunk::inVision(const sc2::ObservationInterface* obs) {
@@ -92,12 +79,20 @@ bool MapChunk::inVision(const sc2::ObservationInterface* obs) {
     return (last_visibility == sc2::Visibility::Visible);
 }
 
+void MapChunk::increaseThreat(BasicSc2Bot* agent_, const sc2::Unit* unit, float modifier) {
+    // increase the threat value of this chunk
+
+    float d_threat = agent_->getValue(unit) * modifier;
+    threat += d_threat;
+}
+
 
 LocationHandler::LocationHandler(BasicSc2Bot* agent_){
     agent = agent_;
     enemy_start_location_index = 0;
+    chunks_initialized = false;
 }
-    
+
 sc2::Point2D LocationHandler::getNearestStartLocation(sc2::Point2D spot) {
     // Get the nearest Start Location from a given point
     float nearest_distance = 10000.0f;
@@ -128,8 +123,6 @@ int LocationHandler::getIndexOfClosestBase(sc2::Point2D location_) {
 }
 
 void LocationHandler::scanChunks(const sc2::ObservationInterface* obs) {
-    //auto utd = obs->GetUnitTypeData();
-    //auto atd = obs->GetAbilityData();
     //sc2::Units enemies = obs->GetUnits(sc2::Unit::Alliance::Enemy);
     for (auto it = map_chunks.begin(); it != map_chunks.end(); ++it) {
         (*it)->checkVision(obs);
@@ -211,7 +204,7 @@ sc2::Point2D LocationHandler::getHighestThreatLocation(bool pathable_) {
     else
         chunkset = map_chunks;
 
-    float highest_threat = -1.0f;
+    float highest_threat = 0;
     int highest_id = -99;
 
     for (auto chunk : chunkset) {
@@ -224,8 +217,12 @@ sc2::Point2D LocationHandler::getHighestThreatLocation(bool pathable_) {
         return map_chunk_by_id[highest_id]->getLocation();
     }
     else {
-        return INVALID_POINT;
+        return NO_POINT_FOUND;
     }
+}
+
+MapChunk* LocationHandler::getChunkByCoords(std::pair<float, float> coords) {
+    return map_chunk_by_coords[coords];
 }
 
 sc2::Point2D LocationHandler::smartAttackLocation(bool pathable_) {
@@ -234,7 +231,7 @@ sc2::Point2D LocationHandler::smartAttackLocation(bool pathable_) {
     // which was visited the least recently
 
     sc2::Point2D high_threat = getHighestThreatLocation(pathable_);
-    if (high_threat != INVALID_POINT)
+    if (high_threat != NO_POINT_FOUND)
         return high_threat;
     return getOldestLocation(pathable_);
 }
@@ -395,6 +392,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         if (p_id == 1) {
 
             Base main_base(observation->GetStartLocation());
+            main_base.add_build_area(32, 147);
             bases.push_back(main_base);
 
             Base exp_1(66.5, 161.5);
@@ -439,6 +437,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         }
         else if (p_id == 2) {
             Base main_base(observation->GetStartLocation());
+            main_base.add_build_area(147, 160);
             bases.push_back(main_base);
 
             Base exp_1(161.5, 125.5);
@@ -447,6 +446,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         }
         else if (p_id == 3) {
             Base main_base(observation->GetStartLocation());
+            main_base.add_build_area(128, 40);
             bases.push_back(main_base);
 
             Base exp_1(125.5, 30.5);
@@ -455,6 +455,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         }
         else if (p_id == 4) {
             Base main_base(observation->GetStartLocation());
+            main_base.add_build_area(45, 32);
             bases.push_back(main_base);
 
             Base exp_1(30.5, 66.5);
@@ -736,6 +737,15 @@ void LocationHandler::initMapChunks()
         height++;
     }
 
+    // store information
+    chunk_spread = chunk_size;
+    chunk_min_x = min_x;
+    chunk_min_y = min_y;
+    chunk_max_x = max_x;
+    chunk_max_y = max_y;
+    chunk_cols = width;
+    chunk_rows = height;
+
     sc2::QueryInterface* query = agent->Query();
 
 
@@ -778,9 +788,15 @@ void LocationHandler::initMapChunks()
                 pathable_map_chunks.insert(chunk_ptr);
             }
             map_chunk_by_id[chunk_ptr->getID()] = chunk_ptr;
+            sc2::Point2D chunk_loc = chunk_ptr->getLocation();
+            map_chunk_by_coords[std::pair<float, float>(chunk_loc.x, chunk_loc.y)] = chunk_ptr;
         }
     }
+    chunks_initialized = true;
     std::cout << std::endl << map_chunks.size() << " chunks initialized (" << pathable_count << " pathable)" << std::endl;
+    std::cout << " minx: " << chunk_min_x << " miny: " << chunk_min_y << 
+        " maxx: " << chunk_max_x << " maxy: " << chunk_max_y << 
+        " spread: " << chunk_spread << " rows: " << chunk_rows << " cols: " << chunk_cols << std::endl;
 }
 
 void LocationHandler::setEnemyStartLocation(sc2::Point2D location_)
@@ -794,6 +810,143 @@ void LocationHandler::setEnemyStartLocation(sc2::Point2D location_)
     }
 }
 
+std::vector<MapChunk*> LocationHandler::getLocalChunks(sc2::Point2D loc_) {
+    // get 4 nearby chunks bounding a point, in a vector, the closest at index 0
+    std::vector<MapChunk*> chunks;
+
+    float closest_mod = 1.0f;
+    float others_mod = 0.5f;
+
+    // adjusted point relative to the chunk grid
+    sc2::Point2D adjusted_loc = loc_ - sc2::Point2D(chunk_min_x, chunk_min_y);
+
+    // force location to a point inside our chunk grid
+    if (adjusted_loc.x < 0)
+        adjusted_loc.x = 0.1;
+    if (adjusted_loc.y < 0)
+        adjusted_loc.y = 0.1;
+    if (adjusted_loc.x > chunk_max_x - chunk_min_x)
+        adjusted_loc.x = chunk_max_x - chunk_min_x - .1;
+    if (adjusted_loc.y > chunk_max_y - chunk_min_y)
+        adjusted_loc.y = chunk_max_y - chunk_min_y - .1;
+
+    float right_bound;
+    float left_bound;
+    float up_bound;
+    float down_bound;
+
+    for (float x = 0.0f; x < adjusted_loc.x; x += chunk_spread) {
+        left_bound = x;
+    }
+    right_bound = left_bound + chunk_spread;
+
+    for (float y = 0.0f; y < adjusted_loc.y; y += chunk_spread) {
+        up_bound = y;
+    }
+    down_bound = up_bound + chunk_spread;
+
+
+    // check which halves of the square between chunks the point is in
+    bool left_half = (adjusted_loc.x - left_bound < chunk_spread / 2);
+    bool top_half = (adjusted_loc.y - up_bound < chunk_spread / 2);
+    sc2::Point2D chunk_loc;
+    sc2::Point2D other_1;
+    sc2::Point2D other_2;
+    sc2::Point2D other_3;
+
+    // determine the coordinates of the other bounding chunks
+    if (left_half) {
+        chunk_loc.x = left_bound + chunk_min_x;
+        other_1.x = left_bound + chunk_min_x;
+        other_2.x = right_bound + chunk_min_x;
+        other_3.x = right_bound + chunk_min_x;
+    }
+    else {
+        chunk_loc.x = right_bound + chunk_min_x;
+        other_1.x = right_bound + chunk_min_x;
+        other_2.x = left_bound + chunk_min_x;
+        other_3.x = left_bound + chunk_min_x;
+    }
+    if (top_half) {
+        chunk_loc.y = up_bound + chunk_min_y;
+        other_1.y = down_bound + chunk_min_y;
+        other_2.y = up_bound + chunk_min_y;
+        other_3.y = down_bound + chunk_min_y;
+    }
+    else {
+        chunk_loc.y = down_bound + chunk_min_y;
+        other_1.y = up_bound + chunk_min_y;
+        other_2.y = down_bound + chunk_min_y;
+        other_3.y = up_bound + chunk_min_y;
+    }
+
+    // 4 resulting chunk
+    MapChunk* closest = map_chunk_by_coords[std::pair<float, float>(chunk_loc.x, chunk_loc.y)];
+    MapChunk* near_1 = map_chunk_by_coords[std::pair<float, float>(other_1.x, other_1.y)];
+    MapChunk* near_2 = map_chunk_by_coords[std::pair<float, float>(other_2.x, other_2.y)];
+    MapChunk* near_3 = map_chunk_by_coords[std::pair<float, float>(other_3.x, other_3.y)];
+
+    chunks.push_back(closest);
+    chunks.push_back(near_1);
+    chunks.push_back(near_2);
+    chunks.push_back(near_3);
+
+    return chunks;
+}
+
+MapChunk* LocationHandler::getNearestChunk(sc2::Point2D loc_) {
+
+    // adjusted point relative to the chunk grid
+    sc2::Point2D adjusted_loc = loc_ - sc2::Point2D(chunk_min_x, chunk_min_y);
+
+    // force location to a point inside our chunk grid
+    if (adjusted_loc.x < 0)
+        adjusted_loc.x = 0.1;
+    if (adjusted_loc.y < 0)
+        adjusted_loc.y = 0.1;
+    if (adjusted_loc.x > chunk_max_x - chunk_min_x)
+        adjusted_loc.x = chunk_max_x - chunk_min_x - .1;
+    if (adjusted_loc.y > chunk_max_y - chunk_min_y)
+        adjusted_loc.y = chunk_max_y - chunk_min_y - .1;
+
+    float right_bound;
+    float left_bound;
+    float up_bound;
+    float down_bound;
+
+    for (float x = 0.0f; x < adjusted_loc.x; x+= chunk_spread) {
+        left_bound = x;
+    }
+    right_bound = left_bound + chunk_spread;
+
+    for (float y = 0.0f; y < adjusted_loc.y; y += chunk_spread) {
+        up_bound = y;
+    }
+    down_bound = up_bound + chunk_spread;
+
+    
+    // check which halves of the square between chunks the point is in
+    bool left_half = (adjusted_loc.x - left_bound < chunk_spread / 2);
+    bool top_half = (adjusted_loc.y - up_bound < chunk_spread / 2);
+    sc2::Point2D chunk_loc;
+    
+    if (left_half) {
+        chunk_loc.x = left_bound + chunk_min_x;
+    }
+    else {
+        chunk_loc.x = right_bound + chunk_min_x;
+    }
+    if (top_half) {
+        chunk_loc.y = up_bound + chunk_min_y;
+    }
+    else {
+        chunk_loc.y = down_bound + chunk_min_y;
+    }
+
+    MapChunk* chunk = map_chunk_by_coords[std::pair<float, float>(chunk_loc.x, chunk_loc.y)];
+    return chunk;
+}
+
 sc2::Point2D LocationHandler::getProxyLocation() {
     return proxy_location;
 }
@@ -801,6 +954,10 @@ sc2::Point2D LocationHandler::getProxyLocation() {
 sc2::Point2D LocationHandler::getStartLocation()
 {
     return start_location;
+}
+
+bool LocationHandler::chunksInitialized() {
+    return chunks_initialized;
 }
 
 void LocationHandler::setProxyLocation(sc2::Point2D location_) {

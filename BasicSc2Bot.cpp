@@ -9,6 +9,10 @@
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
 
+#define MINERAL_VALUE 2
+#define GAS_VALUE 3
+#define FOOD_VALUE 100
+
 // forward declarations
 class TriggerCondition;
 class Mob;
@@ -112,9 +116,7 @@ bool BasicSc2Bot::can_unit_use_ability(const sc2::Unit& unit, const sc2::ABILITY
 
 bool BasicSc2Bot::is_structure(const sc2::Unit* unit) {
 	// check if unit is a structure
-
-	std::vector<sc2::Attribute> attrs = get_attributes(unit);
-	return (std::find(attrs.begin(), attrs.end(), sc2::Attribute::Structure) != attrs.end());
+	return (std::find(data_buildings.begin(), data_buildings.end(), unit->unit_type) != data_buildings.end());
 }
 
 void BasicSc2Bot::storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_type_)
@@ -192,6 +194,43 @@ sc2::UnitTypeData BasicSc2Bot::getUnitTypeData(const sc2::Unit* unit) {
 	return Observation()->GetUnitTypeData()[unit->unit_type];
 }
 
+bool BasicSc2Bot::addEnemyUnit(const sc2::Unit* unit) {
+	if (enemy_unit_by_tag[unit->tag] != nullptr) {
+		return false;
+	}
+	enemy_units.insert(unit);
+	enemy_unit_by_tag[unit->tag] = unit;
+	return true;
+}
+
+int BasicSc2Bot::getMineralCost(const sc2::Unit* unit) {
+	return mineral_cost[(int)unit->unit_type];
+}
+
+int BasicSc2Bot::getGasCost(const sc2::Unit* unit) {
+	return gas_cost[(int)unit->unit_type];
+}
+
+int BasicSc2Bot::getFoodCost(const sc2::Unit* unit) {
+	return food_cost[(int)unit->unit_type];
+}
+
+float BasicSc2Bot::getValue(const sc2::Unit* unit) {
+	int mineral_cost = getMineralCost(unit);
+	int gas_cost = getGasCost(unit);
+	int food_cost = getFoodCost(unit);
+
+
+	float value = mineral_cost * MINERAL_VALUE + gas_cost * GAS_VALUE + food_cost * FOOD_VALUE;
+
+	if (is_structure(unit)) {
+		// structures locations should be high priority targets
+		value *= 10;
+	}
+
+	return value;
+}
+
 void BasicSc2Bot::initVariables() {
 	const sc2::ObservationInterface* observation = Observation();
 	map_name = observation->GetGameInfo().map_name;
@@ -254,35 +293,91 @@ void BasicSc2Bot::OnGameStart() {
 	BasicSc2Bot::initStartingUnits();
 	sc2::Point2D start_location = locH->getStartLocation();
 	sc2::Point2D proxy_location = locH->getProxyLocation();
+	current_strategy->loadStrategies();
+
+	const sc2::ObservationInterface* obs = Observation();
+	auto utd_fulldata = obs->GetUnitTypeData();
+	auto atd_fulldata = obs->GetAbilityData();
+
+	// populate data_buildings - vector of all unit types which are buildings
+	std::cout << "populating data_buildings";
+	int i = 0;
+	for (auto utd : utd_fulldata) {
+		if (i % 500 == 0) {
+			std::cout << ".";
+		}
+		if (utd.mineral_cost > 0 && std::find(utd.attributes.begin(), utd.attributes.end(), sc2::Attribute::Structure) != utd.attributes.end()) {
+			//std::cout << utd.name << " id: " << utd.unit_type_id << "  alias: " << utd.unit_alias << std::endl;
+			data_buildings.push_back(utd.unit_type_id);
+		}
+		if (utd.mineral_cost > 0 || utd.food_required > 0 || utd.vespene_cost > 0) {
+			auto a = utd.unit_type_id;
+			int c = a;
+			mineral_cost[(int)utd.unit_type_id] = utd.mineral_cost;
+			gas_cost[(int)utd.unit_type_id] = utd.vespene_cost;
+			food_cost[(int)utd.unit_type_id] = utd.food_required;
+		}
+		i++;
+	}
+	std::cout << " " << data_buildings.size() << " building types." << std::endl;
+
 	std::cout << "Start Location: " << start_location.x << "," << start_location.y << std::endl;
 	std::cout << "Build Area 0: " << locH->bases[0].get_build_area(0).x << "," << locH->bases[0].get_build_area(0).y << std::endl;
 	std::cout << "Proxy Location: " << proxy_location.x << "," << proxy_location.y << std::endl;
-
-	current_strategy->loadStrategies();
-	//std::cout << "the pointer at game start: " << current_strategy << std::endl;
 }
 
-void::BasicSc2Bot::OnStep_100() {
+void::BasicSc2Bot::OnStep_100(const sc2::ObservationInterface* obs) {
 	// occurs every 100 steps
+	if (locH->chunksInitialized()) {
+		sc2::Point2D threat_spot = locH->getHighestThreatLocation();
+		MapChunk* threat_chunk = locH->getChunkByCoords(std::pair<float, float>(threat_spot.x, threat_spot.y));
+		if (threat_spot == NO_POINT_FOUND) {
+			std::cout << "no high threat location found" << std::endl;
+		}
+		else {
+			std::cout << "highest threat location is " << threat_spot.x << "," << threat_spot.y << " with a threat value of " << threat_chunk->getThreat() << std::endl;
+		}
+	}
 }
 
-void::BasicSc2Bot::OnStep_1000() {
+void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
 	// occurs every 1000 steps
-	std::cout << ".";
+
+
 }
 
 void BasicSc2Bot::OnStep() {
 	const sc2::ObservationInterface* observation = Observation();
 	int gameloop = observation->GetGameLoop();
 	if (gameloop % 100 == 0) {
-		OnStep_100();
+		OnStep_100(observation);
 	}
 	if (gameloop % 1000 == 0) {
-		OnStep_1000();
+		OnStep_1000(observation);
 	}
 
 	// update visibility data for chunks
 	locH->scanChunks(observation);
+	if (!enemy_units.empty()) {
+		for (auto it = enemy_units.begin(); it != enemy_units.end(); ) {
+			auto next = std::next(it);
+			if (!(*it)->is_alive) {
+				// we do not need to keep dead enemy units in set
+				enemy_units.erase(*it);
+				it = next;
+				continue;
+			}
+			// if unit is currently visible to you
+			if ((*it)->last_seen_game_loop == gameloop) {
+				std::vector<MapChunk*> chunks = locH->getLocalChunks((*it)->pos);
+				chunks[0]->increaseThreat(this, *it, 1.0);
+				for (int i = 1; i < 4; i++) {
+					chunks[i]->increaseThreat(this, *it, .5);
+				}
+			}
+			++it;
+		}
+	}
 
 	//sc2::Point2D high_threat = locH->getHighestThreatLocation();
 	//if (high_threat != INVALID_POINT) {
@@ -479,4 +574,8 @@ void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
 		}
 		mobH->mobDeath(mob);
 	}
+}
+
+void BasicSc2Bot::OnUnitEnterVision(const sc2::Unit* unit) {
+	addEnemyUnit(unit);
 }

@@ -29,7 +29,7 @@ Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_) {
 	assert(cond_type_ == COND::MIN_UNIT_WITH_FLAGS ||
-		cond_type == COND::MAX_UNIT_WITH_FLAGS);
+		cond_type_ == COND::MAX_UNIT_WITH_FLAGS);
 	cond_type = cond_type_;
 	cond_value = cond_value_;
 	filter_flags = flags_;
@@ -49,7 +49,8 @@ Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
 	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE || cond_type_ == COND::MIN_UNIT_OF_TYPE || 
-		cond_type_ == COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION || cond_type_ == COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION);
+		cond_type_ == COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION || cond_type_ == COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION ||
+		cond_type_ == COND::MIN_UNIT_OF_TYPE_TOTAL || cond_type_ == COND::MAX_UNIT_OF_TYPE_TOTAL);
 	cond_type = cond_type_;
 	cond_value = cond_value_;
 	unit_of_type = unit_of_type_;
@@ -58,7 +59,8 @@ Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
 	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION ||
-	cond_type_ == COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION);
+	cond_type_ == COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION ||
+	cond_type_ == COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION);
 	cond_type = cond_type_;
 	cond_value = cond_value_;
 	unit_of_type = unit_of_type_;
@@ -192,6 +194,16 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		int num_units = filtered_units.size();
 		return (num_units >= cond_value);
 	}
+	case COND::MIN_UNIT_OF_TYPE_TOTAL:
+		// include both under construction and constructed
+	{
+		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+		std::vector<const sc2::Unit*> filtered_units;
+		std::copy_if(units.begin(), units.end(), std::back_inserter(filtered_units),
+			[this](const sc2::Unit* u) { return (u->unit_type == unit_of_type) && (u->build_progress > 0); });
+		int num_units = filtered_units.size();
+		return (num_units >= cond_value);
+	}
 	case COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION:
 		{
 			const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
@@ -202,7 +214,17 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			
 			return (num_units <= cond_value);
 		}
+	case COND::MAX_UNIT_OF_TYPE_TOTAL:
+		// include both under construction and constructed
+	{
+		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+		std::vector<const sc2::Unit*> filtered_units;
+		std::copy_if(units.begin(), units.end(), std::back_inserter(filtered_units),
+			[this, equivalent_type](const sc2::Unit* u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) && (u->build_progress >= 0); });
+		int num_units = filtered_units.size();
 
+		return (num_units <= cond_value);
+	}
 	case COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION:
 		{
 			sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
@@ -215,6 +237,25 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 
 			return (num_units <= cond_value);
 		}
+	case COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION:
+		// include both under construction and constructed
+	{
+		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+		int num_units = count_if(units.begin(), units.end(),
+			[this](const sc2::Unit* u) {
+				return (u->unit_type == unit_of_type
+					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
+					&& (u->build_progress >= 0);
+			});
+
+		//if (unit_of_type == sc2::UNIT_TYPEID::PROTOSS_PYLON) {
+		//	if (num_units > cond_value) {
+		//		std::cout << "(" << num_units << "<=" << cond_value << ":" << location_for_counting_units.x << "," << 
+		//			location_for_counting_units.y << "/" << distance_squared << ")";
+		//	}
+		//}
+		return (num_units <= cond_value);
+	}
 	case COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION:
 		{
 			sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
@@ -227,6 +268,19 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 
 			return (num_units >= cond_value);
 		}
+	case COND::MIN_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION:
+		// include both under construction and constructed
+	{
+		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+		int num_units = count_if(units.begin(), units.end(),
+			[this](const sc2::Unit* u) {
+				return (u->unit_type == unit_of_type
+					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
+					&& (u->build_progress > 0);
+			});
+
+		return (num_units >= cond_value);
+	}
 	case COND::HAS_ABILITY_READY:
 		std::unordered_set<Mob*> structures = agent->mobH->filter_by_flag(agent->mobH->get_mobs(), FLAGS::IS_STRUCTURE);
 		bool found_one = false;

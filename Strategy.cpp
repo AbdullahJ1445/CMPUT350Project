@@ -229,7 +229,7 @@ void Strategy::loadStrategies() {
 			for (auto tc : startup_base_conds)
 				t.add_condition(tc);
 			t.add_condition(COND::MIN_MINERALS, 100);
-			t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[1].get_defend_point(0), 3.0F);
+			t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[1].get_defend_point(0), 2.5F);
 			t.add_condition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			defense_pylon.addDirective(d);
 			defense_pylon.addTrigger(t);
@@ -257,6 +257,73 @@ void Strategy::loadStrategies() {
 			t2.add_condition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].get_defend_point(0), 6.0F);
 			more_cannons.addTrigger(t2);
 			bot->addStrat(more_cannons);
+		}
+		{
+			Precept train_stalker(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_STALKER);
+			d.allowMultiple();
+			Trigger t(bot);
+			t.add_condition(COND::MIN_MINERALS, 125);
+			t.add_condition(COND::MIN_GAS, 50);
+			t.add_condition(COND::MIN_FOOD, 2);
+			t.add_condition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			train_stalker.addDirective(d);
+			train_stalker.addTrigger(t);
+			bot->addStrat(train_stalker);
+		}
+		{
+			Precept main_pylon(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->locH->bases[0].get_build_area(0), 4.0F);
+			Trigger t(bot);
+			for (auto tc : startup_base_conds)
+				t.add_condition(tc);
+			t.add_condition(COND::MIN_MINERALS, 100);
+			t.add_condition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[0].get_build_area(0), 10.0F);
+			main_pylon.addDirective(d);
+			main_pylon.addTrigger(t);
+			bot->addStrat(main_pylon);
+		}
+		{
+			Precept main_gateway(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_GATEWAY, bot->locH->bases[0].get_build_area(0));
+			Trigger t(bot);
+			for (auto tc : startup_base_conds)
+				t.add_condition(tc);
+			t.add_condition(COND::MIN_MINERALS, 100);
+			t.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[0].get_build_area(0));
+			t.add_condition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 2, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, bot->locH->bases[0].get_build_area(0));
+			main_gateway.addDirective(d);
+			main_gateway.addTrigger(t);
+			bot->addStrat(main_gateway);
+		}
+		{
+			Precept attack_threats(bot);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->getStoredLocation("CANNON_1"), 4.0F);
+			Trigger t(bot);
+			auto func = [this]() { return bot->locH->getHighestThreatLocation(); };
+			d.setTargetLocationFunction(this, bot, func);
+			t.add_condition(COND::MIN_UNIT_WITH_FLAGS, 7, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t.add_condition(COND::MAX_UNIT_WITH_FLAGS, 11, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			
+			attack_threats.addDirective(d);
+			attack_threats.addTrigger(t);
+			Trigger t2(bot);
+			t2.add_condition(COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION, 5, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].get_defend_point(0), 18.0F);
+			t2.add_condition(COND::MAX_UNIT_WITH_FLAGS, 11, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			attack_threats.addTrigger(t2);
+			bot->addStrat(attack_threats);
+		} 
+		{
+			Precept attack_and_explore(bot);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->getStoredLocation("CANNON_1"), 4.0F);
+			Trigger t(bot);
+			auto func = [this]() { return bot->locH->smartAttackLocation(); };
+			d.setTargetLocationFunction(this, bot, func);
+			t.add_condition(COND::MIN_UNIT_WITH_FLAGS, 12, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			attack_and_explore.addDirective(d);
+			attack_and_explore.addTrigger(t);
+			bot->addStrat(attack_and_explore);
 		}
 	}
 	
