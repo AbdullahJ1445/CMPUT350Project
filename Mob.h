@@ -39,8 +39,8 @@ class Mob {
 public:
 	Mob(const sc2::Unit& unit_, MOB mobs_type);
 	void initVars();
-	bool is_idle();
-	bool has_flag(FLAGS flag);
+	bool isIdle();
+	bool hasFlag(FLAGS flag);
 	void assignDefaultDirective(Directive directive_);
 	void assignDirective(Directive* directive_);
 	void unassignDirective();
@@ -50,18 +50,18 @@ public:
 	bool executeDefaultDirective(BasicSc2Bot* agent);
 	void disableDefaultDirective();
 	Directive popBundledDirective();
-	bool is_carrying_minerals();
-	bool is_carrying_gas();
-	void set_flag(FLAGS flag);
-	void remove_flag(FLAGS flag);
-	sc2::Point2D get_birth_location();
-	sc2::Point2D get_home_location();
-	sc2::Point2D get_assigned_location();
-	void set_home_location(sc2::Point2D location);
-	void set_assigned_location(sc2::Point2D location);
-	void bundle_directives(std::vector<Directive> dir_vec);
-	std::unordered_set<FLAGS> get_flags();
-	sc2::Tag get_tag();
+	bool isCarryingMinerals();
+	bool isCarryingGas();
+	void setFlag(FLAGS flag);
+	void removeFlag(FLAGS flag);
+	sc2::Point2D getBirthLocation();
+	sc2::Point2D getHomeLocation();
+	sc2::Point2D getAssignedLocation();
+	void setHomeLocation(sc2::Point2D location);
+	void setAssignedLocation(sc2::Point2D location);
+	void bundleDirectives(std::vector<Directive> dir_vec);
+	std::unordered_set<FLAGS> getFlags();
+	sc2::Tag getTag();
 	bool setCurrentDirective(Directive* directive_);
 	Directive* getCurrentDirective();
 	bool operator<(const Mob& mob) const { return tag < mob.tag; }

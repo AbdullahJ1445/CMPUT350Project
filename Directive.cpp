@@ -88,7 +88,7 @@ bool Directive::execute(BasicSc2Bot* agent) {
 	bool found_valid_unit = false; // ensure unit has been assigned before issuing order
 	const sc2::AbilityData ability_data = obs->GetAbilityData()[(int)ability]; // various info about the ability
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
-	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // unordered_set of all friendly units
+	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // unordered_set of all friendly units
 	Mob* mob; // used to store temporary mob
 	if (update_assignee_location) {
 		updateAssigneeLocation(agent);
@@ -138,22 +138,22 @@ bool Directive::execute(BasicSc2Bot* agent) {
 				ability == sc2::ABILITY_ID::BUILD_EXTRACTOR ||
 				ability == sc2::ABILITY_ID::BUILD_REFINERY) {
 				// find a geyser near target location to build the structure on
-				return execute_build_gas_structure(agent);
+				return executeBuildGasStructure(agent);
 			}
 
 			if (ability == sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST) {
 				return execute_protoss_nexus_chronoboost(agent);
 			}
 
-			return execute_order_for_unit_type_with_location(agent);
+			return executeOrderForUnitTypeWithLocation(agent);
 		}
 		if (action_type == SIMPLE_ACTION || action_type == DISABLE_DEFAULT_DIRECTIVE) {
-			return execute_simple_action_for_unit_type(agent);
+			return executeSimpleActionForUnitType(agent);
 		}
 	}
 
 	if (assignee == MATCH_FLAGS || assignee == MATCH_FLAGS_NEAR_LOCATION) {
-		return execute_match_flags(agent);
+		return executeMatchFlags(agent);
 	}
 	
 	return false;
@@ -178,7 +178,7 @@ bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 		// Note: this order cannot have further queued directives attached,
 		//       as harvesting continues indefinitely
 		
-		if (mob->is_carrying_minerals()) {
+		if (mob->isCarryingMinerals()) {
 			// if unit is carrying minerals, return them to the townhall instead
 			const sc2::Unit* townhall = agent->locH->getNearestTownhall(target_location);
 			if (!townhall)
@@ -205,7 +205,7 @@ bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 		// Note: this order cannot have further queued directives attached
 		//       as harvesting continues indefinitely
 		
-		if (mob->is_carrying_gas()) {
+		if (mob->isCarryingGas()) {
 			// if unit is carrying gas, return them to the townhall instead
 			const sc2::Unit* townhall = agent->locH->getNearestTownhall(target_location);
 			if (!townhall)
@@ -243,35 +243,35 @@ bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 	return false;
 }
 
-bool Directive::execute_simple_action_for_unit_type(BasicSc2Bot* agent) {
+bool Directive::executeSimpleActionForUnitType(BasicSc2Bot* agent) {
 	// perform an action that does not require a target unit or point
 
-	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // unordered_set of all friendly units
+	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // unordered_set of all friendly units
 	Mob* mob;
 
 
 	// filter idle units which match unit_type
-	mobs = filter_by_unit_type(mobs, unit_type);
-	mobs = filter_idle(mobs);
+	mobs = filterByUnitType(mobs, unit_type);
+	mobs = filterIdle(mobs);
 
 	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
 		assert(assignee_location != INVALID_POINT);
 		assert(assignee_proximity != INVALID_RADIUS);
-		mobs = filter_near_location(mobs, assignee_location, assignee_proximity);
+		mobs = filterNearLocation(mobs, assignee_location, assignee_proximity);
 	}
 
 	if (mobs.size() == 0)
 		return false;
 
-	mob = get_random_mob_from_set(mobs);
+	mob = getRandomMobFromSet(mobs);
 
 	if (action_type == DISABLE_DEFAULT_DIRECTIVE) {
 		// since this is only used for proxy workers right now, going to use this flag until more functionality is implemented
-		if (!mob->has_flag(FLAGS::IS_PROXY)) {
+		if (!mob->hasFlag(FLAGS::IS_PROXY)) {
 			mob->disableDefaultDirective();
 			issueOrder(agent, mob, false, sc2::ABILITY_ID::STOP); //override the ability to be STOP
 		}
-		mob->set_flag(FLAGS::IS_PROXY);
+		mob->setFlag(FLAGS::IS_PROXY);
 		return true;
 	}
 

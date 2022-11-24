@@ -6,19 +6,19 @@ class Base {
 public:
 	Base(sc2::Point2D location_);
 	Base(float x, float y);
-	void add_build_area(sc2::Point2D location_);
-	void add_build_area(float x, float y);
-	void add_defend_point(sc2::Point2D location_);
-	void add_defend_point(float x, float y);
-	int get_num_build_areas();
-	int get_num_defend_points();
-	sc2::Point2D get_random_build_area();
-	sc2::Point2D get_random_defend_point();
-	void set_active(bool flag=true);
-	bool is_active();
-	sc2::Point2D get_build_area(int index);
-	sc2::Point2D get_defend_point(int index);
-	sc2::Point2D get_townhall();
+	void addBuildArea(sc2::Point2D location_);
+	void addBuildArea(float x, float y);
+	void addDefendPoint(sc2::Point2D location_);
+	void addDefendPoint(float x, float y);
+	int getNumBuildAreas();
+	int getNumDefendPoints();
+	sc2::Point2D getRandomBuildArea();
+	sc2::Point2D getRandomDefendPoint();
+	void setActive(bool flag=true);
+	bool isActive();
+	sc2::Point2D getBuildArea(int index);
+	sc2::Point2D getDefendPoint(int index);
+	sc2::Point2D getTownhall();
 
 private:
 	sc2::Point2D location_townhall;
