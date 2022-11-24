@@ -285,8 +285,9 @@ sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
     }
 
     if (unseen) {
-        //std::cout << "(unseen)";
-        return getClosestUnseenLocation(pathable_);
+        
+        //return getClosestUnseenLocation(pathable_);
+        return getFurthestUnseenLocation(pathable_);
     }
     //std::cout << "(no-unseen)";
 
@@ -357,6 +358,62 @@ sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
 
     return closest_loc;
 }
+
+sc2::Point2D LocationHandler::getFurthestUnseenLocation(bool pathable_) {
+    // checks for the unseen MapChunk point where the closest mob to it is as far away as possible
+
+    std::unordered_set<MapChunk*> chunkset;
+    std::unordered_set<MapChunk*> unseen_chunks;
+    if (pathable_)
+        chunkset = pathable_map_chunks;
+    else
+        chunkset = map_chunks;
+
+    for (auto it = chunkset.begin(); it != chunkset.end(); ++it) {
+        if (!(*it)->wasSeen()) {
+            unseen_chunks.insert(*it);
+        }
+    }
+
+    if (unseen_chunks.empty()) {
+        std::cout << "unseen_chunks.empty() ";
+        return NO_POINT_FOUND;
+    }
+
+    std::unordered_set<Mob*> mobs = agent->mobH->get_mobs();
+    std::unordered_set<Mob*> flying_mobs = agent->mobH->filter_by_flag(mobs, FLAGS::IS_FLYING);
+
+    // should not happen, but lets make sure... this would mean game over
+    if (mobs.empty())
+        return NO_POINT_FOUND;
+
+    float furthest_dist = 0;
+    sc2::Point2D furthest_loc = NO_POINT_FOUND;
+
+    for (auto it = unseen_chunks.begin(); it != unseen_chunks.end(); ++it) {
+        sc2::Point2D loc = (*it)->getLocation();
+        Mob* closest_mob = nullptr;
+        if (!pathable_ && !(*it)->isPathable()) {
+            // if a chunk can only be reached by flying units
+            closest_mob = Directive::get_closest_to_location(flying_mobs, loc);
+        }
+        else {
+            closest_mob = Directive::get_closest_to_location(mobs, loc);
+        }
+
+        if (closest_mob == nullptr)
+            continue;
+
+        float dist = sc2::DistanceSquared2D(closest_mob->unit.pos, loc);
+        if (dist > furthest_dist) {
+            furthest_loc = loc;
+            furthest_dist = dist;
+        }
+    }
+
+    return furthest_loc;
+}
+
 
 int LocationHandler::getPlayerIDForMap(int map_index, sc2::Point2D location) {
     location = getNearestStartLocation(location);

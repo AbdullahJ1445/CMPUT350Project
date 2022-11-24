@@ -77,6 +77,7 @@ private:
     void initAddEnemyStartLocation(sc2::Point2D location_);
     void initMapChunks();
     sc2::Point2D getClosestUnseenLocation(bool pathable_=true);
+    sc2::Point2D getFurthestUnseenLocation(bool pathable_ = true);
 
     BasicSc2Bot* agent;
     std::vector<std::unique_ptr<MapChunk>> map_chunk_storage;

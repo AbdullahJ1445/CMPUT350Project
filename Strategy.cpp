@@ -448,6 +448,7 @@ void Strategy::loadStrategies() {
 		}
 	}
 	else {
+
 	bot->storeUnitType("_CHRONOBOOST_TARGET", sc2::UNIT_TYPEID::PROTOSS_GATEWAY);   // special tag to specify a unit that chronoboost will only target
 
 	{
@@ -481,17 +482,17 @@ void Strategy::loadStrategies() {
 	}
 	{
 		Precept proxy_pylon(bot);
-		Directive d(Directive::UNIT_TYPE_NEAR_LOCATION, bot->locH->getProxyLocation(), Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->locH->getProxyLocation(), 4.0F);
+		Directive d(Directive::UNIT_TYPE_NEAR_LOCATION, bot->locH->getProxyLocation(), Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->locH->getProxyLocation(), 30.0F);
 		Trigger t(bot);
 		t.add_condition(COND::MIN_MINERALS, 100);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PROBE, bot->locH->getProxyLocation(), 30.0F);
-		t.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->getProxyLocation());
+		t.add_condition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->getProxyLocation());
 		proxy_pylon.addDirective(d);
 		proxy_pylon.addTrigger(t);
 		Trigger t2(bot);
 		t2.add_condition(COND::MIN_MINERALS, 100);
 		t2.add_condition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 4, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
-		t2.add_condition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->getProxyLocation());
+		t2.add_condition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->getProxyLocation());
 		proxy_pylon.addTrigger(t2);
 		bot->addStrat(proxy_pylon);
 	}
@@ -505,7 +506,6 @@ void Strategy::loadStrategies() {
 		t.add_condition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, bot->locH->getProxyLocation());
 		proxy_gateway.addDirective(d);
 		proxy_gateway.addTrigger(t);
-		Trigger t2(bot);
 		bot->addStrat(proxy_gateway);
 	}
 	{
@@ -533,6 +533,7 @@ void Strategy::loadStrategies() {
 		t2.add_condition(COND::MIN_MINERALS, 100);
 		t2.add_condition(COND::MIN_FOOD, 2);
 		t2.add_condition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+		t2.add_condition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		t2.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		t2.add_condition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		train_zealot.addTrigger(t2);
@@ -541,6 +542,7 @@ void Strategy::loadStrategies() {
 		t3.add_condition(COND::MIN_FOOD, 2);
 		t3.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
 		t3.add_condition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 3, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+		t3.add_condition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		t3.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		t3.add_condition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		train_zealot.addTrigger(t3);
@@ -549,6 +551,7 @@ void Strategy::loadStrategies() {
 		t4.add_condition(COND::MIN_FOOD, 2);
 		t4.add_condition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
 		t4.add_condition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 2, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+		t4.add_condition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		t4.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		t4.add_condition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		train_zealot.addTrigger(t4);
@@ -557,6 +560,7 @@ void Strategy::loadStrategies() {
 		t4.add_condition(COND::MIN_FOOD, 2);
 		t4.add_condition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
 		t4.add_condition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+		t4.add_condition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		t4.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		t4.add_condition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 		train_zealot.addTrigger(t5);
@@ -566,7 +570,7 @@ void Strategy::loadStrategies() {
 		Precept send_attack(bot);
 		std::unordered_set<FLAGS> attackers;
 		attackers.insert(FLAGS::IS_ATTACKER);
-		Directive d(Directive::MATCH_FLAGS, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, bot->locH->getEnemyLocation());
+		Directive d(Directive::MATCH_FLAGS, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, bot->locH->getBestEnemyLocation());
 		Trigger t(bot);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_ZEALOT, bot->locH->getProxyLocation());
 		send_attack.addDirective(d);
@@ -575,7 +579,7 @@ void Strategy::loadStrategies() {
 	}
 	{
 		Precept send_probe_attack(bot);
-		Directive d(Directive::UNIT_TYPE_NEAR_LOCATION, bot->locH->getProxyLocation(), Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::ATTACK, bot->locH->getEnemyLocation(), 20.0F);
+		Directive d(Directive::UNIT_TYPE_NEAR_LOCATION, bot->locH->getProxyLocation(), Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::ATTACK, bot->locH->getBestEnemyLocation(), 20.0F);
 		Trigger t(bot);
 		t.add_condition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 		send_probe_attack.addDirective(d);
@@ -597,9 +601,9 @@ void Strategy::loadStrategies() {
 		Precept send_attack_exp(bot);
 		std::unordered_set<FLAGS> attackers;
 		attackers.insert(FLAGS::IS_ATTACKER);
-		Directive d(Directive::MATCH_FLAGS, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, bot->locH->getEnemyLocation(), 40.0F);
+		Directive d(Directive::MATCH_FLAGS, Directive::NEAR_LOCATION, attackers, sc2::ABILITY_ID::ATTACK, bot->locH->getBestEnemyLocation(), 40.0F);
 		Trigger t(bot);
-		t.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 7, sc2::UNIT_TYPEID::PROTOSS_ZEALOT, bot->locH->getEnemyLocation(), 40.0F);
+		t.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 7, sc2::UNIT_TYPEID::PROTOSS_ZEALOT, bot->locH->getBestEnemyLocation(), 40.0F);
 		send_attack_exp.addDirective(d);
 		send_attack_exp.addTrigger(t);
 		bot->addStrat(send_attack_exp);

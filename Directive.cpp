@@ -104,6 +104,10 @@ bool Directive::execute(BasicSc2Bot* agent) {
 		//std::cout << "order targetting " << target_location.x << "," << target_location.y << std::endl;
 	}
 
+	if (debug) {
+		std::cout << "(exe)";
+	}
+
 	// ensure proper variables are set for the specified ASSIGNEE and ACTION_TYPE
 
 	if (assignee == ASSIGNEE::UNIT_TYPE || assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION) {
