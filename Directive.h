@@ -17,6 +17,9 @@
 # define SEND_HOME				sc2::Point2D(-9.64727, -9.64727) // value understood to mean the unit's home location
 # define INVALID_RADIUS			-1.1F // value understood to mean a radius is invalid, or uninitialized
 # define NO_POINT_FOUND			sc2::Point2D(-2.5252, -2.5252) // value understood to mean no valid point was found
+# define ASSIGNED_LOCATION		sc2::Point2D(-5.0505, -5.0505) // value understood to mean a unit's assigned_location
+
+# define TWI					sc2::ABILITY_ID::BUILD_TWILIGHTCOUNCIL
 
 class BasicSc2Bot;
 class Mob;
@@ -78,8 +81,12 @@ public:
 	void setTargetLocationFunction(Strategy* strat_, BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_);
 	void setAssigneeLocationFunction(BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_);
 	bool allowMultiple(bool is_true=true);
+	void setContinuous(bool is_true=true);
+	void setDebug(bool is_true=true);
 	bool allowsMultiple();
 	bool hasAssignedMob();
+	int getTargetUpdateIterationID();
+	int getAssigneeUpdateIterationID();
 	sc2::ABILITY_ID getAbilityID();
 	std::unordered_set<Mob*> getAssignedMobs();
 	static Mob* get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
@@ -113,24 +120,27 @@ private:
 	void updateTargetLocation(BasicSc2Bot* agent_);
 	void updateAssigneeLocation(BasicSc2Bot* agent_);
 
-	bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_= USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
-	bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool _generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, Mob* mob_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_= USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
+	bool issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
 
 	bool locked;
 	bool allow_multiple;
 	bool update_target_location;
 	bool update_assignee_location;
+	bool continuous_update;
+	int target_update_iter_id;		// increments by one whenever target location updates to a new value
+	int assignee_update_iter_id;	// increments by one whenever target location updates to a new value
 
 	std::function<sc2::Point2D(void)> target_location_function;
 	std::function<sc2::Point2D(void)> assignee_location_function;
 	std::function<Strategy* ()> test_function;
 
-	
+	bool debug;
 
 	ASSIGNEE assignee;
 	ACTION_TYPE action_type;
