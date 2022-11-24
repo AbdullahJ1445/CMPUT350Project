@@ -152,7 +152,7 @@ const sc2::Unit* LocationHandler::getNearestGeyser(sc2::Point2D location) {
     float distance = std::numeric_limits<float>::max();
     const sc2::Unit* target = nullptr;
     for (const auto& u : units) {
-        if (agent->is_geyser(u)) {
+        if (agent->isGeyser(u)) {
             sc2::Point2D geyser_loc = u->pos;
             // check if geyser already is being mined
             const sc2::Unit* nearest_gas = getNearestGasStructure(geyser_loc);
@@ -380,8 +380,8 @@ sc2::Point2D LocationHandler::getFurthestUnseenLocation(bool pathable_) {
         return NO_POINT_FOUND;
     }
 
-    std::unordered_set<Mob*> mobs = agent->mobH->get_mobs();
-    std::unordered_set<Mob*> flying_mobs = agent->mobH->filter_by_flag(mobs, FLAGS::IS_FLYING);
+    std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
+    std::unordered_set<Mob*> flying_mobs = agent->mobH->filterByFlag(mobs, FLAGS::IS_FLYING);
 
     // should not happen, but lets make sure... this would mean game over
     if (mobs.empty())
@@ -395,10 +395,10 @@ sc2::Point2D LocationHandler::getFurthestUnseenLocation(bool pathable_) {
         Mob* closest_mob = nullptr;
         if (!pathable_ && !(*it)->isPathable()) {
             // if a chunk can only be reached by flying units
-            closest_mob = Directive::get_closest_to_location(flying_mobs, loc);
+            closest_mob = Directive::getClosestToLocation(flying_mobs, loc);
         }
         else {
-            closest_mob = Directive::get_closest_to_location(mobs, loc);
+            closest_mob = Directive::getClosestToLocation(mobs, loc);
         }
 
         if (closest_mob == nullptr)

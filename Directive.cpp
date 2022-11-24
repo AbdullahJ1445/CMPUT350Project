@@ -511,7 +511,7 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 	}
 
 
-	mobs = filter_by_has_ability(agent, mobs, ability);
+	mobs = filterByHasAbility(agent, mobs, ability);
 	if (mobs.size() == 0) {
 		return false;
 	}
@@ -545,7 +545,7 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 		}
 
 	// filter only those not currently building a structure
-	mobs = filter_not_building_structure(agent, mobs);
+	mobs = filterNotBuildingStructure(agent, mobs);
 
 		if (mobs.size() == 0) {
 			return false;
@@ -584,7 +584,7 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 		ordersuccess = issueOrder(agent, mob, mineral_target->pos, false, sc2::ABILITY_ID::GENERAL_MOVE);
 		//ordersuccess = issueOrder(agent, mob, mineral_target, false, sc2::ABILITY_ID::SMART);
 		if (ordersuccess) {
-			mob->set_assigned_location(target_location);
+			mob->setAssignedLocation(target_location);
 		}
 		return ordersuccess;
 		//return issueOrder(agent, mob, mineral_target->pos, false, sc2::ABILITY_ID::GENERAL_MOVE);
@@ -611,7 +611,7 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 	bool order_success = false;
 	order_success = issueOrder(agent, mob, location);
 	if (order_success && ability_data.is_building) {
-		mob->set_flag(FLAGS::IS_BUILDING_STRUCTURE);
+		mob->setFlag(FLAGS::IS_BUILDING_STRUCTURE);
 	}
 	return order_success;
 	/* * * * * * * * * * */
@@ -717,7 +717,7 @@ void Directive::setContinuous(bool is_true) {
 	continuous_update = is_true;
 }
 
-std::unordered_set<Mob*> Directive::filter_near_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_) {
+std::unordered_set<Mob*> Directive::filterNearLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_) {
 	// filters a vector of Mob* by only those within the specified distance to location
 	float sq_dist = pow(radius_, 2);
 
@@ -876,7 +876,7 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 					assignMob(m_);
 					agent->mobH->setMobBusy(m_);
 					if (apply_bundle) {
-						m_->bundle_directives(directive_bundle);
+						m_->bundleDirectives(directive_bundle);
 						apply_bundle = false;  // bundle is only given to one mob
 					}
 				}

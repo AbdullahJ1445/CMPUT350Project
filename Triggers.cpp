@@ -580,6 +580,5 @@ bool Precept::checkTriggerConditions() {
 		if (t_.checkConditions())
 			return true;
 		}
-	}
 	return false;
 }
