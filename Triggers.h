@@ -71,6 +71,7 @@ public:
 	void add_condition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
 	void add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
 	bool check_conditions();
+	void setDebug(bool is_true=true);
 	BasicSc2Bot* getAgent();
 
 	class TriggerCondition {
@@ -83,6 +84,7 @@ public:
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_ = DEFAULT_RADIUS);
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_ = DEFAULT_RADIUS);
 		bool is_met(const sc2::ObservationInterface* obs);
+		void setDebug(bool isTrue=true);
 
 
 	private:
@@ -92,6 +94,7 @@ public:
 		sc2::Point2D location_for_counting_units;
 		float distance_squared;
 		BasicSc2Bot* agent;
+		bool debug;
 		bool is_true;
 		sc2::UPGRADE_ID upgrade_id;
 		sc2::ABILITY_ID ability_id;
@@ -101,6 +104,7 @@ public:
 private:
 	std::vector<TriggerCondition> conditions;
 	BasicSc2Bot* agent;
+	bool debug;
 };
 
 class Precept {
@@ -109,12 +113,17 @@ public:
 	~Precept();
 	bool execute();
 	bool checkTriggerConditions();
+	void setDebug(bool is_true=true);
 	void addTrigger(Trigger trigger_);
 	void addDirective(Directive directive_);
+	bool hasDirective();
+	bool hasTrigger();
 
 protected:
 	BasicSc2Bot* agent;
 	std::vector<Trigger> triggers;
 	std::vector<Directive*> directives;
 	bool has_directive;
+	bool has_trigger;
+	bool debug;
 };

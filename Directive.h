@@ -17,6 +17,9 @@
 # define SEND_HOME				sc2::Point2D(-9.64727, -9.64727) // value understood to mean the unit's home location
 # define INVALID_RADIUS			-1.1F // value understood to mean a radius is invalid, or uninitialized
 # define NO_POINT_FOUND			sc2::Point2D(-2.5252, -2.5252) // value understood to mean no valid point was found
+# define ASSIGNED_LOCATION		sc2::Point2D(-5.0505, -5.0505) // value understood to mean a unit's assigned_location
+
+# define TWI					sc2::ABILITY_ID::BUILD_TWILIGHTCOUNCIL
 
 class BasicSc2Bot;
 class Mob;
@@ -79,6 +82,7 @@ public:
 	void setAssigneeLocationFunction(BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_);
 	bool allowMultiple(bool is_true=true);
 	void setContinuous(bool is_true=true);
+	void setDebug(bool is_true=true);
 	bool allowsMultiple();
 	bool hasAssignedMob();
 	int getTargetUpdateIterationID();
@@ -136,7 +140,7 @@ private:
 	std::function<sc2::Point2D(void)> assignee_location_function;
 	std::function<Strategy* ()> test_function;
 
-	
+	bool debug;
 
 	ASSIGNEE assignee;
 	ACTION_TYPE action_type;

@@ -64,6 +64,7 @@ public:
     std::vector<MapChunk*> getLocalChunks(sc2::Point2D loc_);
     MapChunk* getNearestChunk(sc2::Point2D loc_);
     MapChunk* getChunkByCoords(std::pair<float, float> coords);
+    sc2::Point2D getEnemyLocation();
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();
     float pathDistFromStartLocation(sc2::QueryInterface* query_, sc2::Point2D location_);

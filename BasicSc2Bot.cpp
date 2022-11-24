@@ -25,6 +25,8 @@ void BasicSc2Bot::setCurrentStrategy(Strategy* strategy_) {
 }
 
 void BasicSc2Bot::addStrat(Precept precept_) {
+	assert(precept_.hasDirective());
+	assert(precept_.hasTrigger());
 	precepts_onstep.push_back(precept_);
 }
 
@@ -234,12 +236,21 @@ float BasicSc2Bot::getValue(const sc2::Unit* unit) {
 void BasicSc2Bot::initVariables() {
 	const sc2::ObservationInterface* observation = Observation();
 	map_name = observation->GetGameInfo().map_name;
+	if (map_name.find("Proxima") != std::string::npos) {
+		std::cout << "!3!";
+	}
+	if (map_name.find("Vestige") != std::string::npos) {
+		std::cout << "!2!";
+	}
+	if (map_name.find("Cactus") != std::string::npos) {
+		std::cout << "!1!";
+	}
 	std::cout << "map_name: " << map_name;
-	if (map_name == "Proxima Station LE" || map_name == "Proxim Station LE (Void)")
+	if (map_name == "Proxima Station LE" || map_name == "Proxima Station LE (Void)" || map_name == "(2)Proxima Station LE" || map_name == "(2)Proxima Station LE (Void)")
 		map_index = 3; else
-		if (map_name == "Bel'Shir Vestige LE" || map_name == "Bel'Shir Vestige LE (Void)")
+		if (map_name == "Bel'Shir Vestige LE" || map_name == "Bel'Shir Vestige LE (Void)" || map_name == "(2)Bel'Shir Vestige LE" || map_name == "(2)Bel'Shir Vestige LE (Void)")
 			map_index = 2; else
-			if (map_name == "Cactus Valley LE" || map_name == "Cactus Valley LE (Void)")
+			if (map_name == "Cactus Valley LE" || map_name == "Cactus Valley LE (Void)" || map_name == "(4)Cactus Valley LE" || map_name == "(4)Cactus Valley LE (Void)")
 				map_index = 1; else
 				map_index = 0;
 
@@ -262,7 +273,7 @@ void BasicSc2Bot::initStartingUnits() {
 			u_type == sc2::UNIT_TYPEID::PROTOSS_PROBE) 
 		{
 			Mob worker (*u, MOB::MOB_WORKER);
-			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, u_type, sc2::ABILITY_ID::HARVEST_GATHER, locH->getStartLocation());
+			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, u_type, sc2::ABILITY_ID::HARVEST_GATHER, ASSIGNED_LOCATION);
 			storeDirective(directive_get_minerals_near_Base);
 			Directive* dir = getLastStoredDirective();
 			worker.assignDefaultDirective(*dir);
@@ -370,9 +381,21 @@ void BasicSc2Bot::OnStep() {
 			// if unit is currently visible to you
 			if ((*it)->last_seen_game_loop == gameloop) {
 				std::vector<MapChunk*> chunks = locH->getLocalChunks((*it)->pos);
-				chunks[0]->increaseThreat(this, *it, 1.0);
-				for (int i = 1; i < 4; i++) {
-					chunks[i]->increaseThreat(this, *it, NEARBY_THREAT_MODIFIER);
+
+				// only increase threat for pathable chunks
+				// the closest chunk should increase by a scale of 1.0, while other nearby chunks
+				// increase by a lesser amount adjusted by NEARBY_THREAT_MODIFIER
+				bool found_pathable = false; //whether we have found a pathable chunk near the unit
+				for (int i = 0; i < 4; i++) {
+					if (chunks[i]->isPathable()) {
+						if (!found_pathable) {
+							chunks[i]->increaseThreat(this, *it, 1.0);
+							found_pathable = true;
+						}
+						else {
+							chunks[i]->increaseThreat(this, *it, NEARBY_THREAT_MODIFIER);
+						}
+					}
 				}
 			}
 			++it;
@@ -539,9 +562,10 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 	// make Stalkers Blink away if low health
 	if (unit->unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER) {
 		if (have_upgrade(sc2::UPGRADE_ID::BLINKTECH)) {
-			if (unit->health / unit->health_max < .5f) {
+			if (unit->health / unit->health_max < .3f) {
 				// check if Blink is on cooldown
 				if (can_unit_use_ability(*unit, sc2::ABILITY_ID::EFFECT_BLINK)) {
+					std::cout << "(blink)";
 					Actions()->UnitCommand(unit, sc2::ABILITY_ID::EFFECT_BLINK, locH->bases[0].get_townhall());
 				}
 			}

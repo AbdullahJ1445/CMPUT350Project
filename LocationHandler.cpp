@@ -242,6 +242,16 @@ MapChunk* LocationHandler::getChunkByCoords(std::pair<float, float> coords) {
     return map_chunk_by_coords[coords];
 }
 
+sc2::Point2D LocationHandler::getEnemyLocation()
+{
+    if (!enemy_start_locations.empty()) {
+        return enemy_start_locations.front();
+    }
+    else {
+        return NO_POINT_FOUND;
+    }
+}
+
 sc2::Point2D LocationHandler::smartAttackLocation(bool pathable_) {
     // first returns the highest threat location
     // if none found, then returns the oldest location, meaning the location
@@ -410,6 +420,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
 
             Base main_base(observation->GetStartLocation());
             main_base.add_build_area(32, 147);
+            main_base.add_build_area(47, 151);
             bases.push_back(main_base);
 
             Base exp_1(66.5, 161.5);
@@ -455,6 +466,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         else if (p_id == 2) {
             Base main_base(observation->GetStartLocation());
             main_base.add_build_area(147, 160);
+            main_base.add_build_area(151, 145);
             bases.push_back(main_base);
 
             Base exp_1(161.5, 125.5);
@@ -464,6 +476,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         else if (p_id == 3) {
             Base main_base(observation->GetStartLocation());
             main_base.add_build_area(160, 45);
+            main_base.add_build_area(145, 41);
             bases.push_back(main_base);
 
             Base exp_1(125.5, 30.5);
@@ -473,6 +486,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         else if (p_id == 4) {
             Base main_base(observation->GetStartLocation());
             main_base.add_build_area(45, 32);
+            main_base.add_build_area(41, 47);
             bases.push_back(main_base);
 
             Base exp_1(30.5, 66.5);
