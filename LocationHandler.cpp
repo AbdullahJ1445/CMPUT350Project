@@ -113,7 +113,7 @@ int LocationHandler::getIndexOfClosestBase(sc2::Point2D location_) {
     float distance = std::numeric_limits<float>::max();
     int lowest_index = 0;
     for (int i = 0; i < bases.size(); i++) {
-        float b_dist = sc2::DistanceSquared2D(bases[i].get_townhall(), location_);
+        float b_dist = sc2::DistanceSquared2D(bases[i].getTownhall(), location_);
         if (b_dist < distance) {
             lowest_index = i;
             distance = b_dist;
@@ -135,7 +135,7 @@ const sc2::Unit* LocationHandler::getNearestMineralPatch(sc2::Point2D location) 
     float distance = std::numeric_limits<float>::max();
     const sc2::Unit* target = nullptr;
     for (const auto& u : units) {
-        if (agent->is_mineral_patch(u)) {
+        if (agent->isMineralPatch(u)) {
             float d = sc2::DistanceSquared2D(u->pos, location);
             if (d < distance) {
                 distance = d;
@@ -152,7 +152,7 @@ const sc2::Unit* LocationHandler::getNearestGeyser(sc2::Point2D location) {
     float distance = std::numeric_limits<float>::max();
     const sc2::Unit* target = nullptr;
     for (const auto& u : units) {
-        if (agent->is_geyser(u)) {
+        if (agent->isGeyser(u)) {
             float d = sc2::DistanceSquared2D(u->pos, location);
             if (d < distance) {
                 distance = d;
@@ -189,7 +189,7 @@ const sc2::Unit* LocationHandler::getNearestGasStructure(sc2::Point2D location) 
 const sc2::Unit* LocationHandler::getNearestTownhall(const sc2::Point2D location) {
     // find nearest townhall to location
 
-    std::unordered_set<Mob*> townhalls = agent->mobH->filter_by_flag(agent->mobH->get_mobs(), FLAGS::IS_TOWNHALL);
+    std::unordered_set<Mob*> townhalls = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_TOWNHALL);
     for (auto m : townhalls) {
         return &(m->unit);
     }
@@ -297,8 +297,8 @@ sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
         return NO_POINT_FOUND;
     }
 
-    std::unordered_set<Mob*> mobs = agent->mobH->get_mobs();
-    std::unordered_set<Mob*> flying_mobs = agent->mobH->filter_by_flag(mobs, FLAGS::IS_FLYING);
+    std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
+    std::unordered_set<Mob*> flying_mobs = agent->mobH->filterByFlag(mobs, FLAGS::IS_FLYING);
     
     // should not happen, but lets make sure... this would mean game over
     if (mobs.empty())
@@ -312,10 +312,10 @@ sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
         Mob* closest_mob = nullptr;
         if (!pathable_ && !(*it)->isPathable()) {
             // if a chunk can only be reached by flying units
-            closest_mob = Directive::get_closest_to_location(flying_mobs , loc);
+            closest_mob = Directive::getClosestToLocation(flying_mobs , loc);
         }
         else {
-            closest_mob = Directive::get_closest_to_location(mobs, loc);
+            closest_mob = Directive::getClosestToLocation(mobs, loc);
         }
 
         if (closest_mob == nullptr)
@@ -392,11 +392,11 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         if (p_id == 1) {
 
             Base main_base(observation->GetStartLocation());
-            main_base.add_build_area(32, 147);
+            main_base.addBuildArea(32, 147);
             bases.push_back(main_base);
 
             Base exp_1(66.5, 161.5);
-            exp_1.add_defend_point(64, 152);
+            exp_1.addDefendPoint(64, 152);
             bases.push_back(exp_1); // radius 6.0F
 
             Base exp_2(54.5, 132.5);
@@ -437,29 +437,29 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         }
         else if (p_id == 2) {
             Base main_base(observation->GetStartLocation());
-            main_base.add_build_area(147, 160);
+            main_base.addBuildArea(147, 160);
             bases.push_back(main_base);
 
             Base exp_1(161.5, 125.5);
-            exp_1.add_defend_point(152, 128); // radius 6.0F
+            exp_1.addDefendPoint(152, 128); // radius 6.0F
             bases.push_back(exp_1);
         }
         else if (p_id == 3) {
             Base main_base(observation->GetStartLocation());
-            main_base.add_build_area(128, 40);
+            main_base.addBuildArea(128, 40);
             bases.push_back(main_base);
 
             Base exp_1(125.5, 30.5);
-            exp_1.add_defend_point(128, 40); // radius 6.0F
+            exp_1.addDefendPoint(128, 40); // radius 6.0F
             bases.push_back(exp_1);
         }
         else if (p_id == 4) {
             Base main_base(observation->GetStartLocation());
-            main_base.add_build_area(45, 32);
+            main_base.addBuildArea(45, 32);
             bases.push_back(main_base);
 
             Base exp_1(30.5, 66.5);
-            exp_1.add_defend_point(40, 64);  // radius 6.0F
+            exp_1.addDefendPoint(40, 64);  // radius 6.0F
             bases.push_back(exp_1);
         }
     }
@@ -539,152 +539,152 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             initAddEnemyStartLocation(sc2::Point2D(62.5, 28.5));
 
             Base main_base(observation->GetStartLocation());
-            main_base.add_build_area(146.0, 128.0);
-            main_base.add_build_area(132.0, 132.0);
-            main_base.add_defend_point(149.0, 120.0);
-            main_base.set_active();
+            main_base.addBuildArea(146.0, 128.0);
+            main_base.addBuildArea(132.0, 132.0);
+            main_base.addDefendPoint(149.0, 120.0);
+            main_base.setActive();
             bases.push_back(main_base);
 
             Base exp_1(164.5, 140.5);
-            exp_1.add_build_area(165.0, 135.0);
-            exp_1.add_defend_point(168.0, 132.0);
+            exp_1.addBuildArea(165.0, 135.0);
+            exp_1.addDefendPoint(168.0, 132.0);
             bases.push_back(exp_1);
 
             Base exp_2(149.5, 102.5);
-            exp_2.add_build_area(144.0, 106.0);
-            exp_2.add_defend_point(141.0, 95.0);
+            exp_2.addBuildArea(144.0, 106.0);
+            exp_2.addDefendPoint(141.0, 95.0);
             bases.push_back(exp_2);
 
             Base exp_3(166.5, 69.5);
-            exp_3.add_build_area(161.0, 79.0);
-            exp_3.add_defend_point(155.0, 69.0);
+            exp_3.addBuildArea(161.0, 79.0);
+            exp_3.addDefendPoint(155.0, 69.0);
             bases.push_back(exp_3);
 
             Base exp_4(119.5, 111.5);
-            exp_4.add_defend_point(115.0, 105.0);
-            exp_4.add_defend_point(110.0, 115.0);
+            exp_4.addDefendPoint(115.0, 105.0);
+            exp_4.addDefendPoint(110.0, 115.0);
             bases.push_back(exp_4);
 
             Base exp_5(127.5, 57.5);
-            exp_5.add_defend_point(122.0, 69.0);
-            exp_5.add_build_area(137.0, 54.0);
+            exp_5.addDefendPoint(122.0, 69.0);
+            exp_5.addBuildArea(137.0, 54.0);
             bases.push_back(exp_5);
 
             Base exp_6(165.5, 23.5);
-            exp_6.add_defend_point(157.0, 23.0);
+            exp_6.addDefendPoint(157.0, 23.0);
             bases.push_back(exp_6);
 
             Base exp_7(93.5, 147.5);
-            exp_7.add_defend_point(94.0, 141.0);
+            exp_7.addDefendPoint(94.0, 141.0);
             bases.push_back(exp_7);
 
             Base exp_8(106.5, 20.5);
-            exp_8.add_defend_point(106.0, 27.0);
+            exp_8.addDefendPoint(106.0, 27.0);
             bases.push_back(exp_8);
 
             Base exp_9(34.5, 144.5);
-            exp_9.add_defend_point(43.0, 145.0);
+            exp_9.addDefendPoint(43.0, 145.0);
             bases.push_back(exp_9);
 
             Base exp_10(72.5, 110.5);
-            exp_10.add_defend_point(78.0, 99.0);
-            exp_10.add_defend_point(63.0, 114.0);
+            exp_10.addDefendPoint(78.0, 99.0);
+            exp_10.addDefendPoint(63.0, 114.0);
             bases.push_back(exp_10);
 
             Base exp_11(80.5, 56.5);
-            exp_11.add_defend_point(85.0, 63.0);
-            exp_11.add_defend_point(90.0, 53.0);
+            exp_11.addDefendPoint(85.0, 63.0);
+            exp_11.addDefendPoint(90.0, 53.0);
             bases.push_back(exp_11);
 
             Base exp_12(33.5, 98.5);
-            exp_12.add_build_area(39.0, 89.0);
-            exp_12.add_defend_point(45.0, 99.0);
+            exp_12.addBuildArea(39.0, 89.0);
+            exp_12.addDefendPoint(45.0, 99.0);
             bases.push_back(exp_12);
 
             Base exp_13(50.5, 65.5);
-            exp_13.add_build_area(56.0, 62.0);
-            exp_13.add_defend_point(59.0, 73.0);
+            exp_13.addBuildArea(56.0, 62.0);
+            exp_13.addDefendPoint(59.0, 73.0);
             bases.push_back(exp_13);
 
             Base exp_14(35.5, 27.5);
-            exp_14.add_build_area(35.0, 33.0);
-            exp_14.add_defend_point(32.0, 36.0);
+            exp_14.addBuildArea(35.0, 33.0);
+            exp_14.addDefendPoint(32.0, 36.0);
             bases.push_back(exp_14);
         }
         else if (p_id == 2) {
             setProxyLocation(sc2::Point2D(172.0, 112.0));
             initAddEnemyStartLocation(sc2::Point2D(137.5, 139.5));
             Base main_base(observation->GetStartLocation());
-            main_base.add_build_area(54.0, 40.0);
-            main_base.add_build_area(68.0, 36.0);
-            main_base.add_defend_point(51.0, 48.0);
-            main_base.set_active();
+            main_base.addBuildArea(54.0, 40.0);
+            main_base.addBuildArea(68.0, 36.0);
+            main_base.addDefendPoint(51.0, 48.0);
+            main_base.setActive();
             bases.push_back(main_base);
 
             Base exp_1(35.5, 27.5);
-            exp_1.add_build_area(35.0, 33.0);
-            exp_1.add_defend_point(32.0, 36.0);
+            exp_1.addBuildArea(35.0, 33.0);
+            exp_1.addDefendPoint(32.0, 36.0);
             bases.push_back(exp_1);
 
             Base exp_2(50.5, 65.5);
-            exp_2.add_build_area(56.0, 62.0);
-            exp_2.add_defend_point(59.0, 73.0);
+            exp_2.addBuildArea(56.0, 62.0);
+            exp_2.addDefendPoint(59.0, 73.0);
             bases.push_back(exp_2);
 
             Base exp_3(33.5, 98.5);
-            exp_3.add_build_area(39.0, 89.0);
-            exp_3.add_defend_point(45.0, 99.0);
+            exp_3.addBuildArea(39.0, 89.0);
+            exp_3.addDefendPoint(45.0, 99.0);
             bases.push_back(exp_3);
 
             Base exp_4(80.5, 56.5);
-            exp_4.add_defend_point(85.0, 63.0);
-            exp_4.add_defend_point(90.0, 53.0);
+            exp_4.addDefendPoint(85.0, 63.0);
+            exp_4.addDefendPoint(90.0, 53.0);
             bases.push_back(exp_4);
 
             Base exp_5(72.5, 110.5);
-            exp_5.add_defend_point(78.0, 99.0);
-            exp_5.add_defend_point(63.0, 114.0);
+            exp_5.addDefendPoint(78.0, 99.0);
+            exp_5.addDefendPoint(63.0, 114.0);
             bases.push_back(exp_5);
 
             Base exp_6(34.5, 144.5);
-            exp_6.add_defend_point(43.0, 145.0);
+            exp_6.addDefendPoint(43.0, 145.0);
             bases.push_back(exp_6);
 
             Base exp_7(106.5, 20.5);
-            exp_7.add_defend_point(106.0, 27.0);
+            exp_7.addDefendPoint(106.0, 27.0);
             bases.push_back(exp_7);
 
             Base exp_8(93.5, 147.5);
-            exp_8.add_defend_point(94.0, 141.0);
+            exp_8.addDefendPoint(94.0, 141.0);
             bases.push_back(exp_8);
 
             Base exp_9(165.5, 23.5);
-            exp_9.add_defend_point(157.0, 23.0);
+            exp_9.addDefendPoint(157.0, 23.0);
             bases.push_back(exp_9);
 
             Base exp_10(127.5, 57.5);
-            exp_10.add_defend_point(122.0, 69.0);
-            exp_10.add_build_area(137.0, 54.0);
+            exp_10.addDefendPoint(122.0, 69.0);
+            exp_10.addBuildArea(137.0, 54.0);
             bases.push_back(exp_10);
 
             Base exp_11(119.5, 111.5);
-            exp_11.add_defend_point(115.0, 105.0);
-            exp_11.add_defend_point(110.0, 115.0);
+            exp_11.addDefendPoint(115.0, 105.0);
+            exp_11.addDefendPoint(110.0, 115.0);
             bases.push_back(exp_11);
 
             Base exp_12(166.5, 69.5);
-            exp_12.add_build_area(161.0, 79.0);
-            exp_12.add_defend_point(155.0, 69.0);
+            exp_12.addBuildArea(161.0, 79.0);
+            exp_12.addDefendPoint(155.0, 69.0);
             bases.push_back(exp_12);
 
             Base exp_13(149.5, 102.5);
-            exp_13.add_build_area(144.0, 106.0);
-            exp_13.add_defend_point(141.0, 95.0);
+            exp_13.addBuildArea(144.0, 106.0);
+            exp_13.addDefendPoint(141.0, 95.0);
             bases.push_back(exp_13);
 
             Base exp_14(164.5, 140.5);
-            exp_14.add_build_area(165.0, 135.0);
-            exp_14.add_defend_point(168.0, 132.0);
+            exp_14.addBuildArea(165.0, 135.0);
+            exp_14.addDefendPoint(168.0, 132.0);
             bases.push_back(exp_14);
         }
     }

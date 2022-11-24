@@ -144,21 +144,21 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::MIN_UNIT_WITH_FLAGS:
 	{
 		std::unordered_set<Mob*> mobs;
-		mobs = agent->mobH->filter_by_flags(agent->mobH->get_mobs(), filter_flags);
+		mobs = agent->mobH->filterByFlags(agent->mobH->getMobs(), filter_flags);
 		int num_units = mobs.size();
 		return (num_units >= cond_value);
 	}
 	case COND::MAX_UNIT_WITH_FLAGS:
 	{
 		std::unordered_set<Mob*> mobs;
-		mobs = agent->mobH->filter_by_flags(agent->mobH->get_mobs(), filter_flags);
+		mobs = agent->mobH->filterByFlags(agent->mobH->getMobs(), filter_flags);
 		int num_units = mobs.size();
 		return (num_units <= cond_value);
 	}
 	case COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
 		std::unordered_set<Mob*> mobs;
-		mobs = agent->mobH->filter_by_flags(agent->mobH->get_mobs(), filter_flags);
+		mobs = agent->mobH->filterByFlags(agent->mobH->getMobs(), filter_flags);
 		std::unordered_set<Mob*> filtered_mobs;
 		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
 			[this](Mob* m) { return (
@@ -170,7 +170,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
 		std::unordered_set<Mob*> mobs;
-		mobs = agent->mobH->filter_by_flags(agent->mobH->get_mobs(), filter_flags);
+		mobs = agent->mobH->filterByFlags(agent->mobH->getMobs(), filter_flags);
 		std::unordered_set<Mob*> filtered_mobs;
 		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
 			[this](Mob* m) { return (
@@ -182,9 +182,9 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::BASE_IS_ACTIVE:
 		if (agent->locH->bases.size() <= cond_value || cond_value < 0)
 			return false;
-		return agent->locH->bases[cond_value].is_active();
+		return agent->locH->bases[cond_value].isActive();
 	case COND::HAVE_UPGRADE:
-		return agent->have_upgrade(upgrade_id) == is_true;
+		return agent->haveUpgrade(upgrade_id) == is_true;
 	case COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION:
 	{
 		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
@@ -282,10 +282,10 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		return (num_units >= cond_value);
 	}
 	case COND::HAS_ABILITY_READY:
-		std::unordered_set<Mob*> structures = agent->mobH->filter_by_flag(agent->mobH->get_mobs(), FLAGS::IS_STRUCTURE);
+		std::unordered_set<Mob*> structures = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_STRUCTURE);
 		bool found_one = false;
 		for (auto m : structures) {
-			if (agent->can_unit_use_ability(m->unit, ability_id)) {
+			if (agent->canUnitUseAbility(m->unit, ability_id)) {
 				found_one = true;
 				break;
 			}
@@ -341,47 +341,47 @@ Trigger::Trigger(BasicSc2Bot* agent_) {
 	agent = agent_;
 };
 
-void Trigger::add_condition(TriggerCondition tc_) {
+void Trigger::addCondition(TriggerCondition tc_) {
 	conditions.push_back(tc_);
 }
 
-void Trigger::add_condition(COND cond_type_, int cond_value_) {
+void Trigger::addCondition(COND cond_type_, int cond_value_) {
 	TriggerCondition tc_(agent, cond_type_, cond_value_);
 	conditions.push_back(tc_);
 }
 
-void Trigger::add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
+void Trigger::addCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
 	TriggerCondition tc_(agent, cond_type_, cond_value_, unit_of_type_);
 	conditions.push_back(tc_);
 }
 
-void Trigger::add_condition(COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_) {
+void Trigger::addCondition(COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_) {
 	TriggerCondition tc_(agent, cond_type_, unit_of_type_, ability_id_, is_true_);
 	conditions.push_back(tc_);
 }
 
-void Trigger::add_condition(COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_) {
+void Trigger::addCondition(COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_) {
 	TriggerCondition tc_(agent, cond_type_, upgrade_id_, is_true_);
 	conditions.push_back(tc_);
 }
 
-void Trigger::add_condition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_) {
+void Trigger::addCondition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_) {
 	TriggerCondition tc_(agent, cond_type_, cond_value_, flags_);
 	conditions.push_back(tc_);
 }
 
-void Trigger::add_condition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_) {
+void Trigger::addCondition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_) {
 	TriggerCondition tc_(agent, cond_type_, cond_value_, flags_, location_, radius_);
 	conditions.push_back(tc_);
 }
 
-void Trigger::add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
+void Trigger::addCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
 	TriggerCondition tc_(agent, cond_type_, cond_value_, unit_of_type_, location_, radius_);
 	conditions.push_back(tc_);
 }
 
 
-bool Trigger::check_conditions() {
+bool Trigger::checkConditions() {
 	// Iterate through all conditions and return false if any are not met.
 	// Otherwise return true.
 	const sc2::ObservationInterface* obs = agent->Observation();
@@ -432,7 +432,7 @@ void Precept::addTrigger(Trigger trigger_) {
 
 bool Precept::checkTriggerConditions() {
 	for (Trigger t_ : triggers) {
-		if (t_.check_conditions())
+		if (t_.checkConditions())
 			return true;
 	}
 	return false;

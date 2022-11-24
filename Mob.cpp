@@ -41,11 +41,11 @@ void Mob::initVars() {
 	std::unordered_set<FLAGS> flags;
 }
 
-bool Mob::is_idle() {
+bool Mob::isIdle() {
 	return ((unit.orders).size() == 0);
 }
 
-bool Mob::has_flag(FLAGS flag) {
+bool Mob::hasFlag(FLAGS flag) {
 	return (flags.find(flag) != flags.end());
 }
 
@@ -96,7 +96,7 @@ void Mob::disableDefaultDirective()
 	has_default_directive = false;
 }
 
-void Mob::bundle_directives(std::vector<Directive> dir_vec) {
+void Mob::bundleDirectives(std::vector<Directive> dir_vec) {
 	// bundle the orders to be executed after this unit is 
 	// completed its current order
 	if (hasBundledDirective())
@@ -115,11 +115,11 @@ void Mob::bundle_directives(std::vector<Directive> dir_vec) {
 }
 
 
-void Mob::set_flag(FLAGS flag) {
+void Mob::setFlag(FLAGS flag) {
 	flags.insert(flag);
 }
 
-void Mob::remove_flag(FLAGS flag) {
+void Mob::removeFlag(FLAGS flag) {
 	flags.erase(flag);
 }
 
@@ -131,7 +131,7 @@ Directive Mob::popBundledDirective() {
 	return bundled;
 }
 
-bool Mob::is_carrying_minerals() {
+bool Mob::isCarryingMinerals() {
 	// return true if a unit is carrying minerals
 
 	std::vector<sc2::BuffID> unit_buffs = unit.buffs;
@@ -143,7 +143,7 @@ bool Mob::is_carrying_minerals() {
 	return std::find_first_of(unit_buffs.begin(), unit_buffs.end(), mineral_buffs.begin(), mineral_buffs.end()) != unit_buffs.end();
 }
 
-bool Mob::is_carrying_gas() {
+bool Mob::isCarryingGas() {
 	// return true if a unit is carrying gas
 
 	std::vector<sc2::BuffID> unit_buffs = unit.buffs;
@@ -156,27 +156,27 @@ bool Mob::is_carrying_gas() {
 	return std::find_first_of(unit_buffs.begin(), unit_buffs.end(), gas_buffs.begin(), gas_buffs.end()) != unit_buffs.end();
 }
 
-void Mob::set_home_location(sc2::Point2D location) {
+void Mob::setHomeLocation(sc2::Point2D location) {
 	home_location = location;
 }
 
-void Mob::set_assigned_location(sc2::Point2D location) {
+void Mob::setAssignedLocation(sc2::Point2D location) {
 	assigned_location = location;
 }
 
-sc2::Point2D Mob::get_birth_location() {
+sc2::Point2D Mob::getBirthLocation() {
 	return birth_location;
 }
 
-sc2::Point2D Mob::get_home_location() {
+sc2::Point2D Mob::getHomeLocation() {
 	return home_location;
 }
 
-sc2::Point2D Mob::get_assigned_location() {
+sc2::Point2D Mob::getAssignedLocation() {
 	return assigned_location;
 }
 
-std::unordered_set<FLAGS> Mob::get_flags() {
+std::unordered_set<FLAGS> Mob::getFlags() {
 	return flags;
 }
 
@@ -198,6 +198,6 @@ Directive* Mob::getCurrentDirective() {
 	}
 }
 
-sc2::Tag Mob::get_tag() {
+sc2::Tag Mob::getTag() {
 	return tag;
 }

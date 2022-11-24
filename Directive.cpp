@@ -280,10 +280,10 @@ bool Directive::executeSimpleActionForUnitType(BasicSc2Bot* agent) {
 	/* * * * * * * * * * */
 }
 
-bool Directive::execute_build_gas_structure(BasicSc2Bot* agent) {
+bool Directive::executeBuildGasStructure(BasicSc2Bot* agent) {
 	// perform the necessary actions to have a gas structure built closest to the specified target_location
 
-	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // vector of all friendly units
+	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
 	Mob* mob; // used to store temporary mob
 	bool found_valid_unit = false;
 
@@ -292,10 +292,10 @@ bool Directive::execute_build_gas_structure(BasicSc2Bot* agent) {
 	sc2::Point2D location = geyser_target->pos;
 
 	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
-		mobs = filter_near_location(mobs, assignee_location, assignee_proximity);
+		mobs = filterNearLocation(mobs, assignee_location, assignee_proximity);
 	}
 
-	mobs = filter_by_unit_type(mobs, unit_type);
+	mobs = filterByUnitType(mobs, unit_type);
 
 	// there are no valid units to perform this action
 	if (mobs.size() == 0)
@@ -306,14 +306,14 @@ bool Directive::execute_build_gas_structure(BasicSc2Bot* agent) {
 	//	  return false;     *****
 	
 	// pick valid mob to execute order, closest to geyser
-	mob = get_closest_to_location(mobs, target_location);
+	mob = getClosestToLocation(mobs, target_location);
 
 	if (!mob)
 		return false;
 
 	/* ORDER IS EXECUTED */
-	mob->set_flag(FLAGS::BUILDING_GAS);  // flag is necessary to prevent protoss probe from staying frozen
-	mob->set_flag(FLAGS::IS_BUILDING_STRUCTURE);
+	mob->setFlag(FLAGS::BUILDING_GAS);  // flag is necessary to prevent protoss probe from staying frozen
+	mob->setFlag(FLAGS::IS_BUILDING_STRUCTURE);
 	return issueOrder(agent, mob, geyser_target);
 	/* * * * * * * * * * */
 
@@ -326,7 +326,7 @@ bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 	// that has the chronoboost ability ready
 	// then find a structure that would benefit from it
 
-	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // vector of all friendly units
+	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
 	Mob* mob; // used to store temporary mob
 	Mob* chrono_target;
 	std::unordered_set<Mob*> mobs_filter1;
@@ -339,16 +339,16 @@ bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 	bool _special_chronotarget = (_chronotarget_type != sc2::UNIT_TYPEID::INVALID);
 
 	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
-		mobs = filter_near_location(mobs, assignee_location, assignee_proximity);
+		mobs = filterNearLocation(mobs, assignee_location, assignee_proximity);
 	}
 
 	// first get list of Mobs matching type
-	mobs = filter_by_unit_type(mobs, unit_type);
+	mobs = filterByUnitType(mobs, unit_type);
 
 	// then filter by those with ability available
 	std::unordered_set<Mob*> mobs_filter;
 	std::copy_if(mobs.begin(), mobs.end(), std::inserter(mobs_filter, mobs_filter.begin()),
-		[agent, this](Mob* m) { return agent->can_unit_use_ability(m->unit, ability); });
+		[agent, this](Mob* m) { return agent->canUnitUseAbility(m->unit, ability); });
 	mobs = mobs_filter;
 	
 	// return false if no structures exist with chronoboost ready to cast
@@ -357,14 +357,14 @@ bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 		return false;
 
 	// then pick the one closest to location
-	mob = get_closest_to_location(mobs, target_location);
+	mob = getClosestToLocation(mobs, target_location);
 
 	// return false if mob has not been assigned above
 	if (!mob)
 		return false;
 
 	// get all structures
-	std::unordered_set<Mob*> structures = agent->mobH->filter_by_flag(agent->mobH->get_mobs(), FLAGS::IS_STRUCTURE);
+	std::unordered_set<Mob*> structures = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_STRUCTURE);
 
 	// if a special chronotarget structure was specified in the strategy, filter by that structure
 	if (_special_chronotarget) {
@@ -411,7 +411,7 @@ bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 	}
 
 	// then pick one of THESE closest to location
-	chrono_target = get_closest_to_location(not_already_chronoboosted, target_location);
+	chrono_target = getClosestToLocation(not_already_chronoboosted, target_location);
 
 	// return false if there is nothing worth casting chronoboost on
 	if (!chrono_target) {
@@ -423,15 +423,15 @@ bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 	/* * * * * * * * * * */
 }
 
-bool Directive::execute_match_flags(BasicSc2Bot* agent) {
+bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 	// issue an order to units matching the provided flags
 
-	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs(); // vector of all friendly units
-	std::unordered_set<Mob*> matching_mobs = agent->mobH->filter_by_flags(mobs, flags);
+	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
+	std::unordered_set<Mob*> matching_mobs = agent->mobH->filterByFlags(mobs, flags);
 
 	// get only units near the assignee_location parameter
 	if (assignee == MATCH_FLAGS_NEAR_LOCATION) {
-		matching_mobs = filter_near_location(matching_mobs, assignee_location, assignee_proximity);
+		matching_mobs = filterNearLocation(matching_mobs, assignee_location, assignee_proximity);
 	}
 
 	// no units match the condition(s)
@@ -463,18 +463,18 @@ bool Directive::execute_match_flags(BasicSc2Bot* agent) {
 	/* * * * * * * * * * */
 }
 
-bool Directive::execute_order_for_unit_type_with_location(BasicSc2Bot* agent) {
+bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 	const sc2::AbilityData ability_data = agent->Observation()->GetAbilityData()[(int)ability]; // various info about the ability
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
 	sc2::Point2D location = target_location;
-	std::unordered_set<Mob*> mobs = agent->mobH->get_mobs();
+	std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
 	Mob* mob = nullptr;
 
 	if (action_type == ACTION_TYPE::NEAR_LOCATION) {
 		location = uniform_random_point_in_circle(target_location, proximity);
 	}
 
-	mobs = filter_by_unit_type(mobs, unit_type);
+	mobs = filterByUnitType(mobs, unit_type);
 
 	// check if a unit of this type is already executing this order
 	//if (is_any_executing_order(mobs, ability)) {
@@ -486,7 +486,7 @@ bool Directive::execute_order_for_unit_type_with_location(BasicSc2Bot* agent) {
 		return false;
 	}
 
-	mobs = filter_by_has_ability(agent, mobs, ability);
+	mobs = filterByHasAbility(agent, mobs, ability);
 	if (mobs.size() == 0) {
 		return false;
 	}
@@ -496,7 +496,7 @@ bool Directive::execute_order_for_unit_type_with_location(BasicSc2Bot* agent) {
 	if (ability_data.is_building) {
 		
 		// if any unit is currently already on route to build this structure
-		if (if_any_on_route_to_build(agent, mobs)) {
+		if (ifAnyOnRouteToBuild(agent, mobs)) {
 			return false;
 		}
 
@@ -527,7 +527,7 @@ bool Directive::execute_order_for_unit_type_with_location(BasicSc2Bot* agent) {
 	}
 
 	if (allow_multiple) {
-		mobs = filter_not_assigned_to_this(mobs);
+		mobs = filterNotAssignedToThis(mobs);
 	}
 
 	if (mobs.size() == 0) {
@@ -535,7 +535,7 @@ bool Directive::execute_order_for_unit_type_with_location(BasicSc2Bot* agent) {
 	}
 
 	// get closest matching unit to target location
-	mob = get_closest_to_location(mobs, target_location);
+	mob = getClosestToLocation(mobs, target_location);
 
 	if (!mob) {
 		return false;
@@ -559,12 +559,12 @@ bool Directive::execute_order_for_unit_type_with_location(BasicSc2Bot* agent) {
 
 	/* ORDER IS EXECUTED */
 	if (ability_data.is_building)
-		mob->set_flag(FLAGS::IS_BUILDING_STRUCTURE);
+		mob->setFlag(FLAGS::IS_BUILDING_STRUCTURE);
 	return issueOrder(agent, mob, location);
 	/* * * * * * * * * * */
 }
 
-bool Directive::have_bundle() {
+bool Directive::haveBundle() {
 	// if this directive has other directives bundled with it
 	return (directive_bundle.size() > 0);
 }
@@ -574,7 +574,7 @@ size_t Directive::getID()
 	return id;
 }
 
-bool Directive::if_any_on_route_to_build(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_) {
+bool Directive::ifAnyOnRouteToBuild(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_) {
 	const sc2::ObservationInterface* obs = agent->Observation();
 
 	for (auto it = mobs_.begin(); it != mobs_.end(); ++it) {
@@ -587,7 +587,7 @@ bool Directive::if_any_on_route_to_build(BasicSc2Bot* agent, std::unordered_set<
 	return false;
 }
 
-bool Directive::is_building_structure(BasicSc2Bot* agent, Mob* mob_) {
+bool Directive::isBuildingStructure(BasicSc2Bot* agent, Mob* mob_) {
 	sc2::QueryInterface* query_interface = agent->Query();
 	const sc2::ObservationInterface* obs = agent->Observation();
 	std::vector<sc2::AbilityData> ability_data = obs->GetAbilityData();
@@ -611,7 +611,7 @@ bool Directive::is_building_structure(BasicSc2Bot* agent, Mob* mob_) {
 	return match;
 }
 
-bool Directive::is_any_executing_order(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
+bool Directive::isExecutingOrder(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
 	// check if any Mob in the vector is already executing the specified order
 	for (Mob* m : mobs_set) {
 		for (const auto& order : m->unit.orders) {
@@ -622,7 +622,7 @@ bool Directive::is_any_executing_order(std::unordered_set<Mob*> mobs_set, sc2::A
 	return false;
 }
 
-Mob* Directive::get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_) {
+Mob* Directive::getClosestToLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_) {
 	// return a pointer to the Mob object closest to a location
 
 	float lowest_distance = std::numeric_limits<float>::max();
@@ -651,7 +651,7 @@ bool Directive::allowMultiple(bool is_true) {
 	return false;
 }
 
-std::unordered_set<Mob*> Directive::filter_near_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_) {
+std::unordered_set<Mob*> Directive::filterNearLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_) {
 	// filters a vector of Mob* by only those within the specified distance to location
 	float sq_dist = pow(radius_, 2);
 
@@ -663,7 +663,7 @@ std::unordered_set<Mob*> Directive::filter_near_location(std::unordered_set<Mob*
 	return filtered_mobs;
 }
 
-std::unordered_set<Mob*> Directive::filter_not_building_structure(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set) {
+std::unordered_set<Mob*> Directive::filterNotBuildingStructure(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set) {
 	// returns only units that are not currently constructing a structure
 	
 	std::unordered_set<Mob*> filtered;
@@ -673,36 +673,36 @@ std::unordered_set<Mob*> Directive::filter_not_building_structure(BasicSc2Bot* a
 		[this, agent](Mob* m) { return !is_building_structure(agent, m); });
 		*/
 
-	filtered = agent->mobH->filter_by_flag(mobs_set, FLAGS::IS_BUILDING_STRUCTURE, false);
+	filtered = agent->mobH->filterByFlag(mobs_set, FLAGS::IS_BUILDING_STRUCTURE, false);
 	return filtered;
 
 }
 
-std::unordered_set<Mob*> Directive::filter_by_has_ability(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
+std::unordered_set<Mob*> Directive::filterByHasAbility(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
 	// get only mobs from set that have a specified ability
 
 	std::unordered_set<Mob*> mobs_filter;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(mobs_filter, mobs_filter.begin()),
-		[agent, this](Mob* m) { return agent->can_unit_use_ability(m->unit, ability); });
+		[agent, this](Mob* m) { return agent->canUnitUseAbility(m->unit, ability); });
 
 	return mobs_filter;
 }
 
-std::unordered_set<Mob*> Directive::filter_by_unit_type(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_) {
+std::unordered_set<Mob*> Directive::filterByUnitType(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_) {
 	std::unordered_set<Mob*> filtered;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
 		[this](Mob* m) { return m->unit.unit_type == unit_type; });
 	return filtered;
 }
 
-std::unordered_set<Mob*> Directive::filter_idle(std::unordered_set<Mob*> mobs_set) {
+std::unordered_set<Mob*> Directive::filterIdle(std::unordered_set<Mob*> mobs_set) {
 	std::unordered_set<Mob*> filtered;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
 		[this](Mob* m) { return (m->unit.orders).size() == 0; });
 	return filtered;
 }
 
-std::unordered_set<Mob*> Directive::filter_not_assigned_to_this(std::unordered_set<Mob*> mobs_set) {
+std::unordered_set<Mob*> Directive::filterNotAssignedToThis(std::unordered_set<Mob*> mobs_set) {
 	std::unordered_set<Mob*> filtered;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
 		[this](Mob* m) { 
@@ -715,7 +715,7 @@ std::unordered_set<Mob*> Directive::filter_not_assigned_to_this(std::unordered_s
 	return filtered;
 }
 
-Mob* Directive::get_random_mob_from_set(std::unordered_set<Mob*> mob_set) {
+Mob* Directive::getRandomMobFromSet(std::unordered_set<Mob*> mob_set) {
 	int index = rand() % mob_set.size();
 	auto it = mob_set.begin();
 	for (int i = 0; i < index; i++)
@@ -735,13 +735,13 @@ bool Directive::allowsMultiple() {
 	return allow_multiple;
 }
 
-bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
+bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
 
 	// if no ability override specified
 	if (ability_ == USE_DEFINED_ABILITY)
 		ability_ = ability;
 
-	bool apply_bundle = have_bundle();
+	bool apply_bundle = haveBundle();
 	
 	// handle case where more than one mob is being assigned the order
 	if (mobs_.size() > 1) {
@@ -762,7 +762,7 @@ bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*>
 		if (target_loc_ != INVALID_POINT && target_unit_ == nullptr) {
 			// if point is SEND_HOME, grab the first unit's home location instead
 			if (target_loc_ == SEND_HOME) {
-				target_loc_ = agent->mobH->getMob(*units.front()).get_home_location();
+				target_loc_ = agent->mobH->getMob(*units.front()).getHomeLocation();
 			}
 			agent->Actions()->UnitCommand(units, ability_, target_loc_, queued_);
 			action_success = true;
@@ -776,9 +776,9 @@ bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*>
 		if (action_success && assignee != DEFAULT_DIRECTIVE) {
 			for (auto m_ : mobs_) {
 				assignMob(m_);
-				agent->mobH->set_mob_busy(m_);
+				agent->mobH->setMobBusy(m_);
 				if (apply_bundle) {
-					m_->bundle_directives(directive_bundle);
+					m_->bundleDirectives(directive_bundle);
 					apply_bundle = false;  // bundle is only given to one mob
 				}
 			}
@@ -806,7 +806,7 @@ bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*>
 		// target location is specified
 		if (target_loc_ != INVALID_POINT && target_unit_ == nullptr) {
 			if (target_loc_ == SEND_HOME) {
-				target_loc_ = mob_->get_home_location();
+				target_loc_ = mob_->getHomeLocation();
 			}
 			agent->Actions()->UnitCommand(&mob_->unit, ability_, target_loc_, queued_);
 			action_success = true;
@@ -830,11 +830,11 @@ bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*>
 
 			assignMob(mob_);
 
-			agent->mobH->set_mob_busy(mob_);
+			agent->mobH->setMobBusy(mob_);
 			mob_->assignDirective(this);
 
 			if (apply_bundle) 
-				mob_->bundle_directives(directive_bundle);
+				mob_->bundleDirectives(directive_bundle);
 
 			return true;
 		}
@@ -844,27 +844,27 @@ bool Directive::_generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*>
 }
 
 bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, INVALID_POINT, nullptr, queued_, ability_);
+	return _genericIssueOrder(agent, std::unordered_set<Mob*>{ mob_ }, INVALID_POINT, nullptr, queued_, ability_);
 }
 
 bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, target_loc_, nullptr, queued_, ability_);
+	return _genericIssueOrder(agent, std::unordered_set<Mob*>{ mob_ }, target_loc_, nullptr, queued_, ability_);
 }
 
 bool Directive::issueOrder(BasicSc2Bot* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, std::unordered_set<Mob*>{ mob_ }, INVALID_POINT, target_unit_, queued_, ability_);
+	return _genericIssueOrder(agent, std::unordered_set<Mob*>{ mob_ }, INVALID_POINT, target_unit_, queued_, ability_);
 }
 
 bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, mobs_, INVALID_POINT, nullptr, queued_, ability_);
+	return _genericIssueOrder(agent, mobs_, INVALID_POINT, nullptr, queued_, ability_);
 }
 
 bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, mobs_, target_loc_, nullptr, queued_, ability_);
+	return _genericIssueOrder(agent, mobs_, target_loc_, nullptr, queued_, ability_);
 }
 
 bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, const sc2::Unit* target_unit_, bool queued_, sc2::ABILITY_ID ability_) {
-	return _generic_issueOrder(agent, mobs_, INVALID_POINT, target_unit_, queued_, ability_);
+	return _genericIssueOrder(agent, mobs_, INVALID_POINT, target_unit_, queued_, ability_);
 }
 
 bool Directive::setDefault() {

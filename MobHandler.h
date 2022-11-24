@@ -13,18 +13,18 @@ class BasicSc2Bot;
 class MobHandler {
 public:
     MobHandler(BasicSc2Bot* agent);
-    void set_mob_idle(Mob* mob_, bool is_true=true);
-    void set_mob_busy(Mob* mob_, bool is_true=true);
+    void setMobIdle(Mob* mob_, bool is_true=true);
+    void setMobBusy(Mob* mob_, bool is_true=true);
     bool addMob(Mob mob_);
-    bool mob_exists(const sc2::Unit& unit);
+    bool mobExists(const sc2::Unit& unit);
     Mob& getMob(const sc2::Unit& unit);
     void mobDeath(Mob* mob_);
     std::unordered_set<Mob*> getIdleWorkers();
-    std::unordered_set<Mob*> filter_by_flag(std::unordered_set<Mob*> mobs_set, FLAGS flag, bool is_true=true);
-    std::unordered_set<Mob*> filter_by_flags(std::unordered_set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list, bool is_true=true);
-    std::unordered_set<Mob*> get_mobs();
-    std::unordered_set<Mob*> get_idle_mobs();
-    std::unordered_set<Mob*> get_busy_mobs();
+    std::unordered_set<Mob*> filterByFlag(std::unordered_set<Mob*> mobs_set, FLAGS flag, bool is_true=true);
+    std::unordered_set<Mob*> filterByFlags(std::unordered_set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list, bool is_true=true);
+    std::unordered_set<Mob*> getMobs();
+    std::unordered_set<Mob*> getIdleMobs();
+    std::unordered_set<Mob*> getBusyMobs();
     std::unordered_set<Mob*> getMobGroupByName(std::string mobName);
     
 private:
