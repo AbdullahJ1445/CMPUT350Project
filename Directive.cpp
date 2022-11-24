@@ -25,6 +25,11 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	update_assignee_location = false;
 	update_target_location = false;
 	group_name = group_name_;
+	continuous_update = false;
+	target_update_iter_id = 0;
+	assignee_update_iter_id = 0;
+	debug = false;
+
 
 	// assignee using match flags assigns multiple units, so force `allow_multiple = true`
 	if (assignee == ASSIGNEE::MATCH_FLAGS || assignee == ASSIGNEE::MATCH_FLAGS_NEAR_LOCATION) {
@@ -99,6 +104,10 @@ bool Directive::execute(BasicSc2Bot* agent) {
 		//std::cout << "order targetting " << target_location.x << "," << target_location.y << std::endl;
 	}
 
+	if (debug) {
+		std::cout << "(exe)";
+	}
+
 	// ensure proper variables are set for the specified ASSIGNEE and ACTION_TYPE
 
 	if (assignee == ASSIGNEE::UNIT_TYPE || assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION) {
@@ -129,10 +138,12 @@ bool Directive::execute(BasicSc2Bot* agent) {
 		if (target_location == NO_POINT_FOUND) {
 			return false;
 		}
+
 	}
 
 	if (assignee == ASSIGNEE::UNIT_TYPE || assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION) {
-		if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION) {
+		if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION ||
+			action_type == ACTION_TYPE::GET_MINERALS_NEAR_LOCATION) {
 			
 			if (ability == sc2::ABILITY_ID::BUILD_ASSIMILATOR ||
 				ability == sc2::ABILITY_ID::BUILD_EXTRACTOR ||
@@ -165,6 +176,13 @@ bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 	if (!mob) {
 		return false;
 	}
+
+	sc2::Point2D location = target_location;
+
+	if (location == ASSIGNED_LOCATION) {
+		location = mob->getAssignedLocation();
+	}
+
 	if (update_assignee_location)
 		updateAssigneeLocation(agent);
 
@@ -178,25 +196,27 @@ bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 		// Note: this order cannot have further queued directives attached,
 		//       as harvesting continues indefinitely
 		
-		if (mob->isCarryingMinerals()) {
+		
+		//if (mob->is_carrying_minerals()) {
 			// if unit is carrying minerals, return them to the townhall instead
-			const sc2::Unit* townhall = agent->locH->getNearestTownhall(target_location);
-			if (!townhall)
-				return false;
+		//	const sc2::Unit* townhall = agent->locH->getNearestTownhall(location);
+		//	if (!townhall)
+		//		return false;
 
 			/* ORDER IS EXECUTED */
-			return issueOrder(agent, mob, false, sc2::ABILITY_ID::HARVEST_RETURN);
+		//	return issueOrder(agent, mob, false, sc2::ABILITY_ID::HARVEST_RETURN);
 			/* * * * * * * * * * */
-		}
+		//}
+	
 
-		const sc2::Unit* mineral_target = agent->locH->getNearestMineralPatch(target_location);
+		const sc2::Unit* mineral_target = agent->locH->getNearestMineralPatch(location);
 
 		if (!mineral_target) {
 			return false;
 		}
 
 		/* ORDER IS EXECUTED */
-		return issueOrder(agent, mob, mineral_target);
+		return issueOrder(agent, mob, mineral_target, false, sc2::ABILITY_ID::HARVEST_GATHER);
 		//agent->Actions()->UnitCommand(&mob->unit, ability, mineral_target);
 		/* * * * * * * * * * */
 	}
@@ -207,7 +227,7 @@ bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 		
 		if (mob->isCarryingGas()) {
 			// if unit is carrying gas, return them to the townhall instead
-			const sc2::Unit* townhall = agent->locH->getNearestTownhall(target_location);
+			const sc2::Unit* townhall = agent->locH->getNearestTownhall(location);
 			if (!townhall)
 				return false;
 
@@ -216,12 +236,12 @@ bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 			/* * * * * * * * * * */
 		}
 
-		const sc2::Unit* gas_target = agent->locH->getNearestGasStructure(target_location);
+		const sc2::Unit* gas_target = agent->locH->getNearestGasStructure(location);
 		if (!gas_target) {
 			return false;
 		}
 		/* ORDER IS EXECUTED */
-		return issueOrder(agent, mob, gas_target);
+		return issueOrder(agent, mob, false, sc2::ABILITY_ID::SMART);
 		/* * * * * * * * * * */
 	}
 	if (action_type == SIMPLE_ACTION) {
@@ -231,13 +251,13 @@ bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 		/* * * * * * * * * * */
 	}
 	if (action_type == EXACT_LOCATION || action_type == NEAR_LOCATION) {
-		sc2::Point2D location = target_location;
+		sc2::Point2D loc = location;
 
 		if (action_type == NEAR_LOCATION)
-			location = uniform_random_point_in_circle(target_location, proximity);
+			loc = uniform_random_point_in_circle(location, proximity);
 
 		/* ORDER IS EXECUTED */
-		return issueOrder(agent, mob, location);
+		return issueOrder(agent, mob, loc);
 		/* * * * * * * * * * */
 	}
 	return false;
@@ -470,6 +490,10 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
 	Mob* mob = nullptr;
 
+	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
+		mobs = filterNearLocation(mobs, assignee_location, assignee_proximity);
+	}
+
 	if (action_type == ACTION_TYPE::NEAR_LOCATION) {
 		location = uniform_random_point_in_circle(target_location, proximity);
 	}
@@ -486,7 +510,8 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 		return false;
 	}
 
-	mobs = filterByHasAbility(agent, mobs, ability);
+
+	mobs = filter_by_has_ability(agent, mobs, ability);
 	if (mobs.size() == 0) {
 		return false;
 	}
@@ -499,6 +524,7 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 		if (ifAnyOnRouteToBuild(agent, mobs)) {
 			return false;
 		}
+
 
 		int i = 0;
 		if (action_type == ACTION_TYPE::NEAR_LOCATION) {
@@ -518,8 +544,8 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 			}
 		}
 
-		// filter only those not currently building a structure
-		//mobs = filter_not_building_structure(agent, mobs);
+	// filter only those not currently building a structure
+	mobs = filter_not_building_structure(agent, mobs);
 
 		if (mobs.size() == 0) {
 			return false;
@@ -541,6 +567,30 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 		return false;
 	}
 
+	if (action_type == GET_MINERALS_NEAR_LOCATION) {
+
+		// Note: this order should not have further queued directives attached,
+		//       as harvesting continues indefinitely
+
+
+		const sc2::Unit* mineral_target = agent->locH->getNearestMineralPatch(target_location);
+
+		if (!mineral_target) {
+			return false;
+		}
+
+		/* ORDER IS EXECUTED */
+		bool ordersuccess = false;
+		ordersuccess = issueOrder(agent, mob, mineral_target->pos, false, sc2::ABILITY_ID::GENERAL_MOVE);
+		//ordersuccess = issueOrder(agent, mob, mineral_target, false, sc2::ABILITY_ID::SMART);
+		if (ordersuccess) {
+			mob->set_assigned_location(target_location);
+		}
+		return ordersuccess;
+		//return issueOrder(agent, mob, mineral_target->pos, false, sc2::ABILITY_ID::GENERAL_MOVE);
+		/* * * * * * * * * * */
+	}
+
 	// if the ability does not require a target location
 	if (ability_data.target == sc2::AbilityData::Target::None) {
 		
@@ -558,9 +608,12 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 	// else, the ability requires a target location
 
 	/* ORDER IS EXECUTED */
-	if (ability_data.is_building)
-		mob->setFlag(FLAGS::IS_BUILDING_STRUCTURE);
-	return issueOrder(agent, mob, location);
+	bool order_success = false;
+	order_success = issueOrder(agent, mob, location);
+	if (order_success && ability_data.is_building) {
+		mob->set_flag(FLAGS::IS_BUILDING_STRUCTURE);
+	}
+	return order_success;
 	/* * * * * * * * * * */
 }
 
@@ -642,6 +695,14 @@ sc2::ABILITY_ID Directive::getAbilityID()
 	return ability;
 }
 
+int Directive::getTargetUpdateIterationID() {
+	return target_update_iter_id;
+}
+
+int Directive::getAssigneeUpdateIterationID() {
+	return assignee_update_iter_id;
+}
+
 bool Directive::allowMultiple(bool is_true) {
 	// allow this directive to be assigned to more than one Mob
 	if (!locked) {
@@ -651,7 +712,12 @@ bool Directive::allowMultiple(bool is_true) {
 	return false;
 }
 
-std::unordered_set<Mob*> Directive::filterNearLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_) {
+void Directive::setContinuous(bool is_true) {
+	// when true, this directive will continuously re-issue orders when locations are updated to new values
+	continuous_update = is_true;
+}
+
+std::unordered_set<Mob*> Directive::filter_near_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_) {
 	// filters a vector of Mob* by only those within the specified distance to location
 	float sq_dist = pow(radius_, 2);
 
@@ -708,8 +774,10 @@ std::unordered_set<Mob*> Directive::filterNotAssignedToThis(std::unordered_set<M
 		[this](Mob* m) { 
 			if (!m->hasCurrentDirective())
 				return true;
-			if (m->getCurrentDirective()->getID() == getID())
+			if (m->getCurrentDirective()->getID() == getID() &&
+				(!continuous_update || m->getCurrentDirective()->getTargetUpdateIterationID() == target_update_iter_id)) {
 				return false;
+			}
 			return true;
 		});
 	return filtered;
@@ -723,6 +791,10 @@ Mob* Directive::getRandomMobFromSet(std::unordered_set<Mob*> mob_set) {
 		it++;
 	}
 	return *it;
+}
+
+void Directive::setDebug(bool is_true) {
+	debug = is_true;
 }
 
 void Directive::lock() {
@@ -741,10 +813,35 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 	if (ability_ == USE_DEFINED_ABILITY)
 		ability_ = ability;
 
+
+	sc2::Point2D location = target_loc_;
+
 	bool apply_bundle = haveBundle();
 	
 	// handle case where more than one mob is being assigned the order
 	if (mobs_.size() > 1) {
+		
+		// check mobs_ for units already assigned this directive
+		for (auto iter = mobs_.begin(); iter != mobs_.end(); ) {
+			auto next = std::next(iter);
+			if ((*iter)->hasCurrentDirective()) {
+				Directive* curr_dir = (*iter)->getCurrentDirective();
+				// if mob at iter is already assigned to this directive
+				if (curr_dir->getID() == getID()) {
+					// if continuous_update, erase only if target_location is the same
+					if (!continuous_update ||
+						continuous_update && curr_dir->getTargetUpdateIterationID() == target_update_iter_id) {
+						mobs_.erase(*iter);
+					}
+				}
+			}
+			iter = next;
+		}
+
+		if (mobs_.empty()) {
+			return false;
+		}		
+		
 		sc2::Units units;
 		for (auto m_ : mobs_) {
 			units.push_back(&(m_->unit));
@@ -773,13 +870,22 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 			agent->Actions()->UnitCommand(units, ability_, target_unit_, queued_);
 			action_success = true;
 		}
-		if (action_success && assignee != DEFAULT_DIRECTIVE) {
-			for (auto m_ : mobs_) {
-				assignMob(m_);
-				agent->mobH->setMobBusy(m_);
-				if (apply_bundle) {
-					m_->bundleDirectives(directive_bundle);
-					apply_bundle = false;  // bundle is only given to one mob
+		if (action_success) {
+			if (assignee != DEFAULT_DIRECTIVE) {
+				for (auto m_ : mobs_) {
+					assignMob(m_);
+					agent->mobH->setMobBusy(m_);
+					if (apply_bundle) {
+						m_->bundle_directives(directive_bundle);
+						apply_bundle = false;  // bundle is only given to one mob
+					}
+				}
+			}
+			else {
+				for (auto iter = mobs_.begin(); iter != mobs_.end(); ) {
+					auto next = std::next(iter);
+					agent->mobH->setMobIdle((*iter), false);
+					iter = next;
 				}
 			}
 		}
@@ -787,10 +893,15 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 	else {
 		// handle case where only one mob is being assigned the order
 
+		if (ability == TWI) {
+			std::cout << "(1)";
+		}
+
 		// this order already has a mob
 		if (!allow_multiple && hasAssignedMob()) {
 			return false;
 		}
+
 
 
 		Mob* mob_ = &agent->mobH->getMob((*mobs_.begin())->unit);
@@ -818,25 +929,38 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 			action_success = true;
 		}
 
-		if (action_success && assignee != DEFAULT_DIRECTIVE) {
-			Directive* last_directive = mob_->getCurrentDirective();
+		if (action_success) {
+			if (ability == TWI) {
+				std::cout << "(2)";
+			}
+			if (assignee != DEFAULT_DIRECTIVE) {
+				Directive* last_directive = mob_->getCurrentDirective();
 
-			// free up the previous directive from this mob
-			if (last_directive != nullptr) {
-				last_directive->unassignMob(mob_);
+				// free up the previous directive from this mob
+				if (last_directive != nullptr) {
+					last_directive->unassignMob(mob_);
+				}
+				else {
+				}
+
+				assignMob(mob_);
+
+				agent->mobH->setMobBusy(mob_);
+				mob_->assignDirective(this);
+
+				if (apply_bundle)
+					mob_->bundleDirectives(directive_bundle);
+
+				return true;
 			}
 			else {
+				Directive* last_directive = mob_->getCurrentDirective();
+				if (last_directive != nullptr) {
+					last_directive->unassignMob(mob_);
+				}
+				agent->mobH->setMobIdle(mob_, false);
+				return true;
 			}
-
-			assignMob(mob_);
-
-			agent->mobH->setMobBusy(mob_);
-			mob_->assignDirective(this);
-
-			if (apply_bundle) 
-				mob_->bundleDirectives(directive_bundle);
-
-			return true;
 		}
 	}
 	
@@ -921,15 +1045,24 @@ void Directive::setAssigneeLocationFunction(BasicSc2Bot* agent_, std::function<s
 }
 
 void Directive::updateAssigneeLocation(BasicSc2Bot* agent_) {
+	static int a_iter_id = 0;
+	sc2::Point2D prev_location = assignee_location;
 	assignee_location = assignee_location_function();
+	if (prev_location != assignee_location) {
+		assignee_update_iter_id = a_iter_id++;
+	}
 }
 
 void Directive::updateTargetLocation(BasicSc2Bot* agent_) {
-
+	static int t_iter_id = 0;
+	sc2::Point2D prev_location = target_location;
 	target_location = target_location_function();
 	//std::cout << "target location updated to be (" << target_location.x << ", " << target_location.y << ")" << std::endl;
 	if (target_location == NO_POINT_FOUND) {
 		target_location == SEND_HOME;
+	}
+	if (prev_location != target_location) {
+		target_update_iter_id = t_iter_id++;
 	}
 }
 

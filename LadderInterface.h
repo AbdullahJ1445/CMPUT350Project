@@ -152,10 +152,12 @@ static void runBot(int argc, char *argv[], sc2::Agent *Agent, sc2::Race race)
 			CreateComputer(Options.computerRace, Options.computerDifficulty)
 			});
 
-		// my code
-		coordinator.SetRealtime(true);
 
 		coordinator.LoadSettings(1, argv);
+
+		// my code
+		//coordinator.SetRealtime(true);
+
 		coordinator.LaunchStarcraft();
 		coordinator.StartGame(Options.map);
 	}

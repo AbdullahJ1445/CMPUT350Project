@@ -148,11 +148,21 @@ const sc2::Unit* LocationHandler::getNearestMineralPatch(sc2::Point2D location) 
 
 const sc2::Unit* LocationHandler::getNearestGeyser(sc2::Point2D location) {
     const sc2::ObservationInterface* obs = agent->Observation();
-    sc2::Units units = agent->Observation()->GetUnits(sc2::Unit::Alliance::Neutral);
+    sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Neutral);
     float distance = std::numeric_limits<float>::max();
     const sc2::Unit* target = nullptr;
     for (const auto& u : units) {
-        if (agent->isGeyser(u)) {
+        if (agent->is_geyser(u)) {
+            sc2::Point2D geyser_loc = u->pos;
+            // check if geyser already is being mined
+            const sc2::Unit* nearest_gas = getNearestGasStructure(geyser_loc);
+            if (nearest_gas) {
+                sc2::Point2D gas_structure_loc = nearest_gas->pos;
+                // do not consider geyser with structure already built on it
+                if (geyser_loc == gas_structure_loc) {
+                    continue;
+                }
+            }
             float d = sc2::DistanceSquared2D(u->pos, location);
             if (d < distance) {
                 distance = d;
@@ -163,9 +173,16 @@ const sc2::Unit* LocationHandler::getNearestGeyser(sc2::Point2D location) {
     return target;
 }    
 
-const sc2::Unit* LocationHandler::getNearestGasStructure(sc2::Point2D location) {
+const sc2::Unit* LocationHandler::getNearestGasStructure(sc2::Point2D location, bool allied) {
     const sc2::ObservationInterface* obs = agent->Observation();
-    sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
+    sc2::Units units;
+    if (allied) {
+        units = obs->GetUnits(sc2::Unit::Alliance::Self);
+    }
+    else {
+        units = obs->GetUnits(sc2::Unit::Alliance::Self);
+    }
+    
     float distance = std::numeric_limits<float>::max();
     const sc2::Unit* target = nullptr;
     for (const auto& u : units) {
@@ -225,6 +242,16 @@ MapChunk* LocationHandler::getChunkByCoords(std::pair<float, float> coords) {
     return map_chunk_by_coords[coords];
 }
 
+sc2::Point2D LocationHandler::getEnemyLocation()
+{
+    if (!enemy_start_locations.empty()) {
+        return enemy_start_locations.front();
+    }
+    else {
+        return NO_POINT_FOUND;
+    }
+}
+
 sc2::Point2D LocationHandler::smartAttackLocation(bool pathable_) {
     // first returns the highest threat location
     // if none found, then returns the oldest location, meaning the location
@@ -258,8 +285,9 @@ sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
     }
 
     if (unseen) {
-        //std::cout << "(unseen)";
-        return getClosestUnseenLocation(pathable_);
+        
+        //return getClosestUnseenLocation(pathable_);
+        return getFurthestUnseenLocation(pathable_);
     }
     //std::cout << "(no-unseen)";
 
@@ -331,6 +359,62 @@ sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
     return closest_loc;
 }
 
+sc2::Point2D LocationHandler::getFurthestUnseenLocation(bool pathable_) {
+    // checks for the unseen MapChunk point where the closest mob to it is as far away as possible
+
+    std::unordered_set<MapChunk*> chunkset;
+    std::unordered_set<MapChunk*> unseen_chunks;
+    if (pathable_)
+        chunkset = pathable_map_chunks;
+    else
+        chunkset = map_chunks;
+
+    for (auto it = chunkset.begin(); it != chunkset.end(); ++it) {
+        if (!(*it)->wasSeen()) {
+            unseen_chunks.insert(*it);
+        }
+    }
+
+    if (unseen_chunks.empty()) {
+        std::cout << "unseen_chunks.empty() ";
+        return NO_POINT_FOUND;
+    }
+
+    std::unordered_set<Mob*> mobs = agent->mobH->get_mobs();
+    std::unordered_set<Mob*> flying_mobs = agent->mobH->filter_by_flag(mobs, FLAGS::IS_FLYING);
+
+    // should not happen, but lets make sure... this would mean game over
+    if (mobs.empty())
+        return NO_POINT_FOUND;
+
+    float furthest_dist = 0;
+    sc2::Point2D furthest_loc = NO_POINT_FOUND;
+
+    for (auto it = unseen_chunks.begin(); it != unseen_chunks.end(); ++it) {
+        sc2::Point2D loc = (*it)->getLocation();
+        Mob* closest_mob = nullptr;
+        if (!pathable_ && !(*it)->isPathable()) {
+            // if a chunk can only be reached by flying units
+            closest_mob = Directive::get_closest_to_location(flying_mobs, loc);
+        }
+        else {
+            closest_mob = Directive::get_closest_to_location(mobs, loc);
+        }
+
+        if (closest_mob == nullptr)
+            continue;
+
+        float dist = sc2::DistanceSquared2D(closest_mob->unit.pos, loc);
+        if (dist > furthest_dist) {
+            furthest_loc = loc;
+            furthest_dist = dist;
+        }
+    }
+
+    return furthest_loc;
+}
+
+
 int LocationHandler::getPlayerIDForMap(int map_index, sc2::Point2D location) {
     location = getNearestStartLocation(location);
     int p_id = 0;
@@ -393,6 +477,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
 
             Base main_base(observation->GetStartLocation());
             main_base.addBuildArea(32, 147);
+            main_base.addBuildArea(47, 151);
             bases.push_back(main_base);
 
             Base exp_1(66.5, 161.5);
@@ -438,6 +523,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         else if (p_id == 2) {
             Base main_base(observation->GetStartLocation());
             main_base.addBuildArea(147, 160);
+            main_base.addBuildArea(151, 145);
             bases.push_back(main_base);
 
             Base exp_1(161.5, 125.5);
@@ -446,7 +532,8 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         }
         else if (p_id == 3) {
             Base main_base(observation->GetStartLocation());
-            main_base.addBuildArea(128, 40);
+            main_base.addBuildArea(160, 45);
+            main_base.addBuildArea(145, 41);
             bases.push_back(main_base);
 
             Base exp_1(125.5, 30.5);
@@ -456,6 +543,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         else if (p_id == 4) {
             Base main_base(observation->GetStartLocation());
             main_base.addBuildArea(45, 32);
+            main_base.addBuildArea(41, 47);
             bases.push_back(main_base);
 
             Base exp_1(30.5, 66.5);
