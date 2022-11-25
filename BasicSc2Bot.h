@@ -48,14 +48,14 @@ public:
 	int getMapIndex();
 
 	// various bool functions
-	bool have_upgrade(const sc2::UpgradeID upgrade_);
-	bool can_unit_use_ability(const sc2::Unit& unit, const sc2::ABILITY_ID ability_);
-	bool is_structure(const sc2::Unit* unit);
-	bool is_mineral_patch(const sc2::Unit* unit_);
-	bool is_geyser(const sc2::Unit* unit_);
+	bool haveUpgrade(const sc2::UpgradeID upgrade_);
+	bool canUnitUseAbility(const sc2::Unit& unit, const sc2::ABILITY_ID ability_);
+	bool isStructure(const sc2::Unit* unit);
+	bool isMineralPatch(const sc2::Unit* unit_);
+	bool isGeyser(const sc2::Unit* unit_);
 
 	// various getters
-	std::vector<sc2::Attribute> get_attributes(const sc2::Unit* unit);
+	std::vector<sc2::Attribute> getAttributes(const sc2::Unit* unit);
 	sc2::UnitTypeData getUnitTypeData(const sc2::Unit* unit);
 	int getMineralCost(const sc2::Unit* unit);
 	int getGasCost(const sc2::Unit* unit);

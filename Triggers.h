@@ -62,15 +62,15 @@ public:
 	class TriggerCondition;
 
 	Trigger(BasicSc2Bot* agent_);
-	void add_condition(TriggerCondition tc_);
-	void add_condition(COND cond_type_, int cond_value_);
-	void add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
-	void add_condition(COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_=true);
-	void add_condition(COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_=true);
-	void add_condition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_);
-	void add_condition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
-	void add_condition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
-	bool check_conditions();
+	void addCondition(TriggerCondition tc_);
+	void addCondition(COND cond_type_, int cond_value_);
+	void addCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
+	void addCondition(COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_=true);
+	void addCondition(COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_=true);
+	void addCondition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_);
+	void addCondition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
+	void addCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
+	bool checkConditions();
 	void setDebug(bool is_true=true);
 	BasicSc2Bot* getAgent();
 

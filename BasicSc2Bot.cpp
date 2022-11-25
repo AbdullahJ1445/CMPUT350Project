@@ -38,7 +38,7 @@ bool BasicSc2Bot::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structur
 	
 	// get a filtered set of workers that are currently assigned to minerals
 	std::unordered_set<FLAGS> flags{ FLAGS::IS_WORKER, FLAGS::IS_MINERAL_GATHERER };
-	std::unordered_set<Mob*> worker_miners = mobH->filter_by_flags(mobH->get_mobs(), flags);
+	std::unordered_set<Mob*> worker_miners = mobH->filterByFlags(mobH->getMobs(), flags);
 
 	//std::unordered_set<Mob*> worker_miners = filter_by_flag(mobs, FLAGS::IS_MINERAL_GATHERER);
 	float distance = std::numeric_limits<float>::max();
@@ -52,8 +52,8 @@ bool BasicSc2Bot::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structur
 		}
 	}
 	if (found_viable_unit) {
-		target->remove_flag(FLAGS::IS_MINERAL_GATHERER);
-		target->set_flag(FLAGS::IS_GAS_GATHERER);
+		target->removeFlag(FLAGS::IS_MINERAL_GATHERER);
+		target->setFlag(FLAGS::IS_GAS_GATHERER);
 
 		// make the unit continue to mine gas after being idle
 		Directive directive_get_gas(Directive::DEFAULT_DIRECTIVE, Directive::GET_GAS_NEAR_LOCATION, target->unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, gas_structure.pos);
@@ -92,7 +92,7 @@ Directive* BasicSc2Bot::getLastStoredDirective()
 }
 
 
-bool BasicSc2Bot::have_upgrade(const sc2::UpgradeID upgrade_) {
+bool BasicSc2Bot::haveUpgrade(const sc2::UpgradeID upgrade_) {
 	// return true if the bot has fully researched the specified upgrade
 
 	const sc2::ObservationInterface* observation = Observation();
@@ -101,7 +101,7 @@ bool BasicSc2Bot::have_upgrade(const sc2::UpgradeID upgrade_) {
 }
 
 
-bool BasicSc2Bot::can_unit_use_ability(const sc2::Unit& unit, const sc2::ABILITY_ID ability_) {
+bool BasicSc2Bot::canUnitUseAbility(const sc2::Unit& unit, const sc2::ABILITY_ID ability_) {
 	// check if a unit is able to use a given ability
 
 	sc2::QueryInterface* query_interface = Query();
@@ -116,7 +116,7 @@ bool BasicSc2Bot::can_unit_use_ability(const sc2::Unit& unit, const sc2::ABILITY
 
 
 
-bool BasicSc2Bot::is_structure(const sc2::Unit* unit) {
+bool BasicSc2Bot::isStructure(const sc2::Unit* unit) {
 	// check if unit is a structure
 	return (std::find(data_buildings.begin(), data_buildings.end(), unit->unit_type) != data_buildings.end());
 }
@@ -134,7 +134,7 @@ void BasicSc2Bot::storeLocation(std::string identifier_, sc2::Point2D location_)
 	special_locations[identifier_] = location_;
 }
 
-bool BasicSc2Bot::is_mineral_patch(const sc2::Unit* unit_) {
+bool BasicSc2Bot::isMineralPatch(const sc2::Unit* unit_) {
 	// check whether a given unit is a mineral patch
 
 	sc2::UNIT_TYPEID type_ = unit_->unit_type;
@@ -171,7 +171,7 @@ int BasicSc2Bot::getMapIndex()
 	return map_index;
 }
 
-bool BasicSc2Bot::is_geyser(const sc2::Unit* unit_) {
+bool BasicSc2Bot::isGeyser(const sc2::Unit* unit_) {
 	// check whether a given unit is a geyser
 
 	sc2::UNIT_TYPEID type_ = unit_->unit_type;
@@ -184,7 +184,7 @@ bool BasicSc2Bot::is_geyser(const sc2::Unit* unit_) {
 }
 
 
-std::vector<sc2::Attribute> BasicSc2Bot::get_attributes(const sc2::Unit* unit) {
+std::vector<sc2::Attribute> BasicSc2Bot::getAttributes(const sc2::Unit* unit) {
 	// get attributes for a unit
 
 	return getUnitTypeData(unit).attributes;
@@ -225,7 +225,7 @@ float BasicSc2Bot::getValue(const sc2::Unit* unit) {
 
 	float value = mineral_cost * MINERAL_VALUE + gas_cost * GAS_VALUE + food_cost * FOOD_VALUE;
 
-	if (is_structure(unit)) {
+	if (isStructure(unit)) {
 		// structures locations should be high priority targets
 		value *= 10;
 	}
@@ -333,7 +333,7 @@ void BasicSc2Bot::OnGameStart() {
 	std::cout << " " << data_buildings.size() << " building types." << std::endl;
 
 	std::cout << "Start Location: " << start_location.x << "," << start_location.y << std::endl;
-	std::cout << "Build Area 0: " << locH->bases[0].get_build_area(0).x << "," << locH->bases[0].get_build_area(0).y << std::endl;
+	std::cout << "Build Area 0: " << locH->bases[0].getBuildArea(0).x << "," << locH->bases[0].getBuildArea(0).y << std::endl;
 	std::cout << "Proxy Location: " << proxy_location.x << "," << proxy_location.y << std::endl;
 }
 
@@ -437,7 +437,7 @@ void BasicSc2Bot::OnStep() {
 	}
 	*/
 	
-	std::unordered_set<Mob*> idle_mobs = mobH->get_idle_mobs();
+	std::unordered_set<Mob*> idle_mobs = mobH->getIdleMobs();
 	if (!idle_mobs.empty()) {
 		for (auto it = idle_mobs.begin(); it != idle_mobs.end(); ) {
 			auto next = std::next(it);
@@ -463,14 +463,14 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	const sc2::ObservationInterface* observation = Observation();
 	
 	// mob already exists
-	if (mobH->mob_exists(*unit))
+	if (mobH->mobExists(*unit))
 		return;
 
 	sc2::UNIT_TYPEID unit_type = unit->unit_type;
 	MOB mob_type; // which category of mob to create
 
 	// determine if unit is a structure
-	bool structure = is_structure(unit);
+	bool structure = isStructure(unit);
 	bool is_worker = false;
 	int base_index = locH->getIndexOfClosestBase(unit->pos);
 
@@ -498,9 +498,9 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 				|*   while the assimilator is under construction.                                           *|
 				|*   For some reason it does not trigger as idle after building this particular structure   */
 
-				std::unordered_set<Mob*> gas_builders = mobH->filter_by_flag(mobH->get_mobs(), FLAGS::BUILDING_GAS);
-				Mob* gas_builder = Directive::get_closest_to_location(gas_builders, unit->pos);
-				gas_builder->remove_flag(FLAGS::BUILDING_GAS);
+				std::unordered_set<Mob*> gas_builders = mobH->filterByFlag(mobH->getMobs(), FLAGS::BUILDING_GAS);
+				Mob* gas_builder = Directive::getClosestToLocation(gas_builders, unit->pos);
+				gas_builder->removeFlag(FLAGS::BUILDING_GAS);
 				Actions()->UnitCommand(&gas_builder->unit, sc2::ABILITY_ID::STOP);
 			}
 		}
@@ -508,22 +508,22 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	Mob new_mob(*unit, mob_type);
 
 	if (new_mob.unit.is_flying) {
-		new_mob.set_flag(FLAGS::IS_FLYING);
+		new_mob.setFlag(FLAGS::IS_FLYING);
 	}
 
-	new_mob.set_home_location(locH->bases[base_index].get_townhall());
+	new_mob.setHomeLocation(locH->bases[base_index].getTownhall());
 	if (is_worker) {
-		new_mob.set_assigned_location(new_mob.get_home_location());
+		new_mob.setAssignedLocation(new_mob.getHomeLocation());
 		Directive directive_get_minerals_near_birth(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION,
-			new_mob.unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, locH->bases[base_index].get_townhall());
+			new_mob.unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, locH->bases[base_index].getTownhall());
 		new_mob.assignDefaultDirective(directive_get_minerals_near_birth);
 	}
 	else {
 		if (!structure) {
-			new_mob.set_assigned_location(Directive::uniform_random_point_in_circle(new_mob.get_home_location(), 2.5F));
+			new_mob.setAssignedLocation(Directive::uniform_random_point_in_circle(new_mob.getHomeLocation(), 2.5F));
 		}
 		else {
-			new_mob.set_assigned_location(new_mob.get_home_location());
+			new_mob.setAssignedLocation(new_mob.getHomeLocation());
 		}
 	}
 	mobH->addMob(new_mob);	
@@ -547,14 +547,14 @@ void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 		int base_index = locH->getIndexOfClosestBase(unit->pos);
 		is_townhall = true;
 		std::cout << "expansion " << base_index << " has been activated." << std::endl;
-		locH->bases[base_index].set_active();
+		locH->bases[base_index].setActive();
 	}
 	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON ||
 		unit_type == sc2::UNIT_TYPEID::TERRAN_BUNKER ||
 		unit_type == sc2::UNIT_TYPEID::TERRAN_MISSILETURRET ||
 		unit_type == sc2::UNIT_TYPEID::ZERG_SPINECRAWLER ||
 		unit_type == sc2::UNIT_TYPEID::ZERG_SPORECRAWLER) {
-		mob->set_flag(FLAGS::IS_DEFENSE);
+		mob->setFlag(FLAGS::IS_DEFENSE);
 	}
 	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR ||
 		unit_type == sc2::UNIT_TYPEID::TERRAN_REFINERY ||
@@ -580,12 +580,12 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 	const sc2::ObservationInterface* observation = Observation();
 	// make Stalkers Blink away if low health
 	if (unit->unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER) {
-		if (have_upgrade(sc2::UPGRADE_ID::BLINKTECH)) {
+		if (haveUpgrade(sc2::UPGRADE_ID::BLINKTECH)) {
 			if (unit->health / unit->health_max < .3f) {
 				// check if Blink is on cooldown
-				if (can_unit_use_ability(*unit, sc2::ABILITY_ID::EFFECT_BLINK)) {
+				if (canUnitUseAbility(*unit, sc2::ABILITY_ID::EFFECT_BLINK)) {
 					std::cout << "(blink)";
-					Actions()->UnitCommand(unit, sc2::ABILITY_ID::EFFECT_BLINK, locH->bases[0].get_townhall());
+					Actions()->UnitCommand(unit, sc2::ABILITY_ID::EFFECT_BLINK, locH->bases[0].getTownhall());
 				}
 			}
 		}
@@ -594,7 +594,7 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 
 void BasicSc2Bot::OnUnitIdle(const sc2::Unit* unit) {
 	Mob* mob = &mobH->getMob(*unit);
-	mobH->set_mob_idle(mob, true);
+	mobH->setMobIdle(mob, true);
 	if (mob->hasCurrentDirective()) {
 		Directive* prev_dir = mob->getCurrentDirective();
 		size_t id = prev_dir->getID();

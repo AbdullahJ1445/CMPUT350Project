@@ -89,7 +89,7 @@ public:
 	int getAssigneeUpdateIterationID();
 	sc2::ABILITY_ID getAbilityID();
 	std::unordered_set<Mob*> getAssignedMobs();
-	static Mob* get_closest_to_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
+	static Mob* getClosestToLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
 	size_t getID();
 	Strategy* strategy_ref;    // testing this pointer
 	
@@ -99,28 +99,28 @@ private:
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D assignee_location_,
 		sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_, std::string group_name_);
 
-	bool execute_simple_action_for_unit_type(BasicSc2Bot* agent);
-	bool execute_build_gas_structure(BasicSc2Bot* agent);
+	bool executeSimpleActionForUnitType(BasicSc2Bot* agent);
+	bool executeBuildGasStructure(BasicSc2Bot* agent);
 	bool execute_protoss_nexus_chronoboost(BasicSc2Bot* agent);
-	bool execute_match_flags(BasicSc2Bot* agent);
-	bool execute_order_for_unit_type_with_location(BasicSc2Bot* agent);
-	bool have_bundle();
-	bool if_any_on_route_to_build(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_);
-	bool is_building_structure(BasicSc2Bot* agent, Mob* mob_);
-	bool has_build_order(Mob* mob_);
-	std::unordered_set<Mob*> filter_by_has_ability(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
-	bool is_any_executing_order(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
-	std::unordered_set<Mob*> filter_near_location(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_);
-	std::unordered_set<Mob*> filter_by_unit_type(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_);
-	std::unordered_set<Mob*> filter_not_building_structure(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set);
-	std::unordered_set<Mob*> filter_idle(std::unordered_set<Mob*> mobs_set);
-	std::unordered_set<Mob*> filter_not_assigned_to_this(std::unordered_set<Mob*> mobs_set);
-	Mob* get_random_mob_from_set(std::unordered_set<Mob*> mob_set);
+	bool executeMatchFlags(BasicSc2Bot* agent);
+	bool executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent);
+	bool haveBundle();
+	bool ifAnyOnRouteToBuild(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_);
+	bool isBuildingStructure(BasicSc2Bot* agent, Mob* mob_);
+	bool hasBuildOrder(Mob* mob_);
+	std::unordered_set<Mob*> filterByHasAbility(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
+	bool isExecutingOrder(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
+	std::unordered_set<Mob*> filterNearLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_);
+	std::unordered_set<Mob*> filterByUnitType(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_);
+	std::unordered_set<Mob*> filterNotBuildingStructure(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set);
+	std::unordered_set<Mob*> filterIdle(std::unordered_set<Mob*> mobs_set);
+	std::unordered_set<Mob*> filterNotAssignedToThis(std::unordered_set<Mob*> mobs_set);
+	Mob* getRandomMobFromSet(std::unordered_set<Mob*> mob_set);
 
 	void updateTargetLocation(BasicSc2Bot* agent_);
 	void updateAssigneeLocation(BasicSc2Bot* agent_);
 
-	bool _generic_issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
+	bool _genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, sc2::Point2D target_loc_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
 	bool issueOrder(BasicSc2Bot* agent, Mob* mob_, bool queued_=false, sc2::ABILITY_ID ability_=USE_DEFINED_ABILITY);
 	bool issueOrder(BasicSc2Bot* agent, Mob* mob_, sc2::Point2D target_loc_, bool queued_=false, sc2::ABILITY_ID ability_= USE_DEFINED_ABILITY);
 	bool issueOrder(BasicSc2Bot* agent, Mob* mob_, const sc2::Unit* target_unit_, bool queued_=false, sc2::ABILITY_ID ability_ = USE_DEFINED_ABILITY);
