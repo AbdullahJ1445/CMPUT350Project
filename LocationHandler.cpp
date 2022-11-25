@@ -16,6 +16,7 @@ MapChunk::MapChunk(BasicSc2Bot* agent_, sc2::Point2D location_, bool pathable_) 
     location = location_;
     last_seen = -1;
     threat = 0;
+    pathable = pathable_;
     dist_squared_from_start = agent->locH->distSquaredFromStart(location_);
 }
 
