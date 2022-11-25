@@ -75,7 +75,20 @@ void MobHandler::mobDeath(Mob* mob_)
 	for (auto f : mob->getFlags()) {
 		mob->removeFlag(f);
 	}
+	dead_mobs.insert(mob);
 	mobs.erase(mob);
+}
+
+int MobHandler::getNumDeadMobs() {
+	return dead_mobs.size();
+}
+
+bool MobHandler::nearbyMobsWithFlagsAttackTarget(std::unordered_set<FLAGS> flags, const sc2::Unit* unit, float range) {
+	Directive d(Directive::MATCH_FLAGS_NEAR_LOCATION, Directive::TARGET_UNIT_NEAR_LOCATION, flags, sc2::ABILITY_ID::ATTACK, unit->pos, unit->pos, range, 1.0F);
+	d.allowMultiple();
+	d.setDebug(true);
+	agent->storeDirective(d);
+	return d.execute(agent);
 }
 
 std::unordered_set<Mob*> MobHandler::getIdleWorkers() {

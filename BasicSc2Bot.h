@@ -40,11 +40,8 @@ public:
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
 	void storeDirective(Directive directive_);
 	void storeStrategy(Strategy strategy_);
-	Directive* getLastStoredDirective();
 	void storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_type_);
 	void storeLocation(std::string identifier_, sc2::Point2D location_);
-	sc2::UNIT_TYPEID getUnitType(std::string identifier_);
-	sc2::Point2D getStoredLocation(std::string identifier_);
 	int getMapIndex();
 
 	// various bool functions
@@ -61,6 +58,11 @@ public:
 	int getGasCost(const sc2::Unit* unit);
 	int getFoodCost(const sc2::Unit* unit);
 	float getValue(const sc2::Unit* unit);
+	sc2::UNIT_TYPEID getUnitType(std::string identifier_);
+	sc2::Point2D getStoredLocation(std::string identifier_);
+	Directive* getLastStoredDirective();
+	sc2::Race getEnemyRace();
+	std::unordered_set<const sc2::Unit*> getEnemyUnits();
 
 	// public variables 
 	//sc2::Point2D start_location;
@@ -108,5 +110,6 @@ private:
 	int player_start_id;
 	int enemy_start_id;
 	std::string map_name;
+	sc2::Race enemy_race;
 	int map_index; // 1 = CactusValleyLE,  2 = BelShirVestigeLE,  3 = ProximaStationLE
 };

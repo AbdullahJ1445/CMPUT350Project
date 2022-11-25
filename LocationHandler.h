@@ -73,6 +73,7 @@ public:
     sc2::Point2D getEnemyLocation();
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();
+    sc2::Point2D getCenterPathableLocation();
 
     void setHighestThreat(double threat_);
     double getHighestThreat();
@@ -138,5 +139,7 @@ private:
     MapChunk* high_threat_chunk_away_from_start;
     MapChunk* high_threat_pathable_chunk_away_from_start;
     float sq_dist_threshold;
+    sc2::Point2D map_center;
+    MapChunk* center_chunk;
     
 };

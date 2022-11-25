@@ -90,6 +90,7 @@ public:
 	sc2::ABILITY_ID getAbilityID();
 	std::unordered_set<Mob*> getAssignedMobs();
 	static Mob* getClosestToLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
+	static std::unordered_set<Mob*> filterNearLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_);
 	size_t getID();
 	Strategy* strategy_ref;    // testing this pointer
 	
@@ -110,7 +111,6 @@ private:
 	bool hasBuildOrder(Mob* mob_);
 	std::unordered_set<Mob*> filterByHasAbility(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
 	bool isExecutingOrder(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_);
-	std::unordered_set<Mob*> filterNearLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_);
 	std::unordered_set<Mob*> filterByUnitType(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_);
 	std::unordered_set<Mob*> filterNotBuildingStructure(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_set);
 	std::unordered_set<Mob*> filterIdle(std::unordered_set<Mob*> mobs_set);
