@@ -54,7 +54,13 @@ enum class COND {
 	MAX_UNITS_OF_TYPE_IN_GROUP,
 	MIN_UNITS_OF_TYPE_IN_GROUP,
 	MAX_UNITS_IN_GROUP_NEAR_LOCATION,
-	MIN_UNITS_IN_GROUP_NEAR_LOCATION
+	MIN_UNITS_IN_GROUP_NEAR_LOCATION,
+	MAX_DEAD_MOBS,
+	MIN_DEAD_MOBS,
+	ENEMY_RACE_ZERG,
+	ENEMY_RACE_PROTOSS,
+	ENEMY_RACE_TERRAN,
+	ENEMY_RACE_UNKNOWN
 };
 
 class Trigger {
@@ -63,33 +69,33 @@ public:
 
 	Trigger(BasicSc2Bot* agent_);
 	void addCondition(TriggerCondition tc_);
-	void addCondition(COND cond_type_, int cond_value_);
-	void addCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
+	void addCondition(COND cond_type_, double cond_value_=0, bool is_true_=true);
+	void addCondition(COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_);
 	void addCondition(COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_=true);
 	void addCondition(COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_=true);
-	void addCondition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_);
-	void addCondition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
-	void addCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
+	void addCondition(COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_);
+	void addCondition(COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
+	void addCondition(COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);
 	bool checkConditions();
 	void setDebug(bool is_true=true);
 	BasicSc2Bot* getAgent();
 
 	class TriggerCondition {
 	public:
-		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_);
-		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_);
+		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_=0, bool is_true_=true);
+		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_);
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_ = true);
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_ = true);
-		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_);
-		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_ = DEFAULT_RADIUS);
-		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_ = DEFAULT_RADIUS);
+		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_);
+		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_ = DEFAULT_RADIUS);
+		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_ = DEFAULT_RADIUS);
 		bool is_met(const sc2::ObservationInterface* obs);
 		void setDebug(bool isTrue=true);
 
 
 	private:
 		COND cond_type;
-		int cond_value;
+		double cond_value;
 		sc2::UNIT_TYPEID unit_of_type;
 		sc2::Point2D location_for_counting_units;
 		float distance_squared;

@@ -158,6 +158,15 @@ sc2::UNIT_TYPEID BasicSc2Bot::getUnitType(std::string identifier_)
 	
 }
 
+sc2::Race BasicSc2Bot::getEnemyRace() {
+	return enemy_race;
+}
+
+std::unordered_set<const sc2::Unit*> BasicSc2Bot::getEnemyUnits()
+{
+	return enemy_units;
+}
+
 sc2::Point2D BasicSc2Bot::getStoredLocation(std::string identifier_)
 {
 	return special_locations[identifier_];
@@ -256,6 +265,7 @@ void BasicSc2Bot::initVariables() {
 
 	player_start_id = locH->getPlayerIDForMap(map_index, observation->GetStartLocation());
 	locH->initLocations(map_index, player_start_id);
+	enemy_race = sc2::Race::Random;
 
 	std::cout << "Map Index " << map_index << std::endl;
 	std::cout << "Map Name: " << map_name << std::endl;
@@ -354,7 +364,7 @@ void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
 		//std::cout << "no pathable high threat location found" << std::endl;
 	}
 	else {
-		std::cout << "highest threat at " << pathable_threat_spot.x << "," << pathable_threat_spot.y << " = " << pathable_threat_chunk->getThreat() << std::endl;;
+		std::cout << "[" << obs->GetGameLoop() << "] highest threat at " << pathable_threat_spot.x << ", " << pathable_threat_spot.y << " = " << pathable_threat_chunk->getThreat() << std::endl;;
 	}
 	/*
 	if (pathable_away_threat_spot == NO_POINT_FOUND) {
@@ -510,6 +520,17 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	if (new_mob.unit.is_flying) {
 		new_mob.setFlag(FLAGS::IS_FLYING);
 	}
+	else {
+		new_mob.setFlag(FLAGS::GROUND);
+	}
+
+	if (mob_type == MOB::MOB_ARMY) {
+		// todo: implement assigning flags for other races and units
+		if (unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER ||
+			unit_type == sc2::UNIT_TYPEID::PROTOSS_IMMORTAL) {
+			new_mob.setFlag(FLAGS::SHORT_RANGE);
+		}
+	}
 
 	new_mob.setHomeLocation(locH->bases[base_index].getTownhall());
 	if (is_worker) {
@@ -622,4 +643,24 @@ void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
 
 void BasicSc2Bot::OnUnitEnterVision(const sc2::Unit* unit) {
 	addEnemyUnit(unit);
+	if (enemy_race == sc2::Race::Random) {
+		const sc2::ObservationInterface* obs = Observation();
+		auto utd_vector = obs->GetUnitTypeData();
+		auto utd = utd_vector[unit->unit_type];
+		enemy_race = utd.race;
+		if (enemy_race == sc2::Race::Protoss) {
+			std::cout << "Enemy Race Detected: Protoss" << std::endl;
+		}
+		if (enemy_race == sc2::Race::Terran) {
+			std::cout << "Enemy Race Detected: Terran" << std::endl;
+		}
+		if (enemy_race == sc2::Race::Zerg) {
+			std::cout << "Enemy Race Detected: Zerg" << std::endl;
+		}
+	}
+	/* needs debugging 
+	sc2::UNIT_TYPEID unit_type = unit->unit_type;
+	if (unit_type == sc2::UNIT_TYPEID::TERRAN_SIEGETANK || unit_type == sc2::UNIT_TYPEID::TERRAN_SIEGETANKSIEGED) {
+		mobH->nearbyMobsWithFlagsAttackTarget(std::unordered_set<FLAGS>{FLAGS::SHORT_RANGE}, unit, 8.0F);
+	} */
 }

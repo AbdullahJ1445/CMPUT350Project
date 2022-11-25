@@ -169,6 +169,8 @@ LocationHandler::LocationHandler(BasicSc2Bot* agent_){
     high_threat_pathable_chunk = nullptr;
     high_threat_chunk_away_from_start = nullptr;
     high_threat_pathable_chunk_away_from_start = nullptr;
+    map_center = INVALID_POINT;
+    center_chunk = nullptr;
 }
 
 sc2::Point2D LocationHandler::getNearestStartLocation(sc2::Point2D spot) {
@@ -1061,6 +1063,7 @@ void LocationHandler::initMapChunks()
     float min_y = game_info.playable_min.x + chunk_size;
     float max_x;
     float max_y;
+    map_center = sc2::Point2D(game_info.playable_max.x - game_info.playable_min.x, game_info.playable_max.y - game_info.playable_min.y);
 
     // chunk matrix size
     int width = 0;
@@ -1320,6 +1323,16 @@ sc2::Point2D LocationHandler::getProxyLocation() {
 sc2::Point2D LocationHandler::getStartLocation()
 {
     return start_location;
+}
+
+sc2::Point2D LocationHandler::getCenterPathableLocation() {
+    if (!chunks_initialized)
+        return INVALID_POINT;
+
+    if (center_chunk == nullptr) {
+        center_chunk = getNearestPathableChunk(map_center);
+    }
+    return center_chunk->getLocation();
 }
 
 void LocationHandler::setHighestThreat(double threat_)

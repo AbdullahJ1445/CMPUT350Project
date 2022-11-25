@@ -474,13 +474,37 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 				filtered_mobs.insert(m);
 			}
 		}
-	}
 	if (!found_valid_unit)
 		return false;
-
 	/* ORDER IS EXECUTED */
 	return issueOrder(agent, filtered_mobs, location);
 	/* * * * * * * * * * */
+	}
+	if (action_type == ACTION_TYPE::TARGET_UNIT_NEAR_LOCATION) {
+		std::unordered_set<const sc2::Unit*> enemies = agent->getEnemyUnits();
+		
+		float lowest_distance = std::numeric_limits<float>::max();
+		const sc2::Unit* closest_unit = nullptr;
+		for (auto it = enemies.begin(); it != enemies.end(); ++it) {
+			float dist = sc2::DistanceSquared2D((*it)->pos, location);
+			if (dist < lowest_distance) {
+				closest_unit = (*it);
+				lowest_distance = dist;
+			}
+		}
+		if (closest_unit == nullptr) {
+			return false;
+		}
+
+		// debug
+		std::cout << (0);
+
+		/* ORDER IS EXECUTED */
+		return issueOrder(agent, filtered_mobs, closest_unit);
+		/* * * * * * * * * * */
+	}
+
+	return false;
 }
 
 bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
@@ -813,7 +837,9 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 	if (ability_ == USE_DEFINED_ABILITY)
 		ability_ = ability;
 
-
+	if (debug) {
+		std::cout << "{*}";
+	}
 	sc2::Point2D location = target_loc_;
 
 	bool apply_bundle = haveBundle();

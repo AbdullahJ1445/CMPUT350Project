@@ -4,11 +4,12 @@
 #include "Triggers.h"
 #include "sc2api/sc2_api.h"
 
-Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, bool is_true_) {
 	cond_type = cond_type_;
 	cond_value = cond_value_;
 	agent = agent_;
 	debug = false;
+	is_true = is_true_;
 }
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_) {
@@ -30,40 +31,43 @@ Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_
 	debug = false;
 }
 
-Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_) {
 	assert(cond_type_ == COND::MIN_UNIT_WITH_FLAGS ||
 		cond_type_ == COND::MAX_UNIT_WITH_FLAGS);
 	cond_type = cond_type_;
 	cond_value = cond_value_;
 	filter_flags = flags_;
 	agent = agent_;
+	is_true = true;
 	debug = false;
 }
 
-Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_) {
 	assert(cond_type_ == COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION || 
-		cond_type == COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION);
+		cond_type_ == COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION);
 	cond_type = cond_type_;
 	cond_value = cond_value_;
 	filter_flags = flags_;
 	agent = agent_;
 	distance_squared = pow(radius_, 2);
 	location_for_counting_units = location_;
+	is_true = true;
 	debug = false;
 }
 
-Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
 	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE || cond_type_ == COND::MIN_UNIT_OF_TYPE || 
 		cond_type_ == COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION || cond_type_ == COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION ||
 		cond_type_ == COND::MIN_UNIT_OF_TYPE_TOTAL || cond_type_ == COND::MAX_UNIT_OF_TYPE_TOTAL);
 	cond_type = cond_type_;
 	cond_value = cond_value_;
 	unit_of_type = unit_of_type_;
+	is_true = true;
 	agent = agent_;
 	debug = false;
 }
 
-Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
 	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION ||
 	cond_type_ == COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION ||
 	cond_type_ == COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION);
@@ -72,6 +76,7 @@ Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_
 	unit_of_type = unit_of_type_;
 	location_for_counting_units = location_;
 	distance_squared = pow(radius_, 2);
+	is_true = true;
 	agent = agent_;
 	debug = false;
 }
@@ -119,35 +124,39 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 
 	switch (cond_type) {
 	case COND::MIN_MINERALS:
-		return obs->GetMinerals() >= cond_value;
+		return (obs->GetMinerals() >= cond_value) == is_true;
 	case COND::MIN_GAS:
-		return obs->GetVespene() >= cond_value;
+		return (obs->GetVespene() >= cond_value) == is_true;
 	case COND::MIN_TIME:
-		return obs->GetGameLoop() >= cond_value;
+		return (obs->GetGameLoop() >= cond_value) == is_true;
 	case COND::MIN_FOOD:
-		return obs->GetFoodCap() - obs->GetFoodUsed() >= cond_value;
+		return (obs->GetFoodCap() - obs->GetFoodUsed() >= cond_value) == is_true;
 	case COND::MIN_FOOD_USED:
-		return obs->GetFoodUsed() >= cond_value;
+		return (obs->GetFoodUsed() >= cond_value) == is_true;
 	case COND::MIN_FOOD_CAP:
-		return obs->GetFoodCap() >= cond_value;
+		return (obs->GetFoodCap() >= cond_value) == is_true;
 	case COND::MAX_MINERALS:
-		return obs->GetMinerals() <= cond_value;
+		return (obs->GetMinerals() <= cond_value) == is_true;
 	case COND::MAX_GAS:
-		return obs->GetVespene() <= cond_value;
+		return (obs->GetVespene() <= cond_value) == is_true;
 	case COND::MAX_TIME:
-		return obs->GetGameLoop() <= cond_value;
+		return (obs->GetGameLoop() <= cond_value) == is_true;
 	case COND::MAX_FOOD:
-		return obs->GetFoodCap() - obs->GetFoodUsed() <= cond_value;
+		return (obs->GetFoodCap() - obs->GetFoodUsed() <= cond_value) == is_true;
 	case COND::MAX_FOOD_USED:
-		return obs->GetFoodUsed() <= cond_value;
+		return (obs->GetFoodUsed() <= cond_value) == is_true;
 	case COND::MAX_FOOD_CAP:
-		return obs->GetFoodCap() <= cond_value;
+		return (obs->GetFoodCap() <= cond_value) == is_true;
 	case COND::MIN_MINERALS_MINED:
 		// not implemented
 		return false;
 	case COND::MAX_MINERALS_MINED:
 		// not implemented
 		return false;
+	case COND::MIN_DEAD_MOBS:
+		return (agent->mobH->getNumDeadMobs() >= cond_value) == is_true;
+	case COND::MAX_DEAD_MOBS:
+		return (agent->mobH->getNumDeadMobs() <= cond_value) == is_true;
 	case COND::MIN_UNIT_WITH_FLAGS:
 	{
 		std::unordered_set<Mob*> mobs;
@@ -158,7 +167,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		if (debug && num_units < cond_value) {
 			std::cout << "MIN_W_F(" << num_units << ">=" << cond_value << ") ";
 		}
-		return (num_units >= cond_value);
+		return (num_units >= cond_value) == is_true;
 	}
 	case COND::MAX_UNIT_WITH_FLAGS:
 	{
@@ -170,7 +179,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		if (debug && num_units > cond_value) {
 			std::cout << "MAX_W_F(" << num_units << "<=" << cond_value << ") ";
 		}
-		return (num_units <= cond_value);
+		return (num_units <= cond_value) == is_true;
 	}
 	case COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
@@ -188,7 +197,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << "MIN_W_F_NL(" << num_units << ">=" << cond_value << ") ";
 		}
 
-		return (num_units >= cond_value);
+		return (num_units >= cond_value) == is_true;
 	}
 	case COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION:
 	{
@@ -206,12 +215,12 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << "MAX_W_F_NL(" << num_units << "<=" << cond_value << ") ";
 		}
 		
-		return (num_units <= cond_value);
+		return (num_units <= cond_value) == is_true;
 	}
 	case COND::BASE_IS_ACTIVE:
 		if (agent->locH->bases.size() <= cond_value || cond_value < 0)
-			return false;
-		return agent->locH->bases[cond_value].isActive();
+			return !is_true;
+		return (agent->locH->bases[cond_value].isActive()) == is_true;
 	case COND::HAVE_UPGRADE:
 		return agent->haveUpgrade(upgrade_id) == is_true;
 	case COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION:
@@ -227,7 +236,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << "MIN_UT_UC(" << num_units << ">=" << cond_value << ") ";
 		}
 
-		return (num_units >= cond_value);
+		return (num_units >= cond_value) == is_true;
 	}
 	case COND::MIN_UNIT_OF_TYPE_TOTAL:
 		// include both under construction and constructed
@@ -243,7 +252,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << "MIN_UTT(" << num_units << ">=" << cond_value << ") ";
 		}
 
-		return (num_units >= cond_value);
+		return (num_units >= cond_value) == is_true;
 	}
 	case COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION:
 		{
@@ -258,7 +267,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 				std::cout << "MAX_UT_UC(" << num_units << "<=" << cond_value << ") ";
 			}
 
-			return (num_units <= cond_value);
+			return (num_units <= cond_value) == is_true;
 		}
 	case COND::MAX_UNIT_OF_TYPE_TOTAL:
 		// include both under construction and constructed
@@ -274,7 +283,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << "MAX_UTT(" << num_units << "<=" << cond_value << ")";
 		}
 
-		return (num_units <= cond_value);
+		return (num_units <= cond_value) == is_true;
 	}
 	case COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION:
 		{
@@ -291,7 +300,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 				std::cout << "MAX_UT_UC_NL(" << num_units << "<=" << cond_value << ")";
 			}
 
-			return (num_units <= cond_value);
+			return (num_units <= cond_value) == is_true;
 		}
 	case COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION:
 		// include both under construction and constructed
@@ -309,7 +318,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << "MAX_UTT_NL(" << num_units << "<=" << cond_value << ")";
 		}
 
-		return (num_units <= cond_value);
+		return (num_units <= cond_value) == is_true;
 	}
 	case COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION:
 		{
@@ -326,7 +335,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 				std::cout << "MIN_UT_UC_NL(" << num_units << ">=" << cond_value << ")";
 			}
 
-			return (num_units >= cond_value);
+			return (num_units >= cond_value) == is_true;
 		}
 	case COND::MIN_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION:
 		// include both under construction and constructed
@@ -344,9 +353,10 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << "MIN_UTT_NL(" << num_units << ">=" << cond_value << ")";
 		}
 
-		return (num_units >= cond_value);
+		return (num_units >= cond_value) == is_true;
 	}
 	case COND::HAS_ABILITY_READY:
+	{
 		std::unordered_set<Mob*> structures = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_STRUCTURE);
 		bool found_one = false;
 		for (auto m : structures) {
@@ -357,6 +367,28 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		}
 		return (found_one == is_true);
 	}
+	case COND::ENEMY_RACE_PROTOSS:
+		if (debug && (agent->getEnemyRace() == sc2::Race::Protoss) != is_true) {
+			std::cout << "(race:protoss check failed<" << is_true << ">)";
+		}
+		return (agent->getEnemyRace() == sc2::Race::Protoss) == is_true;
+	case COND::ENEMY_RACE_TERRAN:
+		if (debug && (agent->getEnemyRace() == sc2::Race::Terran) != is_true) {
+			std::cout << "(race:terran check failed<" << is_true << ">)";
+		}
+		return (agent->getEnemyRace() == sc2::Race::Terran) == is_true;
+	case COND::ENEMY_RACE_ZERG:
+		if (debug && (agent->getEnemyRace() == sc2::Race::Zerg) != is_true) {
+			std::cout << "(race:zerg check failed<" << is_true << ">)";
+		}
+		return (agent->getEnemyRace() == sc2::Race::Zerg) == is_true;
+	case COND::ENEMY_RACE_UNKNOWN:
+		if (debug && (agent->getEnemyRace() == sc2::Race::Random) != is_true) {
+			std::cout << "(race:unknown check failed<" << is_true << ">)";
+		}
+		return (agent->getEnemyRace() == sc2::Race::Random) == is_true;
+	}
+	
 	
 	if (cond_type == COND::MAX_UNIT_OF_TYPE) {
 		// only consider units that have completed construction
@@ -371,7 +403,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			//std::cout << "MAX_U(" << num_units << "<=" << cond_value << ")";
 		}
 
-		return (num_units <= cond_value);
+		return (num_units <= cond_value) == is_true;
 	}
 	if (cond_type == COND::MIN_UNIT_OF_TYPE) {
 		// only consider units that have completed construction
@@ -386,7 +418,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << "MIN_U(" << num_units << ">=" << cond_value << ")";
 		}
 
-		return (num_units >= cond_value);
+		return (num_units >= cond_value) == is_true;
 	}
 
 	if (cond_type == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION) {
@@ -403,7 +435,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << "MAX_UT_NL(" << num_units << "<=" << cond_value << ")";
 		}
 
-		return (num_units <= cond_value);
+		return (num_units <= cond_value) == is_true;
 	}
 	if (cond_type == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION) {
 		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
@@ -419,7 +451,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << "MIN_UT_NL(" << num_units << ">=" << cond_value << ")";
 		}
 
-		return (num_units >= cond_value);
+		return (num_units >= cond_value) == is_true;
 	}
 	return false;
 }
@@ -437,15 +469,15 @@ void Trigger::addCondition(TriggerCondition tc_) {
 	conditions.push_back(tc_);
 }
 
-void Trigger::addCondition(COND cond_type_, int cond_value_) {
-	TriggerCondition tc_(agent, cond_type_, cond_value_);
+void Trigger::addCondition(COND cond_type_, double cond_value_, bool is_true) {
+	TriggerCondition tc_(agent, cond_type_, cond_value_, is_true);
 	if (debug) {
 		tc_.setDebug(true);
 	}
 	conditions.push_back(tc_);
 }
 
-void Trigger::addCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
+void Trigger::addCondition(COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
 	TriggerCondition tc_(agent, cond_type_, cond_value_, unit_of_type_);
 	if (debug) {
 		tc_.setDebug(true);
@@ -469,7 +501,7 @@ void Trigger::addCondition(COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is
 	conditions.push_back(tc_);
 }
 
-void Trigger::addCondition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_) {
+void Trigger::addCondition(COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_) {
 	TriggerCondition tc_(agent, cond_type_, cond_value_, flags_);
 	if (debug) {
 		tc_.setDebug(true);
@@ -477,7 +509,7 @@ void Trigger::addCondition(COND cond_type_, int cond_value_, std::unordered_set<
 	conditions.push_back(tc_);
 }
 
-void Trigger::addCondition(COND cond_type_, int cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_) {
+void Trigger::addCondition(COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_) {
 	TriggerCondition tc_(agent, cond_type_, cond_value_, flags_, location_, radius_);
 	if (debug) {
 		tc_.setDebug(true);
@@ -485,7 +517,7 @@ void Trigger::addCondition(COND cond_type_, int cond_value_, std::unordered_set<
 	conditions.push_back(tc_);
 }
 
-void Trigger::addCondition(COND cond_type_, int cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
+void Trigger::addCondition(COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
 	TriggerCondition tc_(agent, cond_type_, cond_value_, unit_of_type_, location_, radius_);
 	if (debug) {
 		tc_.setDebug(true);
