@@ -94,6 +94,7 @@ void Strategy::loadStrategies() {
 		{
 			Precept main_pylon_2(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->locH->bases[0].getBuildArea(0), 12.0F);
+			d.allowMultiple();
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 100);
 			t.addCondition(COND::MAX_FOOD, 4);
@@ -118,6 +119,7 @@ void Strategy::loadStrategies() {
 		{
 			Precept main_pylon_4(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->locH->bases[0].getBuildArea(2), 12.0F);
+			d.allowMultiple();
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 100);
 			t.addCondition(COND::MAX_FOOD, 4);
@@ -263,6 +265,7 @@ void Strategy::loadStrategies() {
 			Precept assim_1(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_ASSIMILATOR, bot->locH->bases[0].getTownhall());
 			Trigger t(bot);
+			d.allowMultiple();
 			t.addCondition(COND::MIN_MINERALS, 75);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->locH->bases[0].getTownhall(), 10.0F);
@@ -328,6 +331,25 @@ void Strategy::loadStrategies() {
 			bot->addStrat(train_stalker);
 		}
 		{
+			Precept train_zealot(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_ZEALOT);
+			d.allowMultiple();
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 125);
+			t.addCondition(COND::MAX_GAS, 49);
+			t.addCondition(COND::MIN_FOOD, 2);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
+			train_zealot.addDirective(d);
+			train_zealot.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_MINERALS, 400);
+			t2.addCondition(COND::MIN_GAS, 49);
+			t2.addCondition(COND::MIN_FOOD, 2);
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 31, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			train_zealot.addTrigger(t2);
+			bot->addStrat(train_zealot);
+		}
+		{
 			Precept main_gateway(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_GATEWAY, bot->locH->bases[0].getBuildArea(0));
 			Trigger t(bot);
@@ -353,6 +375,19 @@ void Strategy::loadStrategies() {
 		}
 
 		{
+			Precept research_charge(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL, sc2::ABILITY_ID::RESEARCH_CHARGE);
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 100);
+			t.addCondition(COND::MIN_GAS, 100);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
+			t.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::BLINKTECH);
+			t.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::CHARGE, false);
+			research_charge.addDirective(d);
+			research_charge.addTrigger(t);
+			bot->addStrat(research_charge);
+		}
+		{
 			Precept research_blink(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL, sc2::ABILITY_ID::RESEARCH_BLINK);
 			Trigger t(bot);
@@ -367,6 +402,7 @@ void Strategy::loadStrategies() {
 		{
 			Precept assim_2(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_ASSIMILATOR, bot->locH->bases[1].getTownhall());
+			d.allowMultiple();
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 75);
 			t.addCondition(COND::MAX_GAS, 300);
@@ -411,6 +447,32 @@ void Strategy::loadStrategies() {
 			bot->addStrat(upgrade_attack);
 		}
 		{
+			Precept upgrade_shields(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_FORGE, sc2::ABILITY_ID::RESEARCH_PROTOSSSHIELDS);
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 150);
+			t.addCondition(COND::MIN_GAS, 150);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL1, false);
+			t.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSGROUNDWEAPONSLEVEL3, true);
+			upgrade_shields.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_MINERALS, 225);
+			t2.addCondition(COND::MIN_GAS, 225);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
+			t2.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL1);
+			t2.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL2, false);
+			upgrade_shields.addTrigger(t2);
+			Trigger t3(bot);
+			t3.addCondition(COND::MIN_MINERALS, 200);
+			t3.addCondition(COND::MIN_GAS, 200);
+			t3.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL2);
+			t3.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL3, false);
+			upgrade_shields.addTrigger(t3);
+			upgrade_shields.addDirective(d);
+			bot->addStrat(upgrade_shields);
+		}
+		{
 			Precept use_chrono(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_NEXUS, sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST, bot->locH->bases[0].getTownhall());
 			Trigger t(bot);
@@ -426,8 +488,8 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			auto func = [this]() { return bot->locH->getHighestThreatLocation(); };
 			d.setTargetLocationFunction(this, bot, func);
-			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 5, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
-			t.addCondition(COND::MAX_UNIT_WITH_FLAGS, 7, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 1, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t.addCondition(COND::MAX_UNIT_WITH_FLAGS, 2, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
 			t.addCondition(COND::MAX_FOOD_CAP, 65);
 			attack_threats.addDirective(d);
 			attack_threats.addTrigger(t);
