@@ -1440,7 +1440,7 @@ MapChunk* LocationHandler::getHighestPathableThreatChunkAwayFromStart()
 }
 
 float LocationHandler::distSquaredFromStart(sc2::Point2D loc_) {
-    return (sc2::DistanceSquared2D(bases[0].get_townhall(), loc_));
+    return (sc2::DistanceSquared2D(bases[0].getTownhall(), loc_));
 }
 
 bool LocationHandler::chunksInitialized() {

@@ -73,7 +73,7 @@ void Strategy::loadStrategies() {
 
 		std::vector<Trigger::TriggerCondition> startup_base_conds;
 		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->getStoredLocation("PYLON_1"), 0.5F));
-		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->getStoredLocation("PYLON_2"), 0.5F));
+		//startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->getStoredLocation("PYLON_2"), 0.5F));
 		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE, bot->getStoredLocation("FORGE_1"), 0.5F));
 		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_1"), 0.5F));
 		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, bot->getStoredLocation("GATEWAY_1"), 0.5F));
@@ -117,13 +117,13 @@ void Strategy::loadStrategies() {
 		}
 		{
 			Precept main_pylon_4(bot);
-			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->locH->bases[0].get_build_area(2), 12.0F);
+			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->locH->bases[0].getBuildArea(2), 12.0F);
 			Trigger t(bot);
-			t.add_condition(COND::MIN_MINERALS, 100);
-			t.add_condition(COND::MAX_FOOD, 4);
-			t.add_condition(COND::MIN_UNIT_OF_TYPE, 9, sc2::UNIT_TYPEID::PROTOSS_PYLON);
-			t.add_condition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON);
-			t.add_condition(COND::MAX_UNIT_OF_TYPE_TOTAL, 14, sc2::UNIT_TYPEID::PROTOSS_PYLON);
+			t.addCondition(COND::MIN_MINERALS, 100);
+			t.addCondition(COND::MAX_FOOD, 4);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 9, sc2::UNIT_TYPEID::PROTOSS_PYLON);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 14, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			main_pylon_4.addDirective(d);
 			main_pylon_4.addTrigger(t);
 			bot->addStrat(main_pylon_4);
@@ -212,7 +212,9 @@ void Strategy::loadStrategies() {
 			Precept gateway_2(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_GATEWAY, bot->locH->bases[0].getBuildArea(1), 10.0F);
 			Trigger t(bot);
-			t.addCondition(COND::MIN_MINERALS, 700);
+			d.allowMultiple();
+			t.addCondition(COND::MIN_FOOD, 4);
+			t.addCondition(COND::MIN_MINERALS, 400);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 7, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
 			gateway_2.addDirective(d);
@@ -224,11 +226,11 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->getStoredLocation("PYLON_2"));
 			Trigger t(bot);
 			d.allowMultiple();
-			t.add_condition(COND::MIN_MINERALS, 100);
-			t.add_condition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->getStoredLocation("PYLON_2"), 0.3F);
-			t.add_condition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
-			t.add_condition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON);
-			t.add_condition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON);
+			t.addCondition(COND::MIN_MINERALS, 100);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->getStoredLocation("PYLON_2"), 0.3F);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			pylon_2.addDirective(d);
 			pylon_2.addTrigger(t);
 			bot->addStrat(pylon_2);
@@ -338,17 +340,16 @@ void Strategy::loadStrategies() {
 		}
 		{
 			Precept twilight_council(bot);
-			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_TWILIGHTCOUNCIL, bot->locH->bases[0].get_build_area(0), 14.0F);
+			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_TWILIGHTCOUNCIL, bot->locH->bases[0].getBuildArea(0), 14.0F);
 			Trigger t(bot);
 			d.allowMultiple();
-			t.add_condition(COND::MIN_MINERALS, 150);
-			t.add_condition(COND::MIN_GAS, 150);
-			t.add_condition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-			t.add_condition(COND::MAX_UNIT_OF_TYPE_TOTAL, 0, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
+			t.addCondition(COND::MIN_MINERALS, 150);
+			t.addCondition(COND::MIN_GAS, 150);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 0, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
 			twilight_council.addDirective(d);
 			twilight_council.addTrigger(t);
 			bot->addStrat(twilight_council);
-		}dStrat(twilight_council);
 		}
 
 		{
@@ -425,15 +426,15 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			auto func = [this]() { return bot->locH->getHighestThreatLocation(); };
 			d.setTargetLocationFunction(this, bot, func);
-			t.add_condition(COND::MIN_UNIT_WITH_FLAGS, 5, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
-			t.add_condition(COND::MAX_UNIT_WITH_FLAGS, 7, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
-			t.add_condition(COND::MAX_FOOD_CAP, 65);
+			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 5, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t.addCondition(COND::MAX_UNIT_WITH_FLAGS, 7, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t.addCondition(COND::MAX_FOOD_CAP, 65);
 			attack_threats.addDirective(d);
 			attack_threats.addTrigger(t);
 			Trigger t2(bot);
-			t2.add_condition(COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION, 3, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].get_defend_point(0), 18.0F);
-			t2.add_condition(COND::MAX_UNIT_WITH_FLAGS, 7, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
-			t2.add_condition(COND::MAX_FOOD_CAP, 65);
+			t2.addCondition(COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION, 3, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].getDefendPoint(0), 18.0F);
+			t2.addCondition(COND::MAX_UNIT_WITH_FLAGS, 7, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t2.addCondition(COND::MAX_FOOD_CAP, 65);
 			attack_threats.addTrigger(t2);
 			bot->addStrat(attack_threats);
 		}
@@ -605,11 +606,11 @@ void Strategy::loadStrategies() {
 		Trigger t(bot);
 		auto func = [this]() { return bot->locH->smartAttackLocation(); };
 		d.setTargetLocationFunction(this, bot, func);
-		t.add_condition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_ZEALOT, bot->locH->getProxyLocation());
+		t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_ZEALOT, bot->locH->getProxyLocation());
 		attack_and_explore.addDirective(d);
 		attack_and_explore.addTrigger(t);
 		Trigger t2(bot);
-		t2.add_condition(COND::MIN_UNIT_WITH_FLAGS, 5, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+		t2.addCondition(COND::MIN_UNIT_WITH_FLAGS, 5, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
 		attack_and_explore.addTrigger(t2);
 		bot->addStrat(attack_and_explore);
 	}

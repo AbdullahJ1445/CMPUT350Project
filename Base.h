@@ -12,8 +12,8 @@ public:
 	void addDefendPoint(float x, float y);
 	int getNumBuildAreas();
 	int getNumDefendPoints();
-	sc2::Point2D get_random_build_area();
-	sc2::Point2D get_random_defend_point();
+	sc2::Point2D getRandomBuildArea();
+	sc2::Point2D getRandomDefendPoint();
 	void setActive(bool flag = true);
 	bool isActive();
 	sc2::Point2D getBuildArea(int index);

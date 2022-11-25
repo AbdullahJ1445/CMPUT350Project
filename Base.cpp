@@ -14,6 +14,10 @@ void Base::set_rally_point(float x, float y) {
 	rally_point = location_;
 }
 
+sc2::Point2D Base::get_rally_point() {
+	return rally_point;
+}
+
 void Base::addBuildArea(sc2::Point2D location_) {
 	// adds a build area to the base, with radius of 12.0
 	build_areas.push_back(location_);
