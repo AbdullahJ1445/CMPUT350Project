@@ -19,8 +19,8 @@ public:
 	sc2::Point2D getBuildArea(int index);
 	sc2::Point2D getDefendPoint(int index);
 	sc2::Point2D getTownhall();
-	void set_rally_point(float x, float y);
-	sc2::Point2D get_rally_point();
+	void setRallyPoint(float x, float y);
+	sc2::Point2D getRallyPoint();
 
 private:
 	sc2::Point2D location_townhall;

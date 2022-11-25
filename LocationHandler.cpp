@@ -689,11 +689,12 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             main_base.addBuildArea(32, 147);
             main_base.addBuildArea(47, 151);
             main_base.addBuildArea(44.5, 160.5);
-            main_base.set_rally_point(73, 158);
+            main_base.setRallyPoint(73, 158);
             bases.push_back(main_base);
 
             Base exp_1(66.5, 161.5);
             exp_1.addDefendPoint(64, 152);
+            exp_1.setRallyPoint(73, 158);
             bases.push_back(exp_1); // radius 6.0F
 
             Base exp_2(54.5, 132.5);
@@ -742,12 +743,12 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             main_base.addBuildArea(147, 160);
             main_base.addBuildArea(151, 145);
             main_base.addBuildArea(160.5, 147.5);
-            main_base.set_rally_point(158, 119);
+            main_base.setRallyPoint(158, 119);
             bases.push_back(main_base);
 
             Base exp_1(161.5, 125.5);
             exp_1.addDefendPoint(152, 128); // radius 6.0F
-            exp_1.set_rally_point(158, 119);
+            exp_1.setRallyPoint(158, 119);
             bases.push_back(exp_1);
         }
         else if (p_id == 3) {
@@ -759,11 +760,12 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             Base main_base(observation->GetStartLocation());
             main_base.addBuildArea(160, 45);
             main_base.addBuildArea(145, 41);
+            main_base.setRallyPoint(119, 34);
             bases.push_back(main_base);
 
             Base exp_1(125.5, 30.5);
             exp_1.addDefendPoint(128, 40); // radius 6.0F
-            exp_1.set_rally_point(119, 34);
+            exp_1.setRallyPoint(119, 34);
             bases.push_back(exp_1);
         }
         else if (p_id == 4) {
@@ -776,12 +778,12 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             main_base.addBuildArea(45, 32);
             main_base.addBuildArea(41, 47);
             main_base.addBuildArea(31.5, 44.5);
-            main_base.set_rally_point(34, 73);
+            main_base.setRallyPoint(34, 73);
             bases.push_back(main_base);
 
             Base exp_1(30.5, 66.5);
             exp_1.addDefendPoint(40, 64);  // radius 6.0F
-            exp_1.set_rally_point(34, 73);
+            exp_1.setRallyPoint(34, 73);
             bases.push_back(exp_1);
         }
     }
