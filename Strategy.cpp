@@ -218,10 +218,62 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_FOOD, 4);
 			t.addCondition(COND::MIN_MINERALS, 400);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 7, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 4, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
 			gateway_2.addDirective(d);
 			gateway_2.addTrigger(t);
 			bot->addStrat(gateway_2);
+		}
+		{
+			Precept robotics_1(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_ROBOTICSFACILITY, bot->locH->bases[0].getBuildArea(1), 10.0F);
+			Trigger t(bot);
+			d.allowMultiple();
+			t.addCondition(COND::MIN_FOOD, 4);
+			t.addCondition(COND::MIN_MINERALS, 150);
+			t.addCondition(COND::MIN_GAS, 100);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 4, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+			robotics_1.addDirective(d);
+			robotics_1.addTrigger(t);
+			bot->addStrat(robotics_1);
+		}
+		{
+			Precept robotics_2(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_ROBOTICSFACILITY, bot->locH->bases[0].getBuildArea(2), 10.0F);
+			Trigger t(bot);
+			d.allowMultiple();
+			t.addCondition(COND::MIN_FOOD, 4);
+			t.addCondition(COND::MIN_MINERALS, 150);
+			t.addCondition(COND::MIN_GAS, 100);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 4, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+			robotics_2.addDirective(d);
+			robotics_2.addTrigger(t);
+			bot->addStrat(robotics_2);
+		}
+		{
+			Precept train_immortal(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY, sc2::ABILITY_ID::TRAIN_IMMORTAL);
+			d.allowMultiple();
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 275);
+			t.addCondition(COND::MIN_GAS, 100);
+			t.addCondition(COND::MIN_FOOD, 4);
+			t.addCondition(COND::MIN_FOOD_CAP, 70);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			train_immortal.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_MINERALS, 275);
+			t2.addCondition(COND::MIN_GAS, 300);
+			t2.addCondition(COND::MIN_FOOD, 4);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			train_immortal.addTrigger(t2);
+			train_immortal.addDirective(d);
+			bot->addStrat(train_immortal);
 		}
 		{
 			Precept pylon_2(bot);
@@ -317,7 +369,8 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_MINERALS, 125);
 			t.addCondition(COND::MIN_GAS, 50);
 			t.addCondition(COND::MIN_FOOD, 2);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t.addCondition(COND::MAX_FOOD_CAP, 90);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE, 12, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			train_stalker.addDirective(d);
 			train_stalker.addTrigger(t);
@@ -325,9 +378,18 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_MINERALS, 600);
 			t2.addCondition(COND::MIN_GAS, 200);
 			t2.addCondition(COND::MIN_FOOD, 2);
-			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 31, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t2.addCondition(COND::MAX_FOOD_CAP, 90);
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 20, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			train_stalker.addTrigger(t2);
+			Trigger t3(bot);
+			t3.addCondition(COND::MIN_MINERALS, 500);
+			t3.addCondition(COND::MIN_GAS, 350);
+			t3.addCondition(COND::MIN_FOOD, 2);
+			t3.addCondition(COND::MIN_FOOD_CAP, 91);
+			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 6, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			train_stalker.addTrigger(t3);
 			bot->addStrat(train_stalker);
 		}
 		{
@@ -347,6 +409,11 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_FOOD, 2);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 31, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			train_zealot.addTrigger(t2);
+			Trigger t3(bot);
+			t3.addCondition(COND::MIN_MINERALS, 300);
+			t3.addCondition(COND::MIN_FOOD, 2);
+			t3.addCondition(COND::MIN_FOOD_CAP, 91);
+			train_zealot.addTrigger(t3);
 			bot->addStrat(train_zealot);
 		}
 		{
@@ -483,7 +550,7 @@ void Strategy::loadStrategies() {
 			bot->addStrat(use_chrono);
 		}
 		{
-			Precept attack_threats(bot);
+			Precept scout_bases(bot);
 			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->getStoredLocation("CANNON_1"), 4.0F);
 			Trigger t(bot);
 			auto func = [this]() { return bot->locH->getHighestThreatLocation(); };
@@ -491,14 +558,25 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 1, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
 			t.addCondition(COND::MAX_UNIT_WITH_FLAGS, 2, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
 			t.addCondition(COND::MAX_FOOD_CAP, 65);
-			attack_threats.addDirective(d);
-			attack_threats.addTrigger(t);
+			scout_bases.addDirective(d);
+			scout_bases.addTrigger(t);
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION, 3, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].getDefendPoint(0), 18.0F);
-			t2.addCondition(COND::MAX_UNIT_WITH_FLAGS, 7, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t2.addCondition(COND::MAX_UNIT_WITH_FLAGS, 6, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
 			t2.addCondition(COND::MAX_FOOD_CAP, 65);
-			attack_threats.addTrigger(t2);
-			bot->addStrat(attack_threats);
+			scout_bases.addTrigger(t2);
+			bot->addStrat(scout_bases);
+		}
+		{
+			Precept return_home(bot);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::GENERAL_MOVE, bot->locH->bases[1].getRallyPoint(), 4.0F);
+			Trigger t(bot);
+			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 7, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t.addCondition(COND::MAX_UNIT_WITH_FLAGS, 11, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t.addCondition(COND::MAX_FOOD_CAP, 65);
+			return_home.addDirective(d);
+			return_home.addTrigger(t);
+			bot->addStrat(return_home);
 		}
 		{
 			Precept attack_and_explore(bot);

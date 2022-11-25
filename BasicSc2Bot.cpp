@@ -584,7 +584,7 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 			if (unit->health / unit->health_max < .3f) {
 				// check if Blink is on cooldown
 				if (canUnitUseAbility(*unit, sc2::ABILITY_ID::EFFECT_BLINK)) {
-					std::cout << "(blink)";
+					//std::cout << "(blink)";
 					Actions()->UnitCommand(unit, sc2::ABILITY_ID::EFFECT_BLINK, locH->bases[0].getTownhall());
 				}
 			}

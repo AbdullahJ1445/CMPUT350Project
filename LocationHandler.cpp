@@ -1021,7 +1021,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         }
     }
 
-    sq_dist_threshold = pow((sqrt(closest_sq_dist) * .75), 2);
+    sq_dist_threshold = (closest_sq_dist * .4);
 
     initMapChunks();
     scanChunks(agent->Observation());
@@ -1134,10 +1134,11 @@ void LocationHandler::initMapChunks()
 
 
     if (!enemy_start_locations.empty()) {
-        double threat_amt = enemy_start_locations.size() + 1;
+        double threat_amt = enemy_start_locations.size() * 2000 + 2000;
         for (auto esl : enemy_start_locations) {
-            MapChunk* chunk = getNearestChunk(esl);
-            chunk->setThreat(threat_amt--);
+            MapChunk* chunk = getNearestPathableChunk(esl);
+            chunk->setThreat(threat_amt);
+            threat_amt -= 2000;
         }
     }
 
