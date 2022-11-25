@@ -16,6 +16,7 @@ MapChunk::MapChunk(BasicSc2Bot* agent_, sc2::Point2D location_, bool pathable_) 
     location = location_;
     last_seen = -1;
     threat = 0;
+    dist_squared_from_start = agent->locH->distSquaredFromStart(location_);
 }
 
 sc2::Point2D MapChunk::getLocation() {
@@ -50,6 +51,15 @@ double MapChunk::getThreat() {
     return threat;
 }
 
+float MapChunk::distSquaredFromStart() {
+    return dist_squared_from_start;
+}
+
+bool MapChunk::isNearStart() {
+    float threshold = agent->locH->getSqDistThreshold();
+    return dist_squared_from_start < threshold;
+}
+
 void MapChunk::checkVision(const sc2::ObservationInterface* obs) {
 
     // checks the status of the chunk. If the chunk is visible, it updates the data for nearby enemy units.
@@ -82,8 +92,67 @@ bool MapChunk::inVision(const sc2::ObservationInterface* obs) {
 void MapChunk::increaseThreat(BasicSc2Bot* agent_, const sc2::Unit* unit, float modifier) {
     // increase the threat value of this chunk
 
-    float d_threat = agent_->getValue(unit) * modifier;
+    double d_threat = agent_->getValue(unit) * modifier;
     threat += d_threat;
+
+    double highest_threat = agent->locH->getHighestThreat();
+    double highest_pathable_threat = agent->locH->getHighestPathableThreat();
+    double highest_away_threat = agent->locH->getHighestThreatAwayFromStart();
+    double highest_pathable_away_threat = agent->locH->getHighestPathableThreatAwayFromStart();
+
+    MapChunk* hi_chunk = agent->locH->getHighestThreatChunk();
+    MapChunk* hi_p_chunk = agent->locH->getHighestPathableThreatChunk();
+    MapChunk* hi_a_chunk = agent->locH->getHighestThreatChunkAwayFromStart();
+    MapChunk* hi_p_a_chunk = agent->locH->getHighestPathableThreatChunkAwayFromStart();
+
+    if (hi_chunk == this) {
+        agent->locH->setHighestThreat(threat);
+    }
+    else {
+        if (threat > highest_threat) {
+            agent->locH->setHighestThreat(threat);
+            agent->locH->setHighestThreatChunk(this);
+        }
+    }
+
+
+    if (pathable) {
+        if (hi_p_chunk == this) {
+            agent->locH->setHighestPathableThreat(threat);
+        }
+        else {
+            if (threat > highest_pathable_threat) {
+                agent->locH->setHighestPathableThreat(threat);
+                agent->locH->setHighestPathableThreatChunk(this);
+            }
+        }
+    }
+    if (!isNearStart()) {
+        if (hi_a_chunk == this) {
+            agent->locH->setHighestThreatAwayFromStart(threat);
+        }
+        else {
+            if (threat > highest_away_threat) {
+                agent->locH->setHighestThreatAwayFromStart(threat);
+                agent->locH->setHighestThreatChunkAwayFromStart(this);
+            }
+        }
+    }
+    if (pathable && !isNearStart()) {
+        if (hi_p_a_chunk == this) {
+            agent->locH->setHighestPathableThreatAwayFromStart(threat);
+        }
+        else {
+            if (threat > highest_pathable_away_threat) {
+                agent->locH->setHighestPathableThreatAwayFromStart(threat);
+                agent->locH->setHighestPathableThreatChunkAwayFromStart(this);
+            }
+        }
+    }   
+}
+
+void MapChunk::setThreat(double amt_) {
+    threat = amt_;
 }
 
 
@@ -91,6 +160,14 @@ LocationHandler::LocationHandler(BasicSc2Bot* agent_){
     agent = agent_;
     enemy_start_location_index = 0;
     chunks_initialized = false;
+    highest_threat = 0;
+    highest_pathable_threat = 0;
+    highest_threat_away_from_start = 0;
+    highest_pathable_threat_away_from_start = 0;
+    high_threat_chunk = nullptr;
+    high_threat_pathable_chunk = nullptr;
+    high_threat_chunk_away_from_start = nullptr;
+    high_threat_pathable_chunk_away_from_start = nullptr;
 }
 
 sc2::Point2D LocationHandler::getNearestStartLocation(sc2::Point2D spot) {
@@ -213,7 +290,65 @@ const sc2::Unit* LocationHandler::getNearestTownhall(const sc2::Point2D location
     return nullptr;
 }
 
-sc2::Point2D LocationHandler::getHighestThreatLocation(bool pathable_) {
+void LocationHandler::calculateHighestThreatForChunks() {
+    // calculate the threat values for all combinations of conditions
+    // pathable: the chunk is pathable
+    // away: the chunk is away from the start location
+
+    double max_threat = 0;
+    double max_pathable_threat = 0;
+    double max_threat_away = 0;
+    double max_pathable_threat_away = 0;
+    int max_id = -99;
+    int max_pathable_id = -99;
+    int max_id_away = -99;
+    int max_pathable_id_away = -99;
+
+    for (auto chunk : map_chunks) {
+        int id = chunk->getID();
+        float chunk_threat = chunk->getThreat();
+        bool pathable = chunk->isPathable();
+        bool away = !chunk->isNearStart();
+        if (chunk_threat > max_threat) {
+            max_threat = chunk_threat;
+            max_id = id;
+        }
+        if (pathable && chunk_threat > max_pathable_threat) {
+            max_pathable_threat = chunk_threat;
+            max_pathable_id = id;
+        }
+        if (away && chunk_threat > max_threat_away) {
+            max_threat_away = chunk_threat;
+            max_id_away = id;
+        }
+        if (pathable && away && chunk_threat > max_pathable_threat_away) {
+            max_pathable_threat_away = chunk_threat;
+            max_pathable_id_away = id;
+        }
+    }
+
+    if (max_id != -99) {
+        high_threat_chunk = map_chunk_by_id[max_id];
+        highest_threat = max_threat;
+    }
+    if (max_pathable_id != -99) {
+        high_threat_pathable_chunk = map_chunk_by_id[max_pathable_id];
+        highest_pathable_threat = max_pathable_threat;
+    }
+    if (max_id_away != -99) {
+        high_threat_chunk_away_from_start = map_chunk_by_id[max_id_away];
+        highest_threat_away_from_start = max_threat_away;
+    }
+    if (max_pathable_id_away != -99) {
+        high_threat_pathable_chunk_away_from_start = map_chunk_by_id[max_pathable_id_away];
+        highest_pathable_threat_away_from_start = max_pathable_threat_away;
+    }
+
+}
+
+sc2::Point2D LocationHandler::getHighestThreatLocation(bool pathable_, bool away_) {
+    
+    /*
     std::unordered_set<MapChunk*> chunkset;
 
     if (pathable_)
@@ -236,6 +371,37 @@ sc2::Point2D LocationHandler::getHighestThreatLocation(bool pathable_) {
     else {
         return NO_POINT_FOUND;
     }
+    */
+
+    sc2::Point2D return_loc = NO_POINT_FOUND;
+    float hi_threat = 0;
+    MapChunk* hi_chunk = nullptr;
+    if (pathable_) {
+        if (away_) {
+            hi_chunk = getHighestPathableThreatChunkAwayFromStart();
+            hi_threat = hi_chunk->getThreat();
+        }
+        else {
+            hi_chunk = getHighestPathableThreatChunk();
+            hi_threat = hi_chunk->getThreat();
+        }
+    }
+    else {
+        if (away_) {
+            hi_chunk = getHighestThreatChunkAwayFromStart();
+            hi_threat = hi_chunk->getThreat();
+        }
+        else {
+            hi_chunk = getHighestThreatChunk();
+            hi_threat = hi_chunk->getThreat();
+        }
+    }
+
+    if (hi_threat > 0) {
+        return_loc = hi_chunk->getLocation();
+    }
+
+    return return_loc;
 }
 
 MapChunk* LocationHandler::getChunkByCoords(std::pair<float, float> coords) {
@@ -288,6 +454,7 @@ sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
         
         //return getClosestUnseenLocation(pathable_);
         return getFurthestUnseenLocation(pathable_);
+        //return getClosestUnseenLocationToLastThreat(pathable_);
     }
     //std::cout << "(no-unseen)";
 
@@ -307,6 +474,7 @@ sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
 }
 
 sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
+    // gets the closest chunk location to any of the player's units
     std::unordered_set<MapChunk*> chunkset;
     std::unordered_set<MapChunk*> unseen_chunks;
     if (pathable_)
@@ -414,6 +582,44 @@ sc2::Point2D LocationHandler::getFurthestUnseenLocation(bool pathable_) {
     return furthest_loc;
 }
 
+sc2::Point2D LocationHandler::getClosestUnseenLocationToLastThreat(bool pathable_) {
+    // gets the closest chunk location to any of the player's units
+    std::unordered_set<MapChunk*> chunkset;
+    std::unordered_set<MapChunk*> unseen_chunks;
+    if (pathable_)
+        chunkset = pathable_map_chunks;
+    else
+        chunkset = map_chunks;
+
+    for (auto it = chunkset.begin(); it != chunkset.end(); ++it) {
+        if (!(*it)->wasSeen()) {
+            unseen_chunks.insert(*it);
+        }
+    }
+
+    if (unseen_chunks.empty()) {
+        std::cout << "unseen_chunks.empty() ";
+        return NO_POINT_FOUND;
+    }
+
+    float closest_dist = std::numeric_limits<float>::max();
+    sc2::Point2D closest_loc = NO_POINT_FOUND;
+
+    sc2::Point2D high_threat_loc = agent->locH->getHighestThreatChunk()->getLocation();
+
+    for (auto it = unseen_chunks.begin(); it != unseen_chunks.end(); ++it) {
+        sc2::Point2D loc = (*it)->getLocation();
+
+        float dist = sc2::DistanceSquared2D(high_threat_loc, loc);
+        if (dist < closest_dist) {
+            closest_loc = loc;
+            closest_dist = dist;
+        }
+    }
+
+    return closest_loc;
+}
+
 
 int LocationHandler::getPlayerIDForMap(int map_index, sc2::Point2D location) {
     location = getNearestStartLocation(location);
@@ -474,14 +680,21 @@ void LocationHandler::initLocations(int map_index, int p_id) {
     if (map_index == 1) {
         // CACTUS VALLEY
         if (p_id == 1) {
+            
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(158.5, 158.5));
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(158.5, 33.5));
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(33.5, 33.5));
 
             Base main_base(observation->GetStartLocation());
             main_base.add_build_area(32, 147);
             main_base.add_build_area(47, 151);
+            main_base.add_build_area(44.5, 160.5);
+            main_base.set_rally_point(73, 158);
             bases.push_back(main_base);
 
             Base exp_1(66.5, 161.5);
             exp_1.add_defend_point(64, 152);
+            exp_1.set_rally_point(73, 158);
             bases.push_back(exp_1); // radius 6.0F
 
             Base exp_2(54.5, 132.5);
@@ -521,33 +734,57 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(exp_13);
         }
         else if (p_id == 2) {
+            
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(158.5, 33.5));
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(33.5, 33.5));
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(33.5, 158.5));
+
             Base main_base(observation->GetStartLocation());
             main_base.add_build_area(147, 160);
             main_base.add_build_area(151, 145);
+            main_base.add_build_area(160.5, 147.5);
+            main_base.set_rally_point(158, 119);
             bases.push_back(main_base);
 
             Base exp_1(161.5, 125.5);
             exp_1.add_defend_point(152, 128); // radius 6.0F
+            exp_1.set_rally_point(158, 119);
             bases.push_back(exp_1);
         }
         else if (p_id == 3) {
+            
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(33.5, 33.5));
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(33.5, 158.5));
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(158.5, 158.5));
+
             Base main_base(observation->GetStartLocation());
             main_base.add_build_area(160, 45);
             main_base.add_build_area(145, 41);
+            main_base.add_build_area(147.5, 31.5);
+            main_base.set_rally_point(119, 34);
             bases.push_back(main_base);
 
             Base exp_1(125.5, 30.5);
             exp_1.add_defend_point(128, 40); // radius 6.0F
+            exp_1.set_rally_point(119, 34);
             bases.push_back(exp_1);
         }
         else if (p_id == 4) {
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(33.5, 158.5));
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(158.5, 158.5));
+            initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(158.5, 33.5));
+            
+
             Base main_base(observation->GetStartLocation());
             main_base.add_build_area(45, 32);
             main_base.add_build_area(41, 47);
+            main_base.add_build_area(31.5, 44.5);
+            main_base.set_rally_point(34, 73);
             bases.push_back(main_base);
 
             Base exp_1(30.5, 66.5);
             exp_1.add_defend_point(40, 64);  // radius 6.0F
+            exp_1.set_rally_point(34, 73);
             bases.push_back(exp_1);
         }
     }
@@ -776,6 +1013,16 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(exp_14);
         }
     }
+    
+    float closest_sq_dist = std::numeric_limits<float>::max();
+    for (auto esl : enemy_start_locations) {
+        if (distSquaredFromStart(esl) < closest_sq_dist) {
+            closest_sq_dist = distSquaredFromStart(esl);
+        }
+    }
+
+    sq_dist_threshold = pow((sqrt(closest_sq_dist) * .75), 2);
+
     initMapChunks();
     scanChunks(agent->Observation());
 }
@@ -786,6 +1033,10 @@ void LocationHandler::initAddEnemyStartLocation(sc2::Point2D location_) {
 
 float LocationHandler::pathDistFromStartLocation(sc2::QueryInterface* query_, sc2::Point2D location_) {
     return query_->PathingDistance(start_location, location_);
+}
+
+float LocationHandler::getSqDistThreshold() {
+    return sq_dist_threshold;
 }
 
 bool LocationHandler::spotReachable(const sc2::ObservationInterface* obs_, sc2::QueryInterface* query_, sc2::Point2D from_loc_, sc2::Point2D to_loc_) {
@@ -880,6 +1131,16 @@ void LocationHandler::initMapChunks()
             map_chunk_by_coords[std::pair<float, float>(chunk_loc.x, chunk_loc.y)] = chunk_ptr;
         }
     }
+
+
+    if (!enemy_start_locations.empty()) {
+        double threat_amt = enemy_start_locations.size() + 1;
+        for (auto esl : enemy_start_locations) {
+            MapChunk* chunk = getNearestChunk(esl);
+            chunk->setThreat(threat_amt--);
+        }
+    }
+
     chunks_initialized = true;
     std::cout << std::endl << map_chunks.size() << " chunks initialized (" << pathable_count << " pathable)" << std::endl;
     std::cout << " minx: " << chunk_min_x << " miny: " << chunk_min_y << 
@@ -1035,6 +1296,22 @@ MapChunk* LocationHandler::getNearestChunk(sc2::Point2D loc_) {
     return chunk;
 }
 
+MapChunk* LocationHandler::getNearestPathableChunk(sc2::Point2D loc_) {
+    float min_dist = std::numeric_limits<float>::max();
+    MapChunk* nearest = nullptr;
+
+    for (auto c : map_chunks) {
+        if (c->isPathable()) {
+            float dist = sc2::DistanceSquared2D(loc_, c->getLocation());
+            if (dist < min_dist) {
+                min_dist = dist;
+                nearest = c;
+            }
+        }
+    }
+    return nearest;
+}
+
 sc2::Point2D LocationHandler::getProxyLocation() {
     return proxy_location;
 }
@@ -1042,6 +1319,131 @@ sc2::Point2D LocationHandler::getProxyLocation() {
 sc2::Point2D LocationHandler::getStartLocation()
 {
     return start_location;
+}
+
+void LocationHandler::setHighestThreat(double threat_)
+{
+    highest_threat = threat_;
+}
+
+double LocationHandler::getHighestThreat()
+{
+    return highest_threat;
+}
+
+void LocationHandler::setHighestThreatChunk(MapChunk* chunk_)
+{
+    high_threat_chunk = chunk_;
+}
+
+MapChunk* LocationHandler::getHighestThreatChunk()
+{
+    if (high_threat_chunk == nullptr) {
+        assert(!enemy_start_locations.empty());
+        sc2::Point2D clockwise_enemy = getEnemyStartLocationByIndex(0);
+        assert(chunks_initialized);
+        MapChunk* chunk_ = getNearestChunk(clockwise_enemy);
+        high_threat_chunk = chunk_;
+        if (high_threat_chunk->getThreat() == 0) {
+            high_threat_chunk->setThreat(1);
+        }
+    }
+    return high_threat_chunk;
+}
+
+void LocationHandler::setHighestThreatAwayFromStart(double threat_)
+{
+    highest_threat_away_from_start = threat_;
+}
+
+double LocationHandler::getHighestThreatAwayFromStart()
+{
+    return highest_threat_away_from_start;
+}
+
+void LocationHandler::setHighestThreatChunkAwayFromStart(MapChunk* chunk_)
+{
+    high_threat_chunk_away_from_start = chunk_;
+}
+
+MapChunk* LocationHandler::getHighestThreatChunkAwayFromStart()
+{
+    if (high_threat_chunk_away_from_start == nullptr) {
+        assert(!enemy_start_locations.empty());
+        sc2::Point2D clockwise_enemy = getEnemyStartLocationByIndex(0);
+        assert(chunks_initialized);
+        MapChunk* chunk_ = getNearestChunk(clockwise_enemy);
+        high_threat_chunk_away_from_start = chunk_;
+        if (high_threat_chunk_away_from_start->getThreat() == 0) {
+            high_threat_chunk_away_from_start->setThreat(1);
+        }
+    }
+    return high_threat_chunk_away_from_start;
+}
+
+
+void LocationHandler::setHighestPathableThreat(double threat_)
+{
+    highest_pathable_threat = threat_;
+}
+
+double LocationHandler::getHighestPathableThreat()
+{
+    return highest_pathable_threat;
+}
+
+void LocationHandler::setHighestPathableThreatChunk(MapChunk* chunk_)
+{
+    high_threat_pathable_chunk = chunk_;
+}
+
+MapChunk* LocationHandler::getHighestPathableThreatChunk()
+{
+    if (high_threat_pathable_chunk == nullptr) {
+        assert(!enemy_start_locations.empty());
+        sc2::Point2D clockwise_enemy = getEnemyStartLocationByIndex(0);
+        assert(chunks_initialized);
+        MapChunk* chunk_ = getNearestPathableChunk(clockwise_enemy);
+        high_threat_pathable_chunk = chunk_;
+        if (high_threat_pathable_chunk->getThreat() == 0) {
+            high_threat_pathable_chunk->setThreat(1);
+        }
+    }
+    return high_threat_pathable_chunk;
+}
+
+void LocationHandler::setHighestPathableThreatAwayFromStart(double threat_)
+{
+    highest_pathable_threat_away_from_start = threat_;
+}
+
+double LocationHandler::getHighestPathableThreatAwayFromStart()
+{
+    return highest_pathable_threat_away_from_start;
+}
+
+void LocationHandler::setHighestPathableThreatChunkAwayFromStart(MapChunk* chunk_)
+{
+    high_threat_pathable_chunk_away_from_start = chunk_;
+}
+
+MapChunk* LocationHandler::getHighestPathableThreatChunkAwayFromStart()
+{
+    if (high_threat_pathable_chunk_away_from_start == nullptr) {
+        assert(!enemy_start_locations.empty());
+        sc2::Point2D clockwise_enemy = getEnemyStartLocationByIndex(0);
+        assert(chunks_initialized);
+        MapChunk* chunk_ = getNearestPathableChunk(clockwise_enemy);
+        high_threat_pathable_chunk_away_from_start = chunk_;
+        if (high_threat_pathable_chunk_away_from_start->getThreat() == 0) {
+            high_threat_pathable_chunk_away_from_start->setThreat(1);
+        }
+    }
+    return high_threat_pathable_chunk_away_from_start;
+}
+
+float LocationHandler::distSquaredFromStart(sc2::Point2D loc_) {
+    return (sc2::DistanceSquared2D(bases[0].get_townhall(), loc_));
 }
 
 bool LocationHandler::chunksInitialized() {

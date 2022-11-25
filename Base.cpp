@@ -4,9 +4,15 @@ Base::Base(sc2::Point2D location_) {
 	// stores the details of a base
 	location_townhall = location_;
 	active = false;
+	rally_point = location_;
 }
 
 Base::Base(float x, float y) : Base(sc2::Point2D(x,y)) {}
+
+void Base::set_rally_point(float x, float y) {
+	sc2::Point2D location_(x, y);
+	rally_point = location_;
+}
 
 void Base::add_build_area(sc2::Point2D location_) { 
 	// adds a build area to the base, with radius of 12.0
@@ -24,6 +30,10 @@ void Base::add_defend_point(sc2::Point2D location_) {
 
 void Base::add_defend_point(float x, float y) {
 	add_defend_point(sc2::Point2D(x, y));
+}
+
+sc2::Point2D Base::get_rally_point() {
+	return rally_point;
 }
 
 sc2::Point2D Base::get_build_area(int index) {
