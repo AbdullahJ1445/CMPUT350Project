@@ -9,12 +9,12 @@ Base::Base(sc2::Point2D location_) {
 
 Base::Base(float x, float y) : Base(sc2::Point2D(x,y)) {}
 
-void Base::set_rally_point(float x, float y) {
+void Base::setRallyPoint(float x, float y) {
 	sc2::Point2D location_(x, y);
 	rally_point = location_;
 }
 
-sc2::Point2D Base::get_rally_point() {
+sc2::Point2D Base::getRallyPoint() {
 	return rally_point;
 }
 

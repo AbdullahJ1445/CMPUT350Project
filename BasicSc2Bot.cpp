@@ -571,7 +571,7 @@ void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 	// set all buildings rally point (except townhalls)
 	if (!is_townhall) {
 		int nearest_base_idx = locH->getIndexOfClosestBase(unit->pos);
-		sc2::Point2D rally_point = locH->bases[nearest_base_idx].get_rally_point();
+		sc2::Point2D rally_point = locH->bases[nearest_base_idx].getRallyPoint();
 		Actions()->UnitCommand(unit, sc2::ABILITY_ID::SMART, rally_point);
 	}
 }
