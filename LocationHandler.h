@@ -24,12 +24,16 @@ public:
     bool hasEnemyStructures();
     bool isPathable();
     double getThreat();
+    float distSquaredFromStart();
+    bool isNearStart();
     bool inVision(const sc2::ObservationInterface* obs);
     void checkVision(const sc2::ObservationInterface* obs);
     void increaseThreat(BasicSc2Bot* agent_, const sc2::Unit* unit, float modifier_);
+    void setThreat(double amt_);
     sc2::Point2D getLocation();
 
 private:
+    float dist_squared_from_start;
     bool pathable;
     BasicSc2Bot* agent;
     sc2::Point2D location;
@@ -53,8 +57,9 @@ public:
     const sc2::Unit* getNearestGasStructure(sc2::Point2D location, bool allied=true);
     const sc2::Unit* getNearestTownhall(const sc2::Point2D location);
     sc2::Point2D getOldestLocation(bool pathable_=true);
-    sc2::Point2D getHighestThreatLocation(bool pathable_=true);
+    sc2::Point2D getHighestThreatLocation(bool pathable_=true, bool away_=true);
     sc2::Point2D smartAttackLocation(bool pathable_=true);
+    void calculateHighestThreatForChunks();
     int getPlayerIDForMap(int map_index, sc2::Point2D location);
     void initLocations(int map_index, int p_id);
     void setEnemyStartLocation(sc2::Point2D location_);
@@ -63,21 +68,47 @@ public:
     sc2::Point2D getBestEnemyLocation();
     std::vector<MapChunk*> getLocalChunks(sc2::Point2D loc_);
     MapChunk* getNearestChunk(sc2::Point2D loc_);
+    MapChunk* getNearestPathableChunk(sc2::Point2D loc_);
     MapChunk* getChunkByCoords(std::pair<float, float> coords);
     sc2::Point2D getEnemyLocation();
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();
+
+    void setHighestThreat(double threat_);
+    double getHighestThreat();
+    void setHighestThreatChunk(MapChunk* chunk_);
+    MapChunk* getHighestThreatChunk();
+
+    void setHighestThreatAwayFromStart(double threat_);
+    double getHighestThreatAwayFromStart();
+    void setHighestThreatChunkAwayFromStart(MapChunk* chunk_);
+    MapChunk* getHighestThreatChunkAwayFromStart();
+
+    void setHighestPathableThreat(double threat_);
+    double getHighestPathableThreat();
+    void setHighestPathableThreatChunk(MapChunk* chunk_);
+    MapChunk* getHighestPathableThreatChunk();
+
+    void setHighestPathableThreatAwayFromStart(double threat_);
+    double getHighestPathableThreatAwayFromStart();
+    void setHighestPathableThreatChunkAwayFromStart(MapChunk* chunk_);
+    MapChunk* getHighestPathableThreatChunkAwayFromStart();
+
+    float distSquaredFromStart(sc2::Point2D loc_);
+
     float pathDistFromStartLocation(sc2::QueryInterface* query_, sc2::Point2D location_);
     bool spotReachable(const sc2::ObservationInterface* obs_, sc2::QueryInterface* query_, sc2::Point2D from_loc_, sc2::Point2D to_loc_);
     std::vector<Base> bases;
     bool chunksInitialized();
+    float getSqDistThreshold();
 
 private:
     void initSetStartLocation();
     void initAddEnemyStartLocation(sc2::Point2D location_);
     void initMapChunks();
     sc2::Point2D getClosestUnseenLocation(bool pathable_=true);
-    sc2::Point2D getFurthestUnseenLocation(bool pathable_ = true);
+    sc2::Point2D getFurthestUnseenLocation(bool pathable_=true);
+    sc2::Point2D getClosestUnseenLocationToLastThreat(bool pathable_=true);
 
     BasicSc2Bot* agent;
     std::vector<std::unique_ptr<MapChunk>> map_chunk_storage;
@@ -98,5 +129,14 @@ private:
     float chunk_min_y;
     float chunk_max_x;
     float chunk_max_y;
+    double highest_threat;
+    double highest_pathable_threat;
+    double highest_threat_away_from_start;
+    double highest_pathable_threat_away_from_start;
+    MapChunk* high_threat_chunk;
+    MapChunk* high_threat_pathable_chunk;
+    MapChunk* high_threat_chunk_away_from_start;
+    MapChunk* high_threat_pathable_chunk_away_from_start;
+    float sq_dist_threshold;
     
 };

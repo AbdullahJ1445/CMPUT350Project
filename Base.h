@@ -14,15 +14,18 @@ public:
 	int getNumDefendPoints();
 	sc2::Point2D getRandomBuildArea();
 	sc2::Point2D getRandomDefendPoint();
-	void setActive(bool flag=true);
+	void setActive(bool flag = true);
 	bool isActive();
 	sc2::Point2D getBuildArea(int index);
 	sc2::Point2D getDefendPoint(int index);
 	sc2::Point2D getTownhall();
+	void set_rally_point(float x, float y);
+	sc2::Point2D get_rally_point();
 
 private:
 	sc2::Point2D location_townhall;
 	std::vector<sc2::Point2D> defend_points;
 	std::vector<sc2::Point2D> build_areas;
 	bool active;
+	sc2::Point2D rally_point;
 };

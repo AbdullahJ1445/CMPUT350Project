@@ -340,20 +340,30 @@ void BasicSc2Bot::OnGameStart() {
 void::BasicSc2Bot::OnStep_100(const sc2::ObservationInterface* obs) {
 	// occurs every 100 steps
 	if (locH->chunksInitialized()) {
-		sc2::Point2D threat_spot = locH->getHighestThreatLocation();
-		MapChunk* threat_chunk = locH->getChunkByCoords(std::pair<float, float>(threat_spot.x, threat_spot.y));
-		if (threat_spot == NO_POINT_FOUND) {
-			//std::cout << "no high threat location found" << std::endl;
-		}
-		else {
-			std::cout << "threat at " << threat_spot.x << "," << threat_spot.y << " = " << threat_chunk->getThreat() << std::endl;;
-		}
+		locH->calculateHighestThreatForChunks();
 	}
 }
 
 void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
 	// occurs every 1000 steps
-
+	sc2::Point2D pathable_threat_spot = locH->getHighestThreatLocation(true, false);
+	sc2::Point2D pathable_away_threat_spot = locH->getHighestThreatLocation();
+	MapChunk* pathable_threat_chunk = locH->getChunkByCoords(std::pair<float, float>(pathable_threat_spot.x, pathable_threat_spot.y));
+	MapChunk* pathable_away_threat_chunk = locH->getChunkByCoords(std::pair<float, float>(pathable_away_threat_spot.x, pathable_away_threat_spot.y));
+	if (pathable_threat_spot == NO_POINT_FOUND) {
+		//std::cout << "no pathable high threat location found" << std::endl;
+	}
+	else {
+		std::cout << "highest threat at " << pathable_threat_spot.x << "," << pathable_threat_spot.y << " = " << pathable_threat_chunk->getThreat() << std::endl;;
+	}
+	/*
+	if (pathable_away_threat_spot == NO_POINT_FOUND) {
+		//std::cout << "no pathable high threat location found" << std::endl;
+	}
+	else {
+		std::cout << "highest pathable threat away from start at " << pathable_away_threat_spot.x << "," << pathable_away_threat_spot.y << " = " << pathable_away_threat_chunk->getThreat() << std::endl;;
+	}
+	*/
 
 }
 
@@ -530,10 +540,12 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 	Mob* mob = &mobH->getMob(*unit);
 	sc2::UNIT_TYPEID unit_type = unit->unit_type;
+	bool is_townhall = false;
 	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS ||
 		unit_type == sc2::UNIT_TYPEID::TERRAN_COMMANDCENTER ||
 		unit_type == sc2::UNIT_TYPEID::ZERG_HATCHERY) {
 		int base_index = locH->getIndexOfClosestBase(unit->pos);
+		is_townhall = true;
 		std::cout << "expansion " << base_index << " has been activated." << std::endl;
 		locH->bases[base_index].setActive();
 	}
@@ -554,6 +566,13 @@ void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 		// assign 3 workers to harvest this
 		for (int i = 0; i < 3; i++)
 			AssignNearbyWorkerToGasStructure(*unit);
+	}
+
+	// set all buildings rally point (except townhalls)
+	if (!is_townhall) {
+		int nearest_base_idx = locH->getIndexOfClosestBase(unit->pos);
+		sc2::Point2D rally_point = locH->bases[nearest_base_idx].get_rally_point();
+		Actions()->UnitCommand(unit, sc2::ABILITY_ID::SMART, rally_point);
 	}
 }
 

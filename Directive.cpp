@@ -893,10 +893,6 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 	else {
 		// handle case where only one mob is being assigned the order
 
-		if (ability == TWI) {
-			std::cout << "(1)";
-		}
-
 		// this order already has a mob
 		if (!allow_multiple && hasAssignedMob()) {
 			return false;
@@ -930,9 +926,6 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 		}
 
 		if (action_success) {
-			if (ability == TWI) {
-				std::cout << "(2)";
-			}
 			if (assignee != DEFAULT_DIRECTIVE) {
 				Directive* last_directive = mob_->getCurrentDirective();
 
