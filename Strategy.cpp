@@ -705,6 +705,9 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_FOOD_CAP, 115);
 			t2.addCondition(COND::MIN_FOOD_USED, 109);
 			attack_and_explore.addTrigger(t2);
+			Trigger t3(bot);
+			t3.addCondition(COND::MIN_TIME, 17000);
+			attack_and_explore.addTrigger(t3);
 			bot->addStrat(attack_and_explore);
 		}
 		{
