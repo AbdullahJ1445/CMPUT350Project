@@ -541,7 +541,8 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	}
 	else {
 		if (!structure) {
-			new_mob.setAssignedLocation(Directive::uniform_random_point_in_circle(new_mob.getHomeLocation(), 2.5F));
+			new_mob.setAssignedLocation(locH->bases[locH->getIndexOfClosestBase(unit->pos)].getRallyPoint());
+			//new_mob.setAssignedLocation(Directive::uniform_random_point_in_circle(new_mob.getHomeLocation(), 2.5F));
 		}
 		else {
 			new_mob.setAssignedLocation(new_mob.getHomeLocation());

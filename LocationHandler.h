@@ -58,7 +58,10 @@ public:
     const sc2::Unit* getNearestTownhall(const sc2::Point2D location);
     sc2::Point2D getOldestLocation(bool pathable_=true);
     sc2::Point2D getHighestThreatLocation(bool pathable_=true, bool away_=true);
+
     sc2::Point2D smartAttackLocation(bool pathable_=true);
+    sc2::Point2D smartStayHomeAndDefend();
+
     void calculateHighestThreatForChunks();
     int getPlayerIDForMap(int map_index, sc2::Point2D location);
     void initLocations(int map_index, int p_id);
@@ -96,7 +99,10 @@ public:
     void setHighestPathableThreatChunkAwayFromStart(MapChunk* chunk_);
     MapChunk* getHighestPathableThreatChunkAwayFromStart();
 
+    MapChunk* getHighestPathableThreatChunkNearLocation(sc2::Point2D loc_, float range_);
+
     float distSquaredFromStart(sc2::Point2D loc_);
+    sc2::Point2D getThreatNearStart();
 
     float pathDistFromStartLocation(sc2::QueryInterface* query_, sc2::Point2D location_);
     bool spotReachable(const sc2::ObservationInterface* obs_, sc2::QueryInterface* query_, sc2::Point2D from_loc_, sc2::Point2D to_loc_);

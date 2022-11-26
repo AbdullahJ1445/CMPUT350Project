@@ -17,7 +17,7 @@
 # define SEND_HOME				sc2::Point2D(-9.64727, -9.64727) // value understood to mean the unit's home location
 # define INVALID_RADIUS			-1.1F // value understood to mean a radius is invalid, or uninitialized
 # define NO_POINT_FOUND			sc2::Point2D(-2.5252, -2.5252) // value understood to mean no valid point was found
-# define ASSIGNED_LOCATION		sc2::Point2D(-5.0505, -5.0505) // value understood to mean a unit's assigned_location
+# define ASSIGNED_LOCATION		sc2::Point2D(-55555.5, -55555.5) // value understood to mean a unit's assigned_location
 
 # define TWI					sc2::ABILITY_ID::BUILD_TWILIGHTCOUNCIL
 
@@ -87,6 +87,8 @@ public:
 	bool hasAssignedMob();
 	int getTargetUpdateIterationID();
 	int getAssigneeUpdateIterationID();
+	bool isAssignedLocationValue(sc2::Point2D loc_, float range_);
+	sc2::Point2D getOffsetAssignedLocation(sc2::Point2D loc_);
 	sc2::ABILITY_ID getAbilityID();
 	std::unordered_set<Mob*> getAssignedMobs();
 	static Mob* getClosestToLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
