@@ -74,6 +74,7 @@ public:
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();
     sc2::Point2D getCenterPathableLocation();
+    bool locationsEqual(sc2::Point2D loc_1, sc2::Point2D loc_2);
 
     void setHighestThreat(double threat_);
     double getHighestThreat();
