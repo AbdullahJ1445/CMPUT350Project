@@ -79,6 +79,8 @@ public:
     sc2::Point2D getCenterPathableLocation();
     bool locationsEqual(sc2::Point2D loc_1, sc2::Point2D loc_2);
 
+    sc2::Point2D getRallyPointTowardsThreat();
+
     void setHighestThreat(double threat_);
     double getHighestThreat();
     void setHighestThreatChunk(MapChunk* chunk_);

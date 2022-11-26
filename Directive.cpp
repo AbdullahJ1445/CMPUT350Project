@@ -5,7 +5,7 @@
 #include "Mob.h"
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D assignee_location_,
-	sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_, std::string group_name_) {
+	sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_, std::string group_name_, FLAGS set_flag_) {
 	// genertic private constructor delegated by others
 	// constructors which do not provide values for certain variables provide the listed default value instead
 
@@ -24,10 +24,13 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	target_unit = unit_;						// default: nullptr
 	update_assignee_location = false;
 	update_target_location = false;
+	exclude_flags = std::unordered_set<FLAGS>();
 	group_name = group_name_;
+	set_flag = set_flag_;
 	continuous_update = false;
 	target_update_iter_id = 0;
 	assignee_update_iter_id = 0;
+	ignore_distance = -1.0;
 	debug = false;
 
 
@@ -48,39 +51,49 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_) : 
 	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_,
-		INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "") {}
+		INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_) :
 	Directive(assignee_, action_type_, unit_type_, ability_, INVALID_POINT, 
-		INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "") {}
+		INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) :
 	Directive(assignee_, action_type_, unit_type_, ability_, INVALID_POINT,
-		location_, INVALID_RADIUS, proximity_, std::unordered_set<FLAGS>(), nullptr, "") {}
+		location_, INVALID_RADIUS, proximity_, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG) {}
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, float assignee_proximity_) :
-	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "") {}
+	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG) {}
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) :
-	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, target_location_, assignee_proximity_, target_proximity_, std::unordered_set<FLAGS>(), nullptr, "") {}
+	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, target_location_, assignee_proximity_, target_proximity_, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_) :
 	Directive(assignee_, action_type_, unit_type_, ability_, INVALID_POINT,
-		INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), target_, "") {}
+		INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), target_, "", FLAGS::INVALID_FLAG) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) :
 	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, ability_, INVALID_POINT,
-		location_, INVALID_RADIUS, proximity_, flags_, nullptr, "") {}
+		location_, INVALID_RADIUS, proximity_, flags_, nullptr, "", FLAGS::INVALID_FLAG) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_,
 	sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) :
 	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, ability_, assignee_location_,
-		target_location_, assignee_proximity_, target_proximity_, flags_, nullptr, "") {}
+		target_location_, assignee_proximity_, target_proximity_, flags_, nullptr, "", FLAGS::INVALID_FLAG) {}
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, std::string group_name_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_) :
-	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, group_name_) {}
+	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, group_name_, FLAGS::INVALID_FLAG) {}
 
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, FLAGS set_flag_) :
+	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, INVALID_POINT, INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", set_flag_) {}
 
+Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, FLAGS set_flag_, float assignee_proximity_) :
+	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", set_flag_) {}
+	
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, FLAGS set_flag_) :
+	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, sc2::ABILITY_ID::INVALID, INVALID_POINT, INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, flags_, nullptr, "", set_flag_) {}
+
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::Point2D assignee_location_, FLAGS set_flag_, float assignee_proximity_) :
+	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, flags_, nullptr, "", set_flag_) {}
 
 bool Directive::bundleDirective(Directive directive_) {
 	if (!locked)
@@ -141,26 +154,26 @@ bool Directive::execute(BasicSc2Bot* agent) {
 
 	}
 
+	if (action_type == ACTION_TYPE::SET_FLAG) {
+		assert(set_flag != FLAGS::INVALID_FLAG);
+	}
+
 	if (assignee == ASSIGNEE::UNIT_TYPE || assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION) {
-		if (action_type == ACTION_TYPE::EXACT_LOCATION || action_type == ACTION_TYPE::NEAR_LOCATION ||
-			action_type == ACTION_TYPE::GET_MINERALS_NEAR_LOCATION) {
-			
-			if (ability == sc2::ABILITY_ID::BUILD_ASSIMILATOR ||
-				ability == sc2::ABILITY_ID::BUILD_EXTRACTOR ||
-				ability == sc2::ABILITY_ID::BUILD_REFINERY) {
-				// find a geyser near target location to build the structure on
-				return executeBuildGasStructure(agent);
-			}
-
-			if (ability == sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST) {
-				return execute_protoss_nexus_chronoboost(agent);
-			}
-
-			return executeOrderForUnitTypeWithLocation(agent);
-		}
 		if (action_type == SIMPLE_ACTION || action_type == DISABLE_DEFAULT_DIRECTIVE) {
 			return executeSimpleActionForUnitType(agent);
+		}	
+		if (ability == sc2::ABILITY_ID::BUILD_ASSIMILATOR ||
+			ability == sc2::ABILITY_ID::BUILD_EXTRACTOR ||
+			ability == sc2::ABILITY_ID::BUILD_REFINERY) {
+			// find a geyser near target location to build the structure on
+			return executeBuildGasStructure(agent);
 		}
+
+		if (ability == sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST) {
+			return execute_protoss_nexus_chronoboost(agent);
+		}
+
+		return executeOrderForUnitType(agent);
 	}
 
 	if (assignee == MATCH_FLAGS || assignee == MATCH_FLAGS_NEAR_LOCATION) {
@@ -197,17 +210,16 @@ bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 		//       as harvesting continues indefinitely
 		
 		
-		//if (mob->is_carrying_minerals()) {
-			// if unit is carrying minerals, return them to the townhall instead
-		//	const sc2::Unit* townhall = agent->locH->getNearestTownhall(location);
-		//	if (!townhall)
-		//		return false;
+		if (mob->isCarryingMinerals()) {
+			//if unit is carrying minerals, return them to the townhall instead
+			const sc2::Unit* townhall = agent->locH->getNearestTownhall(location);
+			if (!townhall)
+				return false;
 
 			/* ORDER IS EXECUTED */
-		//	return issueOrder(agent, mob, false, sc2::ABILITY_ID::HARVEST_RETURN);
+			return issueOrder(agent, mob, false, sc2::ABILITY_ID::HARVEST_RETURN);
 			/* * * * * * * * * * */
-		//}
-	
+		}	
 
 		const sc2::Unit* mineral_target = agent->locH->getNearestMineralPatch(location);
 
@@ -449,6 +461,10 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
 	std::unordered_set<Mob*> matching_mobs = agent->mobH->filterByFlags(mobs, flags);
 
+	if (!exclude_flags.empty()) {
+		matching_mobs = agent->mobH->filterByFlags(matching_mobs, exclude_flags, false);
+	}
+
 	// get only units near the assignee_location parameter
 	if (assignee == MATCH_FLAGS_NEAR_LOCATION) {
 		matching_mobs = filterNearLocation(matching_mobs, assignee_location, assignee_proximity);
@@ -505,16 +521,41 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 		return issueOrder(agent, filtered_mobs, closest_unit);
 		/* * * * * * * * * * */
 	}
+	if (action_type == ACTION_TYPE::SET_FLAG) {
+		// filter those that don't already have this flag
+		matching_mobs = agent->mobH->filterByFlag(matching_mobs, set_flag, false);
+		
+		if (matching_mobs.empty()) {
+			return false;
+		}
+
+		/* SET FLAG ORDER IS EXECUTED */
+		for (auto m : matching_mobs) {
+			m->setFlag(set_flag);
+		}
+		return true;
+		/* * * * * * * * * * * * * * */
+	}
 
 	return false;
 }
 
-bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
-	const sc2::AbilityData ability_data = agent->Observation()->GetAbilityData()[(int)ability]; // various info about the ability
+bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
+	sc2::AbilityData ability_data;
+	if (ability != sc2::ABILITY_ID::INVALID) {
+		ability_data = agent->Observation()->GetAbilityData()[(int)ability]; // various info about the ability
+	}
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
 	sc2::Point2D location = target_location;
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
 	Mob* mob = nullptr;
+
+	if (!exclude_flags.empty()) {
+		mobs = agent->mobH->filterByFlags(mobs, exclude_flags, false);
+		if (mobs.empty()) {
+			return false;
+		}
+	}
 
 	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
 		mobs = filterNearLocation(mobs, assignee_location, assignee_proximity);
@@ -541,10 +582,9 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 	if (mobs.size() == 0) {
 		return false;
 	}
-
-    
+   
 	// if order is a build structure order, ensure a valid placement location
-	if (ability_data.is_building) {
+	if (ability != sc2::ABILITY_ID::INVALID && ability_data.is_building) {
 		
 		// if any unit is currently already on route to build this structure
 		if (ifAnyOnRouteToBuild(agent, mobs)) {
@@ -586,11 +626,35 @@ bool Directive::executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent) {
 		return false;
 	}
 
+	if (action_type == SET_FLAG) {
+		// filter those that don't already have this flag
+		mobs = agent->mobH->filterByFlag(mobs, set_flag, false);
+	}
+
+	if (mobs.size() == 0) {
+		return false;
+	}
+
 	// get closest matching unit to target location
-	mob = getClosestToLocation(mobs, target_location);
+	if (target_location != INVALID_POINT) {
+		mob = getClosestToLocation(mobs, target_location);
+	}
+	else if (assignee_location != INVALID_POINT) {
+		mob = getClosestToLocation(mobs, assignee_location);
+	}
+	else {
+		mob = *mobs.begin();
+	}
 
 	if (!mob) {
 		return false;
+	}
+
+	if (action_type == SET_FLAG) {
+		/* SET FLAG ORDER IS EXECUTED */
+		mob->setFlag(set_flag);
+		return true;
+		/* * * * * * * * * * * * * * */
 	}
 
 	if (action_type == GET_MINERALS_NEAR_LOCATION) {
@@ -756,6 +820,11 @@ bool Directive::allowMultiple(bool is_true) {
 	return false;
 }
 
+void Directive::excludeFlag(FLAGS exclude_flag_) {
+	// set a flag to exclude when choosing mobs to give orders to
+	exclude_flags.insert(exclude_flag_);
+}
+
 void Directive::setContinuous(bool is_true) {
 	// when true, this directive will continuously re-issue orders when locations are updated to new values
 	continuous_update = is_true;
@@ -841,6 +910,11 @@ void Directive::setDebug(bool is_true) {
 	debug = is_true;
 }
 
+void Directive::setIgnoreDistance(float range_) {
+	// actions will not perform if the distance is within this range of the unit's current position
+	ignore_distance = range_;
+}
+
 void Directive::lock() {
 	// prevent further modification to this
 	locked = true;
@@ -888,30 +962,59 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 			return false;
 		}		
 		
-		sc2::Units units;
-		for (auto m_ : mobs_) {
-			units.push_back(&(m_->unit));
-		}
+
 
 		bool action_success = false;
-
-		// no target is specified
-		if (target_loc_ == INVALID_POINT && target_unit_ == nullptr) {
-			agent->Actions()->UnitCommand(units, ability_, queued_);
-			action_success = true;
-		}
 
 		// target location is specified
 		if (target_loc_ != INVALID_POINT && target_unit_ == nullptr) {
 			// if point is SEND_HOME, grab the first unit's home location instead
 			if (target_loc_ == SEND_HOME) {
-				target_loc_ = agent->mobH->getMob(*units.front()).getHomeLocation();
+				target_loc_ = (*mobs_.begin())->getHomeLocation();
 			}
 			if (isAssignedLocationValue(target_loc_, proximity)) {
 				sc2::Point2D offset = getOffsetAssignedLocation(target_loc_);
-				target_loc_ = agent->mobH->getMob(*units.front()).getAssignedLocation() + offset;
+				target_loc_ = (*mobs_.begin())->getAssignedLocation() + offset;
 			}
+			if (ignore_distance >= 0) {
+				// when ignore_distance is specified, we must filter out mobs that are within the
+				// specified distance of the target. This prevents units from "dancing" in circles
+				// as the same order is repeatedly given to them
+
+				float ign_sq_dist = pow(ignore_distance, 2);
+
+				if (!mobs_.empty()) {
+					for (auto& it = mobs_.begin(); it != mobs_.end(); ) {
+						auto next = std::next(it);
+						if (sc2::DistanceSquared2D((*it)->unit.pos, target_loc_) <= ign_sq_dist) {
+							mobs_.erase(it);
+						}
+						it = next;
+					}
+				}
+				if (mobs_.empty()) {
+					return false;
+				}
+			}
+		}
+
+		// populate units from mobs set
+		sc2::Units units;
+		for (auto m_ : mobs_) {
+			units.push_back(&(m_->unit));
+		}
+
+		// target location is specified, continued
+		if (target_loc_ != INVALID_POINT && target_unit_ == nullptr) {
 			agent->Actions()->UnitCommand(units, ability_, target_loc_, queued_);
+			action_success = true;
+		}
+
+		
+
+		// no target is specified
+		if (target_loc_ == INVALID_POINT && target_unit_ == nullptr) {
+			agent->Actions()->UnitCommand(units, ability_, queued_);
 			action_success = true;
 		}
 
@@ -969,6 +1072,18 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 				sc2::Point2D offset = getOffsetAssignedLocation(target_loc_);
 				target_loc_ = mob_->getAssignedLocation() + offset;
 			}
+
+			if (ignore_distance >= 0) {
+				// when ignore_distance is specified, we must check if the mob is within the
+				// specified distance of the target. This prevnts units from "dancing" in circles
+				// as the same order is repeatedly given to them
+
+				float ign_sq_dist = pow(ignore_distance, 2);
+				if (sc2::DistanceSquared2D((mob_->unit).pos, target_loc_) <= ign_sq_dist) {
+					return false;
+				}
+			}
+
 			agent->Actions()->UnitCommand(&mob_->unit, ability_, target_loc_, queued_);
 			action_success = true;
 		}
