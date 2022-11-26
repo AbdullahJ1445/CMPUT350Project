@@ -623,59 +623,73 @@ sc2::Point2D LocationHandler::getClosestUnseenLocationToLastThreat(bool pathable
     return closest_loc;
 }
 
+bool LocationHandler::locationsEqual(sc2::Point2D loc_1, sc2::Point2D loc_2) {
+    // ensure locations are equaivalent, despite potential floating point serrors
+
+    int loc_1x_10 = loc_1.x * 10;
+    int loc_1y_10 = loc_1.y * 10;
+    int loc_2x_10 = loc_2.x * 10;
+    int loc_2y_10 = loc_2.y * 10;
+    return (loc_1x_10 == loc_2x_10 && loc_1y_10 == loc_2y_10);
+}
+
 
 int LocationHandler::getPlayerIDForMap(int map_index, sc2::Point2D location) {
-    location = getNearestStartLocation(location);
+    //location = getNearestStartLocation(location);
+    //location = agent->Observation()->GetStartLocation();
+        
     int p_id = 0;
     switch (map_index) {
     case 1:
         // Cactus Valley LE
-        if (location == sc2::Point2D(33.5, 158.5)) {
+        if (locationsEqual(location, sc2::Point2D(33.5, 158.5))) {
             // top left
             p_id = 1;
         }
-        if (location == sc2::Point2D(158.5, 158.5)) {
+        if (locationsEqual(location, sc2::Point2D(158.5, 158.5))) {
             // top right
             p_id = 2;
         }
-        if (location == sc2::Point2D(158.5, 33.5)) {
+        if (locationsEqual(location, sc2::Point2D(158.5, 33.5))) {
             // bottom right
             p_id = 3;
         }
-        if (location == sc2::Point2D(33.5, 33.5)) {
+        if (locationsEqual(location, sc2::Point2D(33.5, 33.5))) {
             // bottom left
             p_id = 4;
         }
         break;
     case 2:
         // Bel'Shir Vestige LE
-        if (location == sc2::Point2D(114.5, 25.5)) {
+        if (locationsEqual(location, sc2::Point2D(114.5, 25.5))) {
             // bottom right
             p_id = 1;
         }
-        if (location == sc2::Point2D(29.5, 134.5)) {
+        if (locationsEqual(location, sc2::Point2D(29.5, 134.5))) {
             // top left
             p_id = 2;
         }
         break;
     case 3:
         // Proxima Station LE
-        if (location == sc2::Point2D(137.5, 139.5)) {
+        if (locationsEqual(location, sc2::Point2D(137.5, 139.5))) {
             // top right
             p_id = 1;
         }
-        if (location == sc2::Point2D(62.5, 28.5)) {
+        if (locationsEqual(location, sc2::Point2D(62.5, 28.5))) {
             // bottom left
             p_id = 2;
         }
         break;
     }
+    assert(p_id != 0);
     return p_id;
 }
 
 void LocationHandler::initLocations(int map_index, int p_id) {
     const sc2::ObservationInterface* observation = agent->Observation();
     initSetStartLocation();
+    
 
     std::cout << "map index: " << map_index << std::endl;
     std::cout << "p_id: " << p_id << std::endl;
@@ -1063,7 +1077,7 @@ void LocationHandler::initMapChunks()
     float min_y = game_info.playable_min.x + chunk_size;
     float max_x;
     float max_y;
-    map_center = sc2::Point2D(game_info.playable_max.x - game_info.playable_min.x, game_info.playable_max.y - game_info.playable_min.y);
+    map_center = sc2::Point2D((game_info.playable_max.x - game_info.playable_min.x) / 2 + game_info.playable_min.x, (game_info.playable_max.y - game_info.playable_min.y) / 2 + game_info.playable_min.y);
 
     // chunk matrix size
     int width = 0;
