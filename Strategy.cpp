@@ -318,7 +318,7 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MIN_GAS, 100);
 			t3.addCondition(COND::MIN_FOOD, 4);
 			t3.addCondition(COND::ENEMY_RACE_ZERG, 0, false);
-			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
+			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			train_immortal.addTrigger(t3);
@@ -334,7 +334,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_GAS, 200);
 			t.addCondition(COND::MIN_FOOD, 6);
 			t.addCondition(COND::ENEMY_RACE_ZERG, 0, false);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			train_colossus.addTrigger(t);
@@ -459,7 +459,7 @@ void Strategy::loadStrategies() {
 			train_stalker.addDirective(d);
 			train_stalker.addTrigger(t2);
 			Trigger t3(bot);
-			t3.addCondition(COND::MIN_MINERALS, 600);
+			t3.addCondition(COND::MIN_MINERALS, 400);
 			t3.addCondition(COND::MIN_GAS, 200);
 			t3.addCondition(COND::MIN_FOOD, 2);
 			t3.addCondition(COND::MAX_FOOD_CAP, 90);
@@ -468,7 +468,7 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			train_stalker.addTrigger(t3);
 			Trigger t4(bot);
-			t4.addCondition(COND::MIN_MINERALS, 500);
+			t4.addCondition(COND::MIN_MINERALS, 400);
 			t4.addCondition(COND::MIN_GAS, 350);
 			t4.addCondition(COND::MIN_FOOD, 2);
 			t4.addCondition(COND::MIN_FOOD_CAP, 91);
@@ -481,7 +481,7 @@ void Strategy::loadStrategies() {
 			t5.addCondition(COND::MIN_GAS, 50);
 			t5.addCondition(COND::MIN_FOOD, 2);
 			t5.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg, build tons
-			t5.addCondition(COND::MAX_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
+			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			bot->addStrat(train_stalker);
 		}
@@ -675,20 +675,22 @@ void Strategy::loadStrategies() {
 			bot->addStrat(scout_bases);
 		}
 		{
-			Precept return_home(bot);
-			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::GENERAL_MOVE, bot->locH->bases[1].getRallyPoint(), 4.0F);
+			Precept defend_home(bot);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->locH->bases[1].getRallyPoint(), 4.0F);
 			Trigger t(bot);
-			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 7, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
-			t.addCondition(COND::MAX_UNIT_WITH_FLAGS, 11, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			auto func = [this]() { return bot->locH->smartStayHomeAndDefend(); };
+			d.setTargetLocationFunction(this, bot, func);
+			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 4, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
 			t.addCondition(COND::MAX_FOOD_CAP, 65);
-			return_home.addDirective(d);
-			return_home.addTrigger(t);
+			t.addCondition(COND::MAX_TIME, 16999);
+			defend_home.addTrigger(t);
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_DEAD_MOBS, 1);
-			t2.addCondition(COND::MAX_FOOD_CAP, 65);
-			t2.addCondition(COND::MAX_UNIT_WITH_FLAGS, 11, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
-			return_home.addTrigger(t2);
-			bot->addStrat(return_home);
+			t2.addCondition(COND::MAX_FOOD_CAP, 104);
+			t2.addCondition(COND::MAX_TIME, 16999);
+			defend_home.addDirective(d);
+			defend_home.addTrigger(t2);
+			bot->addStrat(defend_home);
 		}
 		{
 			Precept attack_and_explore(bot);
@@ -704,6 +706,7 @@ void Strategy::loadStrategies() {
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_FOOD_CAP, 115);
 			t2.addCondition(COND::MIN_FOOD_USED, 109);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
 			attack_and_explore.addTrigger(t2);
 			Trigger t3(bot);
 			t3.addCondition(COND::MIN_TIME, 17000);

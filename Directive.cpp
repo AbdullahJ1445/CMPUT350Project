@@ -474,11 +474,13 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 				filtered_mobs.insert(m);
 			}
 		}
-	if (!found_valid_unit)
-		return false;
-	/* ORDER IS EXECUTED */
-	return issueOrder(agent, filtered_mobs, location);
-	/* * * * * * * * * * */
+
+		if (!found_valid_unit)
+			return false;
+
+		/* ORDER IS EXECUTED */
+		return issueOrder(agent, filtered_mobs, location);
+		/* * * * * * * * * * */
 	}
 	if (action_type == ACTION_TYPE::TARGET_UNIT_NEAR_LOCATION) {
 		std::unordered_set<const sc2::Unit*> enemies = agent->getEnemyUnits();
@@ -727,6 +729,24 @@ int Directive::getAssigneeUpdateIterationID() {
 	return assignee_update_iter_id;
 }
 
+bool Directive::isAssignedLocationValue(sc2::Point2D loc_, float range_)
+{
+	// check if location should be interpreted as "assigned location"
+
+	if (loc_.x > 0 || loc_.y > 0)
+		return false;
+	if (sc2::DistanceSquared2D(loc_, ASSIGNED_LOCATION) < pow(range_, 2)) {
+		return true;
+	}
+	return false;
+}
+
+sc2::Point2D Directive::getOffsetAssignedLocation(sc2::Point2D loc_) {
+	// return the offset value of the difference between loc_ and the ASSIGNED_LOCATION defined value
+	// used so that we can use "Near location" but still interpret it as relative to assigned location
+	return loc_ - ASSIGNED_LOCATION;
+}
+
 bool Directive::allowMultiple(bool is_true) {
 	// allow this directive to be assigned to more than one Mob
 	if (!locked) {
@@ -887,6 +907,10 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 			if (target_loc_ == SEND_HOME) {
 				target_loc_ = agent->mobH->getMob(*units.front()).getHomeLocation();
 			}
+			if (isAssignedLocationValue(target_loc_, proximity)) {
+				sc2::Point2D offset = getOffsetAssignedLocation(target_loc_);
+				target_loc_ = agent->mobH->getMob(*units.front()).getAssignedLocation() + offset;
+			}
 			agent->Actions()->UnitCommand(units, ability_, target_loc_, queued_);
 			action_success = true;
 		}
@@ -940,6 +964,10 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 		if (target_loc_ != INVALID_POINT && target_unit_ == nullptr) {
 			if (target_loc_ == SEND_HOME) {
 				target_loc_ = mob_->getHomeLocation();
+			}
+			if (isAssignedLocationValue(target_loc_, proximity)) {
+				sc2::Point2D offset = getOffsetAssignedLocation(target_loc_);
+				target_loc_ = mob_->getAssignedLocation() + offset;
 			}
 			agent->Actions()->UnitCommand(&mob_->unit, ability_, target_loc_, queued_);
 			action_success = true;

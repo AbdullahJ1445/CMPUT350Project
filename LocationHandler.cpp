@@ -432,6 +432,15 @@ sc2::Point2D LocationHandler::smartAttackLocation(bool pathable_) {
     return getOldestLocation(pathable_);
 }
 
+sc2::Point2D LocationHandler::smartStayHomeAndDefend()
+{
+    sc2::Point2D hi_threat = getThreatNearStart();
+    if (hi_threat == NO_POINT_FOUND) {
+        return ASSIGNED_LOCATION;
+    }
+    return hi_threat;
+}
+
 sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
 {
     // first check if any locations were never seen
@@ -1468,6 +1477,66 @@ MapChunk* LocationHandler::getHighestPathableThreatChunkAwayFromStart()
         }
     }
     return high_threat_pathable_chunk_away_from_start;
+}
+
+MapChunk* LocationHandler::getHighestPathableThreatChunkNearLocation(sc2::Point2D loc_, float range_) {
+
+    // determine boundaries of chunks so we don't search the entire map
+
+    float min_x = loc_.x - range_;
+    float max_x = loc_.x + range_;
+    float min_y = loc_.y - range_;
+    float max_y = loc_.y + range_;
+
+    float sq_dist = range_ * range_;
+
+    int i1 = 0; // min row
+    int i2 = 0; // max row
+    int j1 = 0; // min col
+    int j2 = 0; // max col
+
+    for (float x = chunk_min_x; x < max_x && x < chunk_max_x; x += chunk_spread) { 
+        if (x < min_x) {
+            i1++;
+        }
+        i2++;
+    }
+    for (float y = chunk_min_y; y < max_y && y < chunk_max_y; y += chunk_spread) {
+        if (y < min_y) {
+            j1++;
+        }
+        j2++;
+    }
+
+    // iterate through chunks to determine the highest threat.
+    // Index of chunk in storage (by row and col) = j * chunk_rows + i
+    double highest_threat = 0;
+    MapChunk* hi_chunk = nullptr;
+
+    assert(map_chunk_storage.size() > (j2 * chunk_rows + i2));
+
+    for (int j = j1; j <= j2; j++) {
+        for (int i = i1; i <= i2; i++) {
+            MapChunk* chunk = map_chunk_storage[j * chunk_rows + i].get();
+            if (chunk->isPathable()) {
+                if (sc2::DistanceSquared2D(chunk->getLocation(), loc_) <= sq_dist) {
+                    if (chunk->getThreat() > highest_threat) {
+                        hi_chunk = chunk;
+                        highest_threat = chunk->getThreat();
+                    }
+                }
+            }
+        }
+    }
+    return hi_chunk;
+}
+
+sc2::Point2D LocationHandler::getThreatNearStart() {
+    MapChunk* chunk = getHighestPathableThreatChunkNearLocation(start_location, 50.0F);
+    if (chunk == nullptr) {
+        return NO_POINT_FOUND;
+    }
+    return chunk->getLocation();
 }
 
 float LocationHandler::distSquaredFromStart(sc2::Point2D loc_) {
