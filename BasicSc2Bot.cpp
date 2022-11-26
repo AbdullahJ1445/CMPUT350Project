@@ -214,6 +214,34 @@ bool BasicSc2Bot::addEnemyUnit(const sc2::Unit* unit) {
 	return true;
 }
 
+bool BasicSc2Bot::flushOrders()
+{
+	bool any_flushed = false;
+	std::unordered_set<Mob*> busy_mobs = mobH->getBusyMobs();
+	for (auto m : busy_mobs) {
+		if (!m->hasCurrentDirective()) {
+			mobH->setMobIdle(m);
+			any_flushed = true;
+			continue;
+		}
+		Directive* current_dir = m->getCurrentDirective();
+		sc2::ABILITY_ID current_ability = current_dir->getAbilityID();
+		auto orders = m->unit.orders;
+		if (orders.empty()) {
+			mobH->setMobIdle(m);
+			any_flushed = true;
+			continue;
+		}
+		auto order = orders.front();
+		if (order.ability_id != current_ability) {
+			mobH->setMobIdle(m);
+			any_flushed = true;
+			continue;
+		}
+	}
+	return any_flushed;
+}
+
 int BasicSc2Bot::getMineralCost(const sc2::Unit* unit) {
 	return mineral_cost[(int)unit->unit_type];
 }
@@ -245,21 +273,13 @@ float BasicSc2Bot::getValue(const sc2::Unit* unit) {
 void BasicSc2Bot::initVariables() {
 	const sc2::ObservationInterface* observation = Observation();
 	map_name = observation->GetGameInfo().map_name;
-	if (map_name.find("Proxima") != std::string::npos) {
-		std::cout << "!3!";
-	}
-	if (map_name.find("Vestige") != std::string::npos) {
-		std::cout << "!2!";
-	}
-	if (map_name.find("Cactus") != std::string::npos) {
-		std::cout << "!1!";
-	}
+
 	std::cout << "map_name: " << map_name;
-	if (map_name == "Proxima Station LE" || map_name == "Proxima Station LE (Void)" || map_name == "(2)Proxima Station LE" || map_name == "(2)Proxima Station LE (Void)")
+	if (map_name.find("Proxima") != std::string::npos)
 		map_index = 3; else
-		if (map_name == "Bel'Shir Vestige LE" || map_name == "Bel'Shir Vestige LE (Void)" || map_name == "(2)Bel'Shir Vestige LE" || map_name == "(2)Bel'Shir Vestige LE (Void)")
+		if (map_name.find("Vestige") != std::string::npos)
 			map_index = 2; else
-			if (map_name == "Cactus Valley LE" || map_name == "Cactus Valley LE (Void)" || map_name == "(4)Cactus Valley LE" || map_name == "(4)Cactus Valley LE (Void)")
+			if (map_name.find("Cactus") != std::string::npos)
 				map_index = 1; else
 				map_index = 0;
 
@@ -352,6 +372,7 @@ void::BasicSc2Bot::OnStep_100(const sc2::ObservationInterface* obs) {
 	if (locH->chunksInitialized()) {
 		locH->calculateHighestThreatForChunks();
 	}
+	flushOrders();
 }
 
 void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
@@ -380,12 +401,6 @@ void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
 void BasicSc2Bot::OnStep() {
 	const sc2::ObservationInterface* observation = Observation();
 	int gameloop = observation->GetGameLoop();
-	if (gameloop % 100 == 0) {
-		OnStep_100(observation);
-	}
-	if (gameloop % 1000 == 0) {
-		OnStep_1000(observation);
-	}
 
 	// update visibility data for chunks
 	locH->scanChunks(observation);
@@ -462,10 +477,40 @@ void BasicSc2Bot::OnStep() {
 		}
 	}
 
+	/* DEBUG STUFF
+	int erroneous = 0;
+	std::unordered_set<Mob*> busy_mobs = mobH->getBusyMobs();
+	int busy_size = busy_mobs.size();
+	std::cout << "{";
+	if (!busy_mobs.empty()) {
+		for (auto it = busy_mobs.begin(); it != busy_mobs.end(); ++it) {
+			if (((*it)->unit.orders).empty()) {
+				erroneous++;
+			}
+			else {
+				auto order = (*it)->unit.orders.front();
+				sc2::Point2D pos = order.target_pos;
+				std::cout << "ORDER(" << order.ability_id << ":" << pos.x << "," << pos.y << ")";
+			}
+		}
+	}
+	if (erroneous > 0) {
+		std::cout << "[" << erroneous << "/" << busy_size << "]";
+	}
+	std::cout << "}";
+	*/
+
 	for (Precept s : precepts_onstep) {
 		if (s.checkTriggerConditions()) {
 			s.execute();
 		}
+	}
+
+	if (gameloop % 100 == 0) {
+		OnStep_100(observation);
+	}
+	if (gameloop % 1000 == 0) {
+		OnStep_1000(observation);
 	}
 }
 

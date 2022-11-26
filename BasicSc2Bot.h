@@ -80,6 +80,7 @@ private:
 	void initVariables();
 	void initStartingUnits();
 	bool addEnemyUnit(const sc2::Unit* unit);
+	bool flushOrders();
 
 	// virtual functions 
 	virtual void OnGameStart();

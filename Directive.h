@@ -51,6 +51,7 @@ public:
 		GET_MINERALS_NEAR_LOCATION,
 		GET_GAS_NEAR_LOCATION,
 		DISABLE_DEFAULT_DIRECTIVE,
+		SET_FLAG,
 		ADD_TO_GROUP,
 		REMOVE_FROM_GROUP
 	};
@@ -65,6 +66,12 @@ public:
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_);
 	Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, std::string group_name_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_=DEFAULT_RADIUS);
+
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, FLAGS set_flag_);
+	Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, FLAGS set_flag_, float assignee_proximity_ = DEFAULT_RADIUS);
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, FLAGS set_flag_);
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::Point2D assignee_location_, FLAGS set_flag_, float assignee_proximity_ = DEFAULT_RADIUS);
+
 
 
 	//Directive(const Directive& d);
@@ -81,8 +88,10 @@ public:
 	void setTargetLocationFunction(Strategy* strat_, BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_);
 	void setAssigneeLocationFunction(BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_);
 	bool allowMultiple(bool is_true=true);
+	void excludeFlag(FLAGS exclude_flag_);
 	void setContinuous(bool is_true=true);
 	void setDebug(bool is_true=true);
+	void setIgnoreDistance(float range_);
 	bool allowsMultiple();
 	bool hasAssignedMob();
 	int getTargetUpdateIterationID();
@@ -100,13 +109,13 @@ private:
 
 	// generic constructor delegated by others
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D assignee_location_,
-		sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_, std::string group_name_);
+		sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_, std::string group_name_, FLAGS set_flag_);
 
 	bool executeSimpleActionForUnitType(BasicSc2Bot* agent);
 	bool executeBuildGasStructure(BasicSc2Bot* agent);
 	bool execute_protoss_nexus_chronoboost(BasicSc2Bot* agent);
 	bool executeMatchFlags(BasicSc2Bot* agent);
-	bool executeOrderForUnitTypeWithLocation(BasicSc2Bot* agent);
+	bool executeOrderForUnitType(BasicSc2Bot* agent);
 	bool haveBundle();
 	bool ifAnyOnRouteToBuild(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_);
 	bool isBuildingStructure(BasicSc2Bot* agent, Mob* mob_);
@@ -155,7 +164,10 @@ private:
 	sc2::Unit* target_unit;
 	float assignee_proximity;
 	float proximity;
+	float ignore_distance;
+	FLAGS set_flag;
 	std::unordered_set<FLAGS> flags;
+	std::unordered_set<FLAGS> exclude_flags;
 	std::vector<Directive> directive_bundle;
 	std::unordered_set<Mob*> assigned_mobs;
 	std::string group_name;

@@ -723,6 +723,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             exp_1.setRallyPoint(73, 158);
             bases.push_back(exp_1); // radius 6.0F
 
+            /*
             Base exp_2(54.5, 132.5);
             bases.push_back(exp_2);
 
@@ -758,6 +759,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
 
             Base exp_13(137.5, 59.5);
             bases.push_back(exp_13);
+            */
         }
         else if (p_id == 2) {
             
@@ -1356,6 +1358,31 @@ sc2::Point2D LocationHandler::getCenterPathableLocation() {
         center_chunk = getNearestPathableChunk(map_center);
     }
     return center_chunk->getLocation();
+}
+
+sc2::Point2D LocationHandler::getRallyPointTowardsThreat()
+// calculate a point between 3 locations:
+//      the player's start location
+//      the center of the map
+//      the highest threat location
+//      (if highest threat is closer than center, then disregard center)
+{
+    sc2::Point2D p1 = start_location;
+    sc2::Point2D p2 = map_center;
+    sc2::Point2D p3 = smartAttackLocation();
+    sc2::Point2D p4 = NO_POINT_FOUND;
+
+    if (sc2::DistanceSquared2D(p1, p3) < sc2::DistanceSquared2D(p1, p2)) {
+        p4 = (p1 + p2) / 2;
+    }
+    else {
+        p4 = (p1 + p2 + p3) / 3;
+    }
+    MapChunk* best_chunk = getNearestPathableChunk(p4);
+    if (best_chunk == nullptr) {
+        return NO_POINT_FOUND;
+    }
+    return best_chunk->getLocation();
 }
 
 void LocationHandler::setHighestThreat(double threat_)
