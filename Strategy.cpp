@@ -44,6 +44,8 @@ void Strategy::loadStrategies() {
 			bot->storeLocation("CANNON_1", sc2::Point2D(67.0, 151.0));
 			bot->storeLocation("GATEWAY_1", sc2::Point2D(71.5, 150.5));
 			bot->storeLocation("CYBER_1", sc2::Point2D(67.5, 157.5));
+			bot->storeLocation("FORCE_FIELD", sc2::Point2D(73.5, 152));
+			bot->storeLocation("FF_CHECK", sc2::Point2D(71.5, 154));
 		}
 		if (p_id == 2) {
 			bot->storeLocation("FORGE_1", sc2::Point2D(148.5, 123.5));
@@ -52,6 +54,8 @@ void Strategy::loadStrategies() {
 			bot->storeLocation("CANNON_1", sc2::Point2D(151, 125));
 			bot->storeLocation("GATEWAY_1", sc2::Point2D(150.5, 120.5));
 			bot->storeLocation("CYBER_1", sc2::Point2D(157.5, 124.5));
+			bot->storeLocation("FORCE_FIELD", sc2::Point2D(152, 118.5));
+			bot->storeLocation("FF_CHECK", sc2::Point2D(154, 120.5));
 		}
 		if (p_id == 3) {
 			bot->storeLocation("FORGE_1", sc2::Point2D(123.5, 43.5));
@@ -60,6 +64,8 @@ void Strategy::loadStrategies() {
 			bot->storeLocation("CANNON_1", sc2::Point2D(125, 41));
 			bot->storeLocation("GATEWAY_1", sc2::Point2D(120.5, 41.5));
 			bot->storeLocation("CYBER_1", sc2::Point2D(124.5, 34.5));
+			bot->storeLocation("FORCE_FIELD", sc2::Point2D(118.5, 40));
+			bot->storeLocation("FF_CHECK", sc2::Point2D(120.5, 38));
 		}
 		if (p_id == 4) {
 			bot->storeLocation("FORGE_1", sc2::Point2D(43.5, 68.5));
@@ -68,6 +74,8 @@ void Strategy::loadStrategies() {
 			bot->storeLocation("CANNON_1", sc2::Point2D(41, 67));
 			bot->storeLocation("GATEWAY_1", sc2::Point2D(41.5, 71.5));
 			bot->storeLocation("CYBER_1", sc2::Point2D(34.5, 67.5));
+			bot->storeLocation("FORCE_FIELD", sc2::Point2D(40, 73.5));
+			bot->storeLocation("FF_CHECK", sc2::Point2D(38, 71.5));
 		}
 
 		// pre-create a container of TriggerConditions to reduce copy/pasting same conditions over and over
@@ -518,6 +526,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_GAS, 100);
 			t.addCondition(COND::MIN_FOOD, 2);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
+			t.addCondition(COND::MAX_UNITS_USING_ABILITY, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_SENTRY);
 			train_sentry.addDirective(d);
 			train_sentry.addTrigger(t);
 			Trigger t2(bot);
@@ -526,8 +535,21 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_FOOD, 2);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
+			t2.addCondition(COND::MAX_UNITS_USING_ABILITY, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_SENTRY);
 			train_sentry.addTrigger(t2);
 			bot->addStrat(train_sentry);
+		}
+		{
+			Precept force_field(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_SENTRY, sc2::ABILITY_ID::EFFECT_FORCEFIELD, bot->getStoredLocation("FORCE_FIELD"));
+			Trigger t(bot);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
+			//t.addCondition(COND::THREAT_EXISTS_NEAR_LOCATION, bot->getStoredLocation("FORCE_FIELD"), 3.6F);
+			t.addCondition(COND::MIN_ENEMY_UNITS_NEAR_LOCATION, 3, bot->getStoredLocation("FF_CHECK"), 5.0F);
+			t.addCondition(COND::MAX_NEUTRAL_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::NEUTRAL_FORCEFIELD);
+			force_field.addTrigger(t);
+			force_field.addDirective(d);
+			bot->addStrat(force_field);
 		}
 		{
 			Precept train_zealot(bot);
