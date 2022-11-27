@@ -35,7 +35,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 
 
 	// assignee using match flags assigns multiple units, so force `allow_multiple = true`
-	if (assignee == ASSIGNEE::MATCH_FLAGS || assignee == ASSIGNEE::MATCH_FLAGS_NEAR_LOCATION) {
+	if (assignee == ASSIGNEE::MATCH_FLAGS || assignee == ASSIGNEE::MATCH_FLAGS_NEAR_LOCATION || assignee == ASSIGNEE::DEFAULT_DIRECTIVE) {
 		allow_multiple = true;
 	}
 	else {
@@ -253,7 +253,7 @@ bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 			return false;
 		}
 		/* ORDER IS EXECUTED */
-		return issueOrder(agent, mob, false, sc2::ABILITY_ID::SMART);
+		return issueOrder(agent, mob, gas_target, false, sc2::ABILITY_ID::HARVEST_GATHER);
 		/* * * * * * * * * * */
 	}
 	if (action_type == SIMPLE_ACTION) {
@@ -417,23 +417,6 @@ bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 	std::unordered_set<Mob*> not_already_chronoboosted;
 	// make sure the target already isn't chronoboosted
 
-	/*
-	bool is_chronoboosted;
-	for (auto it = structures_with_orders.begin(); it != structures_with_orders.end(); ++it) {
-		std::vector<sc2::BuffID> buffs = (*it)->unit.buffs;
-		is_chronoboosted = false;
-		for (auto b : buffs) {
-			if (b == sc2::BUFF_ID::CHRONOBOOSTENERGYCOST)
-				is_chronoboosted = true;
-			if (!is_chronoboosted) {
-				std::cout << "added something to not_already_chronoboosted" << std::endl;
-				not_already_chronoboosted.insert(*it);
-			}
-		}
-	}
-	*/
-
-	
 	std::copy_if(structures_with_orders.begin(), structures_with_orders.end(), std::inserter(not_already_chronoboosted, not_already_chronoboosted.begin()),
 		[this](Mob* m) { return (std::find(m->unit.buffs.begin(), m->unit.buffs.end(), sc2::BUFF_ID::CHRONOBOOSTENERGYCOST) == m->unit.buffs.end()); }); 
 
@@ -566,11 +549,6 @@ bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
 	}
 
 	mobs = filterByUnitType(mobs, unit_type);
-
-	// check if a unit of this type is already executing this order
-	//if (is_any_executing_order(mobs, ability)) {
-	//	return false;
-	//}   *****
 
 	// unit of type does not exist
 	if (mobs.size() == 0) {
@@ -1038,6 +1016,7 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 				for (auto iter = mobs_.begin(); iter != mobs_.end(); ) {
 					auto next = std::next(iter);
 					agent->mobH->setMobIdle((*iter), false);
+					agent->mobH->setMobBusy((*iter), false);
 					iter = next;
 				}
 			}
@@ -1046,16 +1025,14 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 	else {
 		// handle case where only one mob is being assigned the order
 
+		Mob* mob_ = &agent->mobH->getMob((*mobs_.begin())->unit);
+		bool action_success = false;
+
 		// this order already has a mob
 		if (!allow_multiple && hasAssignedMob()) {
 			return false;
 		}
-
-
-
-		Mob* mob_ = &agent->mobH->getMob((*mobs_.begin())->unit);
-		bool action_success = false;
-		
+	
 		// no target is specified
 		if (target_loc_ == INVALID_POINT && target_unit_ == nullptr) {
 			agent->Actions()->UnitCommand(&mob_->unit, ability_, queued_);
@@ -1083,6 +1060,7 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 					return false;
 				}
 			}
+
 
 			agent->Actions()->UnitCommand(&mob_->unit, ability_, target_loc_, queued_);
 			action_success = true;
@@ -1116,11 +1094,13 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 				return true;
 			}
 			else {
+
 				Directive* last_directive = mob_->getCurrentDirective();
 				if (last_directive != nullptr) {
 					last_directive->unassignMob(mob_);
 				}
 				agent->mobH->setMobIdle(mob_, false);
+				agent->mobH->setMobBusy(mob_, false);
 				return true;
 			}
 		}
