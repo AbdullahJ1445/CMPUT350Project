@@ -158,7 +158,7 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			forge_1.addTrigger(t2);
 			bot->addStrat(forge_1);
-		}
+		} 
 		{	// build gateway #1 at our pre-defined wall location
 			Precept gateway_1(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_GATEWAY, bot->getStoredLocation("GATEWAY_1"));
@@ -169,7 +169,7 @@ void Strategy::loadStrategies() {
 			gateway_1.addDirective(d);
 			gateway_1.addTrigger(t);
 			bot->addStrat(gateway_1);
-		}
+		} 
 		{	// build pylon #2 in our pre-defined wall location
 			Precept pylon_2(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->getStoredLocation("PYLON_2"));
@@ -340,7 +340,7 @@ void Strategy::loadStrategies() {
 			robotics_2.addDirective(d);
 			robotics_2.addTrigger(t);
 			bot->addStrat(robotics_2);
-		}
+		} 
 		{	// build a robotics bay in main base build area 2
 			Precept robotics_bay(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_ROBOTICSBAY, bot->locH->bases[0].getBuildArea(2), 10.0F);
@@ -459,7 +459,7 @@ void Strategy::loadStrategies() {
 			more_cannons.addDirective(d);
 			more_cannons.addTrigger(t);
 			bot->addStrat(more_cannons);
-		}
+		} 
 		{	// handle training stalkers
 			Precept train_stalker(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_STALKER);
@@ -600,7 +600,7 @@ void Strategy::loadStrategies() {
 			t4.addCondition(COND::MIN_FOOD_CAP, 91);
 			train_zealot.addTrigger(t4);
 			bot->addStrat(train_zealot);
-		}
+		} 
 		{	// build twilight council at main base build area 0
 			Precept twilight_council(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_TWILIGHTCOUNCIL, bot->locH->bases[0].getBuildArea(0), 14.0F);
@@ -762,19 +762,48 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			auto func = [this]() { return bot->locH->smartStayHomeAndDefend(); };
 			d.setTargetLocationFunction(this, bot, func);
-			d.setIgnoreDistance(5.5F);
+			d.setIgnoreDistance(2.5F);
 			d.excludeFlag(FLAGS::IS_SCOUT);
-			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 2, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
-			t.addCondition(COND::MAX_FOOD_CAP, 104);
+			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 1, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t.addCondition(COND::TIMER_1_SET, 0, false);
 			t.addCondition(COND::MAX_TIME, 19999);
 			defend_home.addTrigger(t);
-			Trigger t2(bot);
-			t2.addCondition(COND::MIN_DEAD_MOBS, 1);
-			t2.addCondition(COND::MAX_FOOD_CAP, 104);
-			t2.addCondition(COND::MAX_TIME, 19999);
 			defend_home.addDirective(d);
-			defend_home.addTrigger(t2);
 			bot->addStrat(defend_home);
+		}
+		{	// set timer to send workers to defend expansion when army is insufficient
+			Precept workers_defend_init_timer(bot);
+			Directive d(Directive::GAME_VARIABLES, Directive::SET_TIMER_2, 0);
+			Trigger t(bot);
+			t.addCondition(COND::MIN_ENEMY_UNITS_NEAR_LOCATION, 2, bot->locH->bases[1].getTownhall(), 15.0F);
+			t.addCondition(COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION, 3, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].getRallyPoint(), 24.0F);
+			workers_defend_init_timer.addDirective(d);
+			workers_defend_init_timer.addTrigger(t);
+			bot->addStrat(workers_defend_init_timer);
+		}
+		{	// reset the defense timer once enemies are cleared or defense army is sufficient
+			Precept reset_worker_defense_timer(bot);
+			Directive d(Directive::GAME_VARIABLES, Directive::RESET_TIMER_2);
+			Trigger t(bot);
+			t.addCondition(COND::MAX_ENEMY_UNITS_NEAR_LOCATION, 0, bot->locH->bases[1].getTownhall(), 15.0F);
+			reset_worker_defense_timer.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION, 6, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].getRallyPoint(), 24.0F);
+			reset_worker_defense_timer.addTrigger(t2);
+			reset_worker_defense_timer.addDirective(d);
+			bot->addStrat(reset_worker_defense_timer);
+		}
+		{	// send workers to defend expansion when defense timer is initialized
+			Precept workers_defend_expansion(bot);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_WORKER}, sc2::ABILITY_ID::ATTACK, bot->locH->bases[1].getRallyPoint(), 3.0F);
+			Trigger t(bot);
+			auto func = [this]() { return bot->locH->smartStayHomeAndDefend(); };
+			d.setTargetLocationFunction(this, bot, func);
+			t.addCondition(COND::TIMER_2_SET, 0, true);
+			//t.addCondition(COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION, 3, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].getTownhall(), 16.0F);
+			workers_defend_expansion.addTrigger(t);
+			workers_defend_expansion.addDirective(d);
+			bot->addStrat(workers_defend_expansion);
 		}
 		{	// initialize the timer for grouping up at a rally point en route to attacking
 			Precept init_group_timer(bot);

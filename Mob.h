@@ -67,6 +67,7 @@ public:
 	std::unordered_set<FLAGS> getFlags();
 	sc2::Tag getTag();
 	bool setCurrentDirective(Directive* directive_);
+	Directive* getDefaultDirective();
 	Directive* getCurrentDirective();
 	bool operator<(const Mob& mob) const { return tag < mob.tag; }
 	const sc2::Unit& unit;
