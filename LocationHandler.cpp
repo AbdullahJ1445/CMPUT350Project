@@ -1523,10 +1523,10 @@ MapChunk* LocationHandler::getHighestPathableThreatChunkNearLocation(sc2::Point2
 
     float sq_dist = range_ * range_;
 
-    int i1 = 0; // min row
-    int i2 = 0; // max row
-    int j1 = 0; // min col
-    int j2 = 0; // max col
+    size_t i1 = 0; // min row
+    size_t i2 = 0; // max row
+    size_t j1 = 0; // min col
+    size_t j2 = 0; // max col
 
     for (float x = chunk_min_x; x < max_x && x < chunk_max_x; x += chunk_spread) { 
         if (x < min_x) {
@@ -1548,8 +1548,8 @@ MapChunk* LocationHandler::getHighestPathableThreatChunkNearLocation(sc2::Point2
 
     assert(map_chunk_storage.size() > (j2 * chunk_rows + i2));
 
-    for (int j = j1; j <= j2; j++) {
-        for (int i = i1; i <= i2; i++) {
+    for (size_t j = j1; j <= j2; j++) {
+        for (size_t i = i1; i <= i2; i++) {
             MapChunk* chunk = map_chunk_storage[j * chunk_rows + i].get();
             if (chunk->isPathable()) {
                 if (sc2::DistanceSquared2D(chunk->getLocation(), loc_) <= sq_dist) {

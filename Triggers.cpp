@@ -5,86 +5,120 @@
 #include "sc2api/sc2_api.h"
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, bool is_true_) {
+	agent = agent_;
 	cond_type = cond_type_;
 	cond_value = cond_value_;
-	agent = agent_;
+	location = INVALID_POINT;
+	radius = DEFAULT_RADIUS;
 	debug = false;
 	is_true = is_true_;
+	unit_of_type = sc2::UNIT_TYPEID::INVALID;
+	ability_id = sc2::ABILITY_ID::INVALID;
+	upgrade_id = sc2::UPGRADE_ID::INVALID;
+	
 }
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_) {
 	assert(cond_type_ == COND::HAS_ABILITY_READY);
-	cond_type = cond_type_;
-	ability_id = ability_id_;
-	is_true = is_true_;
 	agent = agent_;
-	unit_of_type = unit_of_type_;
+	cond_type = cond_type_;
+	cond_value = 0;
+	location = INVALID_POINT;
+	radius = DEFAULT_RADIUS;
 	debug = false;
+	is_true = is_true_;
+	ability_id = ability_id_;
+	unit_of_type = unit_of_type_;
+	upgrade_id = sc2::UPGRADE_ID::INVALID;
 }
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_) {
 	assert(cond_type_ == COND::HAVE_UPGRADE);
+	agent = agent_;
 	cond_type = cond_type_;
+	cond_value = 0;
+	location = INVALID_POINT;
+	radius = DEFAULT_RADIUS;
+	debug = false;
+	is_true = is_true_;
+	unit_of_type = sc2::UNIT_TYPEID::INVALID;
+	ability_id = sc2::ABILITY_ID::INVALID;
 	upgrade_id = upgrade_id_;
-	is_true = is_true_;
-	agent = agent_;
-	debug = false;
+	
 }
 
-Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::Point2D location_, float radius, bool is_true_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::Point2D location_, float radius_, bool is_true_) {
 	assert(cond_type_ == COND::THREAT_EXISTS_NEAR_LOCATION);
-	cond_type = cond_type_;
-	location_for_counting_units = location_;
-	is_true = is_true_;
 	agent = agent_;
-	distance_squared = radius; // note: for this one usage we don't actually square it
+	cond_type = cond_type_;
+	cond_value = 0;
+	location = location_;
+	radius = radius_;
 	debug = false;
+	is_true = is_true_;
+	unit_of_type = sc2::UNIT_TYPEID::INVALID;
+	ability_id = sc2::ABILITY_ID::INVALID;
+	upgrade_id = sc2::UPGRADE_ID::INVALID;
 }
 
-Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::Point2D location_, float radius, bool is_true_) {
+Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::Point2D location_, float radius_, bool is_true_) {
 	assert(cond_type_ == COND::MIN_ENEMY_UNITS_NEAR_LOCATION || cond_type == COND::MAX_ENEMY_UNITS_NEAR_LOCATION);
-	cond_type = cond_type_;
-	location_for_counting_units = location_;
-	cond_value = cond_value_;
-	is_true = is_true_;
 	agent = agent_;
-	distance_squared = radius; // note: for this one usage we don't actually square it
+	cond_type = cond_type_;
+	cond_value = cond_value_;
+	location = location_;
+	radius = radius_;
 	debug = false;
+	is_true = is_true_;
+	unit_of_type = sc2::UNIT_TYPEID::INVALID;
+	ability_id = sc2::ABILITY_ID::INVALID;
+	upgrade_id = sc2::UPGRADE_ID::INVALID;
 }
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_) {
 	assert(cond_type_ == COND::MIN_UNIT_WITH_FLAGS ||
 		cond_type_ == COND::MAX_UNIT_WITH_FLAGS);
+	agent = agent_;
 	cond_type = cond_type_;
 	cond_value = cond_value_;
+	location = INVALID_POINT;
+	radius = DEFAULT_RADIUS;
 	filter_flags = flags_;
-	agent = agent_;
-	is_true = true;
 	debug = false;
+	is_true = true;
+	unit_of_type = sc2::UNIT_TYPEID::INVALID;
+	ability_id = sc2::ABILITY_ID::INVALID;
+	upgrade_id = sc2::UPGRADE_ID::INVALID;
 }
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_, bool is_true_) {
 	assert(cond_type_ == COND::MAX_UNITS_USING_ABILITY || cond_type_ == COND::MIN_UNITS_USING_ABILITY);
+	agent = agent_;
 	cond_type = cond_type_;
 	cond_value = cond_value_;
-	agent = agent_;
-	ability_id = ability_;
-	unit_of_type = unit_of_type_;
+	location = INVALID_POINT;
+	radius = DEFAULT_RADIUS;
 	debug = false;
 	is_true = is_true_;
+	ability_id = ability_;
+	unit_of_type = unit_of_type_;
+	upgrade_id = sc2::UPGRADE_ID::INVALID;
 }
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_) {
 	assert(cond_type_ == COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION || 
 		cond_type_ == COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION);
+	agent = agent_;
 	cond_type = cond_type_;
 	cond_value = cond_value_;
+	location = location_;
+	radius = radius_;
 	filter_flags = flags_;
-	agent = agent_;
-	distance_squared = pow(radius_, 2);
-	location_for_counting_units = location_;
-	is_true = true;
 	debug = false;
+	is_true = true;
+	unit_of_type = sc2::UNIT_TYPEID::INVALID;
+	ability_id = sc2::ABILITY_ID::INVALID;
+	upgrade_id = sc2::UPGRADE_ID::INVALID;
 }
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_) {
@@ -92,32 +126,40 @@ Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_
 		cond_type_ == COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION || cond_type_ == COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION ||
 		cond_type_ == COND::MIN_UNIT_OF_TYPE_TOTAL || cond_type_ == COND::MAX_UNIT_OF_TYPE_TOTAL ||
 		cond_type_ == COND::MIN_NEUTRAL_UNIT_OF_TYPE || cond_type_ == COND::MAX_NEUTRAL_UNIT_OF_TYPE);
+	agent = agent_;
 	cond_type = cond_type_;
 	cond_value = cond_value_;
-	unit_of_type = unit_of_type_;
-	is_true = true;
-	agent = agent_;
+	location = INVALID_POINT;
+	radius = DEFAULT_RADIUS;
 	debug = false;
+	is_true = true;
+	unit_of_type = unit_of_type_;
+	ability_id = sc2::ABILITY_ID::INVALID;
+	upgrade_id = sc2::UPGRADE_ID::INVALID;
 }
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::Point2D location_, float radius_) {
 	assert(cond_type_ == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION ||
 	cond_type_ == COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION ||
 	cond_type_ == COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION || cond_type_ == COND::MIN_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION);
+	agent = agent_;
 	cond_type = cond_type_;
 	cond_value = cond_value_;
-	unit_of_type = unit_of_type_;
-	location_for_counting_units = location_;
-	distance_squared = pow(radius_, 2);
-	is_true = true;
-	agent = agent_;
+	location = location_;
+	radius = radius_;
 	debug = false;
+	is_true = true;
+	unit_of_type = unit_of_type_;
+	ability_id = sc2::ABILITY_ID::INVALID;
+	upgrade_id = sc2::UPGRADE_ID::INVALID;
 }
 
 bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 
 	// assign equivalent_type for the same units that might have an alternate ID
 	sc2::UNIT_TYPEID equivalent_type = unit_of_type;
+	float radius_sq = pow(radius, 2);
+
 	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_SUPPLYDEPOT) {
 		equivalent_type = sc2::UNIT_TYPEID::TERRAN_SUPPLYDEPOTLOWERED;
 	}
@@ -191,7 +233,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::MAX_DEAD_MOBS:
 		return (agent->mobH->getNumDeadMobs() <= cond_value) == is_true;
 	case COND::THREAT_EXISTS_NEAR_LOCATION:
-		return agent->locH->PathableThreatExistsNearLocation(location_for_counting_units, distance_squared) == is_true;
+		return agent->locH->PathableThreatExistsNearLocation(location, radius) == is_true;
 	case COND::MIN_UNITS_USING_ABILITY:
 	{
 		std::unordered_set<Mob*> mobs;
@@ -270,8 +312,8 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		mobs = agent->mobH->filterByFlags(agent->mobH->getMobs(), filter_flags);
 		std::unordered_set<Mob*> filtered_mobs;
 		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
-			[this](Mob* m) { return (
-				sc2::DistanceSquared2D(m->unit.pos, location_for_counting_units) <= distance_squared); 
+			[this, radius_sq](Mob* m) { return (
+				sc2::DistanceSquared2D(m->unit.pos, location) <= radius_sq);
 			});
 		int num_units = filtered_mobs.size();
 
@@ -288,8 +330,8 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		mobs = agent->mobH->filterByFlags(agent->mobH->getMobs(), filter_flags);
 		std::unordered_set<Mob*> filtered_mobs;
 		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
-			[this](Mob* m) { return (
-				sc2::DistanceSquared2D(m->unit.pos, location_for_counting_units) <= distance_squared);
+			[this, radius_sq](Mob* m) { return (
+				sc2::DistanceSquared2D(m->unit.pos, location) <= radius_sq);
 			});
 		int num_units = filtered_mobs.size();
 		
@@ -304,8 +346,8 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	{
 		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Enemy);
 		int count = std::count_if(units.begin(), units.end(),
-			[this](const sc2::Unit* u) { return (
-				sc2::DistanceSquared2D(u->pos, location_for_counting_units) <= distance_squared);
+			[this, radius_sq](const sc2::Unit* u) { return (
+				sc2::DistanceSquared2D(u->pos, location) <= radius_sq);
 			});
 
 		// output to debug for checking conditions which are failing
@@ -319,8 +361,8 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	{
 		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Enemy);
 		int count = std::count_if(units.begin(), units.end(),
-			[this](const sc2::Unit* u) { return (
-				sc2::DistanceSquared2D(u->pos, location_for_counting_units) <= distance_squared);
+			[this, radius_sq](const sc2::Unit* u) { return (
+				sc2::DistanceSquared2D(u->pos, location) <= radius_sq);
 			});
 		
 		// output to debug for checking conditions which are failing
@@ -334,6 +376,114 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		if (agent->locH->bases.size() <= cond_value || cond_value < 0)
 			return !is_true;
 		return (agent->locH->bases[cond_value].isActive()) == is_true;
+	case COND::TIMER_1_SET:
+	{
+		bool is_set = agent->getTimer1Value() != -1;
+		if (debug && (is_set != is_true)) {
+			std::cout << "T1_SET(" << is_set << ":" << is_true << ")";
+		}
+		return is_set == is_true;
+	}
+	case COND::TIMER_2_SET:
+	{
+		bool is_set = agent->getTimer2Value() != -1;
+		if (debug && (is_set != is_true)) {
+			std::cout << "T2_SET(" << is_set << ":" << is_true << ")";
+		}
+		return is_set == is_true;
+	}
+	case COND::TIMER_3_SET:
+	{
+		bool is_set = agent->getTimer3Value() != -1;
+		if (debug && (is_set != is_true)) {
+			std::cout << "T3_SET(" << is_set << ":" << is_true << ")";
+		}
+		return is_set == is_true;
+	}
+	case COND::TIMER_1_MAX_STEPS_PAST:
+	{
+		int steps_past = agent->getStepsPastTimer1();
+		if (steps_past < 0) {
+			if (debug) {
+				std::cout << "T1_MAX_SP(no)";
+			}
+			return false;
+		}
+		if (debug && ((steps_past <= cond_value) != is_true)) {
+			std::cout << "T1_MAX_SP(" << steps_past << "<=" << cond_value << ")";
+		}
+		return (steps_past <= cond_value) == is_true;
+	}
+	case COND::TIMER_1_MIN_STEPS_PAST:
+	{
+		int steps_past = agent->getStepsPastTimer1();
+		if (steps_past < 0) {
+			if (debug) {
+				std::cout << "T1_MIN_SP(no)";
+			}
+			return false;
+		}
+		if (debug && ((steps_past >= cond_value) != is_true)) {
+			std::cout << "T1_MIN_SP(" << steps_past << ">=" << cond_value << ")";
+		}
+		return (steps_past >= cond_value) == is_true;
+	}
+	case COND::TIMER_2_MAX_STEPS_PAST:
+	{
+		int steps_past = agent->getStepsPastTimer2();
+		if (steps_past < 0) {
+			if (debug) {
+				std::cout << "T2_MAX_SP(no)";
+			}
+			return false;
+		}
+		if (debug && ((steps_past <= cond_value) != is_true)) {
+			std::cout << "T2_MAX_SP(" << steps_past << "<=" << cond_value << ")";
+		}
+		return (steps_past <= cond_value) == is_true;
+	}
+	case COND::TIMER_2_MIN_STEPS_PAST:
+	{
+		int steps_past = agent->getStepsPastTimer2();
+		if (steps_past < 0) {
+			if (debug) {
+				std::cout << "T2_MIN_SP(no)";
+			}
+			return false;
+		}
+		if (debug && ((steps_past >= cond_value) != is_true)) {
+			std::cout << "T2_MIN_SP(" << steps_past << ">=" << cond_value << ")";
+		}
+		return (steps_past >= cond_value) == is_true;
+	}
+	case COND::TIMER_3_MAX_STEPS_PAST:
+	{
+		int steps_past = agent->getStepsPastTimer3();
+		if (steps_past < 0) {
+			if (debug) {
+				std::cout << "T3_MAX_SP(no)";
+			}
+			return false;
+		}
+		if (debug && ((steps_past <= cond_value) != is_true)) {
+			std::cout << "T3_MAX_SP(" << steps_past << "<=" << cond_value << ")";
+		}
+		return (steps_past <= cond_value) == is_true;
+	}
+	case COND::TIMER_3_MIN_STEPS_PAST:
+	{
+		int steps_past = agent->getStepsPastTimer3();
+		if (steps_past < 0) {
+			if (debug) {
+				std::cout << "T3_MIN_SP(no)";
+			}
+			return false;
+		}
+		if (debug && ((steps_past >= cond_value) != is_true)) {
+			std::cout << "T3_MIN_SP(" << steps_past << ">=" << cond_value << ")";
+		}
+		return (steps_past >= cond_value) == is_true;
+	}
 	case COND::HAVE_UPGRADE:
 		return agent->haveUpgrade(upgrade_id) == is_true;
 	case COND::MIN_NEUTRAL_UNIT_OF_TYPE:
@@ -424,9 +574,9 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		{
 			sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 			int num_units = count_if(units.begin(), units.end(),
-				[this](const sc2::Unit* u) {
+				[this, radius_sq](const sc2::Unit* u) {
 					return (u->unit_type == unit_of_type
-						&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
+						&& sc2::DistanceSquared2D(u->pos, location) < radius_sq)
 						&& (u->build_progress > 0 && u->build_progress < 1.0F);
 				});
 
@@ -442,9 +592,9 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	{
 		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		int num_units = count_if(units.begin(), units.end(),
-			[this](const sc2::Unit* u) {
+			[this, radius_sq](const sc2::Unit* u) {
 				return (u->unit_type == unit_of_type
-					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
+					&& sc2::DistanceSquared2D(u->pos, location) < radius_sq)
 					&& (u->build_progress >= 0);
 			});
 
@@ -459,9 +609,9 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		{
 			sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 			int num_units = count_if(units.begin(), units.end(),
-				[this](const sc2::Unit* u) {
+				[this, radius_sq](const sc2::Unit* u) {
 					return (u->unit_type == unit_of_type
-						&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
+						&& sc2::DistanceSquared2D(u->pos, location) < radius_sq)
 						&& (u->build_progress > 0 && u->build_progress < 1.0F);
 				});
 
@@ -477,9 +627,9 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	{
 		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		int num_units = count_if(units.begin(), units.end(),
-			[this](const sc2::Unit* u) {
+			[this, radius_sq](const sc2::Unit* u) {
 				return (u->unit_type == unit_of_type
-					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
+					&& sc2::DistanceSquared2D(u->pos, location) < radius_sq)
 					&& (u->build_progress > 0);
 			});
 
@@ -559,9 +709,9 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	if (cond_type == COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION) {
 		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		int num_units = count_if(units.begin(), units.end(),
-			[this](const sc2::Unit* u) { 
+			[this, radius_sq](const sc2::Unit* u) {
 				return (u->unit_type == unit_of_type
-					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared)
+					&& sc2::DistanceSquared2D(u->pos, location) < radius_sq)
 					&& (u->build_progress == 1.0);
 			});
 
@@ -575,9 +725,9 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	if (cond_type == COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION) {
 		sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		int num_units = count_if(units.begin(), units.end(),
-			[this](const sc2::Unit* u) {
+			[this, radius_sq](const sc2::Unit* u) {
 				return (u->unit_type == unit_of_type
-					&& sc2::DistanceSquared2D(u->pos, location_for_counting_units) < distance_squared) 
+					&& sc2::DistanceSquared2D(u->pos, location) < radius_sq)
 					&& (u->build_progress == 1.0);
 			});
 
@@ -636,16 +786,16 @@ void Trigger::addCondition(COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is
 	conditions.push_back(tc_);
 }
 
-void Trigger::addCondition(COND cond_type_, sc2::Point2D location_, float radius, bool is_true_) {
-	TriggerCondition tc_(agent, cond_type_, location_, radius);
+void Trigger::addCondition(COND cond_type_, sc2::Point2D location_, float radius_, bool is_true_) {
+	TriggerCondition tc_(agent, cond_type_, location_, radius_);
 	if (debug) {
 		tc_.setDebug(true);
 	}
 	conditions.push_back(tc_);
 }
-void Trigger::addCondition(COND cond_type_, double cond_value_, sc2::Point2D location_, float radius, bool is_true)
+void Trigger::addCondition(COND cond_type_, double cond_value_, sc2::Point2D location_, float radius_, bool is_true)
 {
-	TriggerCondition tc_(agent, cond_type_, cond_value_, location_, radius);
+	TriggerCondition tc_(agent, cond_type_, cond_value_, location_, radius_);
 	if (debug) {
 		tc_.setDebug(true);
 	}

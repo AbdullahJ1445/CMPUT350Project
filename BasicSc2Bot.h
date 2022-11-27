@@ -32,9 +32,9 @@ public:
 class BasicSc2Bot : public sc2::Agent {
 public:
 
-	MobHandler* mobH;
-	LocationHandler* locH;
 	// public functions
+
+	BasicSc2Bot();
 	void setCurrentStrategy(Strategy* strategy_);
 	void BasicSc2Bot::addStrat(Precept precept_);
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
@@ -43,6 +43,18 @@ public:
 	void storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_type_);
 	void storeLocation(std::string identifier_, sc2::Point2D location_);
 	int getMapIndex();
+	void setTimer1(int steps_);
+	void setTimer2(int steps_);
+	void setTimer3(int steps_);
+	int getStepsPastTimer1();
+	int getStepsPastTimer2();
+	int getStepsPastTimer3();
+	int getTimer1Value();
+	int getTimer2Value();
+	int getTimer3Value();
+	void resetTimer1();
+	void resetTimer2();
+	void resetTimer3();
 
 	// various bool functions
 	bool haveUpgrade(const sc2::UpgradeID upgrade_);
@@ -65,9 +77,8 @@ public:
 	std::unordered_set<const sc2::Unit*> getEnemyUnits();
 
 	// public variables 
-	//sc2::Point2D start_location;
-	//sc2::Point2D proxy_location;
-	//sc2::Point2D enemy_location;
+	MobHandler* mobH;
+	LocationHandler* locH;
 	Mob* proxy_worker;
 	std::unordered_map<size_t, Directive*> directive_by_id;
 	Strategy* current_strategy;
@@ -112,5 +123,8 @@ private:
 	int enemy_start_id;
 	std::string map_name;
 	sc2::Race enemy_race;
+	int timer_1;
+	int timer_2;
+	int timer_3;
 	int map_index; // 1 = CactusValleyLE,  2 = BelShirVestigeLE,  3 = ProximaStationLE
 };

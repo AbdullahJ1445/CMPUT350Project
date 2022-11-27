@@ -39,7 +39,8 @@ public:
 		MATCH_FLAGS,
 		MATCH_FLAGS_NEAR_LOCATION,
 		UNITS_IN_GROUP,
-		UNIT_TYPE_IN_GROUP
+		UNIT_TYPE_IN_GROUP,
+		GAME_VARIABLES,
 	};
 	enum ACTION_TYPE {
 		// types of action to be performed
@@ -53,9 +54,17 @@ public:
 		DISABLE_DEFAULT_DIRECTIVE,
 		SET_FLAG,
 		ADD_TO_GROUP,
-		REMOVE_FROM_GROUP
+		REMOVE_FROM_GROUP,
+		SET_TIMER_1,
+		SET_TIMER_2,
+		SET_TIMER_3,
+		RESET_TIMER_1,
+		RESET_TIMER_2,
+		RESET_TIMER_3,
 	};
 
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_);
+	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, int steps_);
 	Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_=DEFAULT_RADIUS);
@@ -66,7 +75,6 @@ public:
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_=DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_);
 	Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, std::string group_name_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_=DEFAULT_RADIUS);
-
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, FLAGS set_flag_);
 	Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, FLAGS set_flag_, float assignee_proximity_ = DEFAULT_RADIUS);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, FLAGS set_flag_);
@@ -109,13 +117,14 @@ private:
 
 	// generic constructor delegated by others
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D assignee_location_,
-		sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_, std::string group_name_, FLAGS set_flag_);
+		sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_, std::string group_name_, FLAGS set_flag_, int steps_);
 
 	bool executeSimpleActionForUnitType(BasicSc2Bot* agent);
 	bool executeBuildGasStructure(BasicSc2Bot* agent);
 	bool execute_protoss_nexus_chronoboost(BasicSc2Bot* agent);
 	bool executeMatchFlags(BasicSc2Bot* agent);
 	bool executeOrderForUnitType(BasicSc2Bot* agent);
+	bool executeModifyTimer(BasicSc2Bot* agent);
 	bool haveBundle();
 	bool ifAnyOnRouteToBuild(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_);
 	bool isBuildingStructure(BasicSc2Bot* agent, Mob* mob_);
@@ -166,6 +175,7 @@ private:
 	float proximity;
 	float ignore_distance;
 	FLAGS set_flag;
+	int steps;
 	std::unordered_set<FLAGS> flags;
 	std::unordered_set<FLAGS> exclude_flags;
 	std::vector<Directive> directive_bundle;
