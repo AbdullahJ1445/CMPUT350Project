@@ -228,12 +228,15 @@ bool BasicSc2Bot::flushOrders()
 		sc2::ABILITY_ID current_ability = current_dir->getAbilityID();
 		auto orders = m->unit.orders;
 		if (orders.empty()) {
+			current_dir->unassignMob(m);
 			mobH->setMobIdle(m);
 			any_flushed = true;
+			Actions()->UnitCommand(&m->unit, sc2::ABILITY_ID::STOP);
 			continue;
 		}
 		auto order = orders.front();
 		if (order.ability_id != current_ability) {
+			current_dir->unassignMob(m);
 			mobH->setMobIdle(m);
 			any_flushed = true;
 			continue;
@@ -387,14 +390,6 @@ void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
 	else {
 		std::cout << "[" << obs->GetGameLoop() << "] highest threat at " << pathable_threat_spot.x << ", " << pathable_threat_spot.y << " = " << pathable_threat_chunk->getThreat() << std::endl;;
 	}
-	/*
-	if (pathable_away_threat_spot == NO_POINT_FOUND) {
-		//std::cout << "no pathable high threat location found" << std::endl;
-	}
-	else {
-		std::cout << "highest pathable threat away from start at " << pathable_away_threat_spot.x << "," << pathable_away_threat_spot.y << " = " << pathable_away_threat_chunk->getThreat() << std::endl;;
-	}
-	*/
 
 }
 
@@ -437,30 +432,35 @@ void BasicSc2Bot::OnStep() {
 		}
 	}
 	
-
-	//sc2::Point2D high_threat = locH->getHighestThreatLocation();
-	//if (high_threat != INVALID_POINT) {
-	//	std::cout << "HIGH THREAT LOCATION: (" << high_threat.x << ", " << high_threat.y << ")" << std::endl;
-	//}
-
-	/*
-	std::unordered_set<Mob*> busy_mobs = mobH->get_busy_mobs();
-	if (!busy_mobs.empty()) {
-		for (auto it = busy_mobs.begin(); it != busy_mobs.end(); ++it) {
+	std::unordered_set<Mob*> busy_mobset = mobH->getBusyMobs();
+	if (!busy_mobset.empty()) {
+		for (auto it = busy_mobset.begin(); it != busy_mobset.end(); ) {
+			auto next = std::next(it);
 			Mob* m = *it;
-			Directive* dir = m->getCurrentDirective();
+			auto orders = m->unit.orders;
+			if (m->hasCurrentDirective()) {
+				Directive* dir = m->getCurrentDirective();
+				if (dir) {
+					// if a busy mob has changed orders
+					
+					if (!orders.empty()) {
+						auto order = orders.front();
+						if (dir->getAbilityID() != order.ability_id) {
 
-			if (dir) {
-				// if a busy mob has changed orders
-				if (dir->getAbilityID() != (m->unit.orders).front().ability_id) {
-
-					// free up the directive it was previously assigned
-					dir->unassignMob(m);
+							// free up the directive it was previously assigned
+							dir->unassignMob(m);
+						}
+					}
 				}
 			}
+			if (orders.empty()) {
+				mobH->setMobBusy(m, false);
+				Actions()->UnitCommand(&m->unit, sc2::ABILITY_ID::STOP);
+			}
+			it = next;
 		}
 	}
-	*/
+	
 	
 	std::unordered_set<Mob*> idle_mobs = mobH->getIdleMobs();
 	if (!idle_mobs.empty()) {
@@ -476,29 +476,6 @@ void BasicSc2Bot::OnStep() {
 			it = next;
 		}
 	}
-
-	/* DEBUG STUFF
-	int erroneous = 0;
-	std::unordered_set<Mob*> busy_mobs = mobH->getBusyMobs();
-	int busy_size = busy_mobs.size();
-	std::cout << "{";
-	if (!busy_mobs.empty()) {
-		for (auto it = busy_mobs.begin(); it != busy_mobs.end(); ++it) {
-			if (((*it)->unit.orders).empty()) {
-				erroneous++;
-			}
-			else {
-				auto order = (*it)->unit.orders.front();
-				sc2::Point2D pos = order.target_pos;
-				std::cout << "ORDER(" << order.ability_id << ":" << pos.x << "," << pos.y << ")";
-			}
-		}
-	}
-	if (erroneous > 0) {
-		std::cout << "[" << erroneous << "/" << busy_size << "]";
-	}
-	std::cout << "}";
-	*/
 
 	for (Precept s : precepts_onstep) {
 		if (s.checkTriggerConditions()) {
@@ -581,8 +558,10 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	if (is_worker) {
 		new_mob.setAssignedLocation(new_mob.getHomeLocation());
 		Directive directive_get_minerals_near_birth(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION,
-			new_mob.unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, locH->bases[base_index].getTownhall());
-		new_mob.assignDefaultDirective(directive_get_minerals_near_birth);
+			new_mob.unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, ASSIGNED_LOCATION);
+		storeDirective(directive_get_minerals_near_birth);
+		Directive* dir = getLastStoredDirective();
+		new_mob.assignDefaultDirective(*dir);
 	}
 	else {
 		if (!structure) {
@@ -595,13 +574,6 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	}
 	mobH->addMob(new_mob);	
 	Mob* mob = &mobH->getMob(*unit);
-	/*
-	if (!is_worker && !structure) {
-		Directive atk_mv_to_defense(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, unit_type, sc2::ABILITY_ID::ATTACK_ATTACK, mob->get_assigned_location(), 2.0F);
-		storeDirective(atk_mv_to_defense);
-		Directive* dir = getLastStoredDirective();
-		dir->executeForMob(this, mob);
-	} */
 }
 
 void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
@@ -657,6 +629,32 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 			}
 		}
 	}
+
+	auto buffs = unit->buffs;
+	bool guardian_shield = false;
+	if (!buffs.empty()) {
+		guardian_shield = std::find(buffs.begin(), buffs.end(), sc2::BUFF_ID::GUARDIANSHIELD) != buffs.end();
+	}
+
+	// todo : check if player race = protoss
+	// engage sentry guardian shield when a nearby unit takes damage
+	if (!guardian_shield) {
+		std::unordered_set<Mob*> mobs = mobH->getMobs();
+		mobs = Directive::filterNearLocation(mobs, unit->pos, 4.5F);
+		std::unordered_set<Mob*> sentries;
+		std::copy_if(mobs.begin(), mobs.end(), std::inserter(sentries, sentries.begin()),
+			[this](Mob* m) { return (m->unit.unit_type == sc2::UNIT_TYPEID::PROTOSS_SENTRY); });
+		if (!sentries.empty()) {
+			std::unordered_set<Mob*> sentries_filter;
+			std::copy_if(sentries.begin(), sentries.end(), std::inserter(sentries_filter, sentries_filter.begin()),
+				[this](Mob* m) { return canUnitUseAbility(m->unit, sc2::ABILITY_ID::EFFECT_GUARDIANSHIELD); });
+			if (!sentries_filter.empty()) {
+				Mob* sentry = *sentries_filter.begin();
+				Actions()->UnitCommand(&sentry->unit, sc2::ABILITY_ID::EFFECT_GUARDIANSHIELD);
+			}
+		}
+	}
+
 }
 
 void BasicSc2Bot::OnUnitIdle(const sc2::Unit* unit) {
