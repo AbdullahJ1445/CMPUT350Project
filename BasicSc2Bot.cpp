@@ -531,14 +531,14 @@ void BasicSc2Bot::OnStep() {
 				// the closest chunk should increase by a scale of 1.0, while other nearby chunks
 				// increase by a lesser amount adjusted by NEARBY_THREAT_MODIFIER
 				bool found_pathable = false; //whether we have found a pathable chunk near the unit
-				for (int i = 0; i < 4; i++) {
-					if (chunks[i]->isPathable()) {
+				for (auto chunk : chunks) {
+					if (chunk->isPathable()) {
 						if (!found_pathable) {
-							chunks[i]->increaseThreat(this, *it, 1.0);
+							chunk->increaseThreat(this, *it, 1.0);
 							found_pathable = true;
 						}
 						else {
-							chunks[i]->increaseThreat(this, *it, NEARBY_THREAT_MODIFIER);
+							chunk->increaseThreat(this, *it, NEARBY_THREAT_MODIFIER);
 						}
 					}
 				}
@@ -766,6 +766,21 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 			if (!sentries_filter.empty()) {
 				Mob* sentry = *sentries_filter.begin();
 				Actions()->UnitCommand(&sentry->unit, sc2::ABILITY_ID::EFFECT_GUARDIANSHIELD);
+			}
+		}
+	}
+
+	// increase threat slightly on damage taken for situations where an enemy out of sight is dealing damage to us
+	bool found_pathable = false; //whether we have found a pathable chunk near the unit taking damage
+	std::vector<MapChunk*> chunks = locH->getLocalChunks(unit->pos);
+	for (auto chunk : chunks) {
+		if (chunk->isPathable()) {
+			if (!found_pathable) {
+				chunk->increaseThreat(this, unit, 0.02);
+				found_pathable = true;
+			}
+			else {
+				chunk->increaseThreat(this, unit, 0.01);
 			}
 		}
 	}

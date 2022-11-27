@@ -62,7 +62,7 @@ Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_
 }
 
 Trigger::TriggerCondition::TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::Point2D location_, float radius_, bool is_true_) {
-	assert(cond_type_ == COND::MIN_ENEMY_UNITS_NEAR_LOCATION || cond_type == COND::MAX_ENEMY_UNITS_NEAR_LOCATION);
+	assert(cond_type_ == COND::MIN_ENEMY_UNITS_NEAR_LOCATION || cond_type_ == COND::MAX_ENEMY_UNITS_NEAR_LOCATION);
 	agent = agent_;
 	cond_type = cond_type_;
 	cond_value = cond_value_;

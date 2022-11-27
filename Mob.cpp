@@ -198,6 +198,13 @@ Directive* Mob::getCurrentDirective() {
 	}
 }
 
+Directive* Mob::getDefaultDirective() {
+	if (!has_default_directive) {
+		return nullptr;
+	}
+	return default_directive;
+}
+
 sc2::Tag Mob::getTag() {
 	return tag;
 }
