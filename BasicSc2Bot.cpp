@@ -19,6 +19,22 @@ class Mob;
 class MobHandler;
 
 
+BasicSc2Bot::BasicSc2Bot()
+{
+	mobH = nullptr;
+	locH = nullptr;
+	proxy_worker = nullptr;
+	current_strategy = nullptr;
+	player_start_id = -1;
+	enemy_start_id = -1;
+	map_name = "";
+	enemy_race = sc2::Race::Random;
+	map_index = 0;
+	timer_1 = -1;
+	timer_2 = -1;
+	timer_3 = -1;
+}
+
 void BasicSc2Bot::setCurrentStrategy(Strategy* strategy_) {
 	// set the current strategy
 	storeStrategy(*strategy_);
@@ -84,6 +100,97 @@ void BasicSc2Bot::storeStrategy(Strategy strategy_)
 		strategy_storage.emplace_back(std::make_unique<Strategy>(strategy_));
 		current_strategy = strategy_storage.back().get();
 	}
+}
+
+void BasicSc2Bot::setTimer1(int steps_) {
+	// sets timer1 only if its value is not already set
+	if (timer_1 == -1) {
+		const sc2::ObservationInterface* obs = Observation();
+		auto current_steps = obs->GetGameLoop();
+		timer_1 = current_steps + steps_;
+	}
+}
+
+void BasicSc2Bot::setTimer2(int steps_) {
+	// sets timer2 only if its value is not already set
+	if (timer_2 == -1) {
+		const sc2::ObservationInterface* obs = Observation();
+		auto current_steps = obs->GetGameLoop();
+		timer_2 = current_steps + steps_;
+	}
+}
+
+void BasicSc2Bot::setTimer3(int steps_) {
+	// sets timer3 only if its value is not already set
+	if (timer_3 == -1) {
+		const sc2::ObservationInterface* obs = Observation();
+		auto current_steps = obs->GetGameLoop();
+		timer_3 = current_steps + steps_;
+	}
+}
+
+int BasicSc2Bot::getStepsPastTimer1()
+{
+	// get the amount of timesteps past timer_1
+
+	if (timer_1 != -1) {
+		const sc2::ObservationInterface* obs = Observation();
+		auto current_steps = obs->GetGameLoop();
+		return current_steps - timer_1;
+	}
+	return -1;
+}
+
+int BasicSc2Bot::getStepsPastTimer2() {
+	// get the amount of timesteps past timer_2
+
+	if (timer_2 != -1) {
+		const sc2::ObservationInterface* obs = Observation();
+		auto current_steps = obs->GetGameLoop();
+		return current_steps - timer_2;
+	}
+	return -1;
+}
+
+int BasicSc2Bot::getStepsPastTimer3() {
+	// get the amount of timesteps past timer_1
+
+	if (timer_3 != -1) {
+		const sc2::ObservationInterface* obs = Observation();
+		auto current_steps = obs->GetGameLoop();
+		return current_steps - timer_3;
+	}
+	return -1;
+}
+
+int BasicSc2Bot::getTimer1Value() {
+	// returns -1 if timer was reset
+	return timer_1;
+}
+
+int BasicSc2Bot::getTimer2Value() {
+	// returns -1 if timer was reset
+	return timer_2;
+}
+
+int BasicSc2Bot::getTimer3Value() {
+	// returns -1 if timer was reset
+	return timer_3;
+}
+
+void BasicSc2Bot::resetTimer1() {
+	// resets timer_1 so it can be given a new value
+	timer_1 = -1;
+}
+
+void BasicSc2Bot::resetTimer2() {
+	// resets timer_2 so it can be given a new value
+	timer_2 = -1;
+}
+
+void BasicSc2Bot::resetTimer3() {
+	// resets timer_3 so it can be given a new value
+	timer_3 = -1;
 }
 
 Directive* BasicSc2Bot::getLastStoredDirective()
@@ -380,17 +487,25 @@ void::BasicSc2Bot::OnStep_100(const sc2::ObservationInterface* obs) {
 
 void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
 	// occurs every 1000 steps
+	static MapChunk* prev_threat_chunk = nullptr;
+	static double prev_threat_amount = 0;
 	sc2::Point2D pathable_threat_spot = locH->getHighestThreatLocation(true, false);
-	sc2::Point2D pathable_away_threat_spot = locH->getHighestThreatLocation();
 	MapChunk* pathable_threat_chunk = locH->getChunkByCoords(std::pair<float, float>(pathable_threat_spot.x, pathable_threat_spot.y));
-	MapChunk* pathable_away_threat_chunk = locH->getChunkByCoords(std::pair<float, float>(pathable_away_threat_spot.x, pathable_away_threat_spot.y));
-	if (pathable_threat_spot == NO_POINT_FOUND) {
-		//std::cout << "no pathable high threat location found" << std::endl;
+	double threat_amount = 0;
+	
+	if (pathable_threat_spot != NO_POINT_FOUND) {
+		threat_amount = pathable_threat_chunk->getThreat();
 	}
-	else {
-		std::cout << "[" << obs->GetGameLoop() << "] highest threat at " << pathable_threat_spot.x << ", " << pathable_threat_spot.y << " = " << pathable_threat_chunk->getThreat() << std::endl;;
+	if (pathable_threat_chunk != prev_threat_chunk || threat_amount != prev_threat_amount) {
+		if (pathable_threat_spot != NO_POINT_FOUND) {
+			std::cout << "[" << obs->GetGameLoop() << "] highest threat at " << pathable_threat_spot.x << ", " << pathable_threat_spot.y << " = " << pathable_threat_chunk->getThreat() << std::endl;;
+		}
+		else {
+			std::cout << "[" << obs->GetGameLoop() << "] no threats found." << std::endl;
+		}
 	}
-
+	prev_threat_chunk = pathable_threat_chunk;
+	prev_threat_amount = threat_amount;
 }
 
 void BasicSc2Bot::OnStep() {

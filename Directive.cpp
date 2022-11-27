@@ -5,13 +5,14 @@
 #include "Mob.h"
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D assignee_location_,
-	sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_, std::string group_name_, FLAGS set_flag_) {
+	sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_, std::unordered_set<FLAGS> flags_, sc2::Unit* unit_, std::string group_name_, FLAGS set_flag_, int steps_) {
 	// genertic private constructor delegated by others
 	// constructors which do not provide values for certain variables provide the listed default value instead
 
 	locked = false;
 	static size_t id_ = 0;
 	id = id_++;
+	steps = steps_;
 	assignee = assignee_;
 	action_type = action_type_;
 	unit_type = unit_type_;						// default: UNIT_TYPEID::INVALID
@@ -49,51 +50,59 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 }
 
 
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_) :
+	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, sc2::ABILITY_ID::INVALID, INVALID_POINT, INVALID_POINT,
+		INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG, 0) {}
+
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, int steps_) :
+	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, sc2::ABILITY_ID::INVALID, INVALID_POINT, INVALID_POINT,
+		INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG, steps_) {}
+
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_) : 
 	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_,
-		INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG) {}
+		INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG, 0) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_) :
 	Directive(assignee_, action_type_, unit_type_, ability_, INVALID_POINT, 
-		INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG) {}
+		INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG, 0) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) :
 	Directive(assignee_, action_type_, unit_type_, ability_, INVALID_POINT,
-		location_, INVALID_RADIUS, proximity_, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG) {}
+		location_, INVALID_RADIUS, proximity_, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG, 0) {}
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, float assignee_proximity_) :
-	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG) {}
+	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG, 0) {}
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) :
-	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, target_location_, assignee_proximity_, target_proximity_, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG) {}
+	Directive(assignee_, action_type_, unit_type_, ability_, assignee_location_, target_location_, assignee_proximity_, target_proximity_, std::unordered_set<FLAGS>(), nullptr, "", FLAGS::INVALID_FLAG, 0) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, sc2::ABILITY_ID ability_, sc2::Unit* target_) :
 	Directive(assignee_, action_type_, unit_type_, ability_, INVALID_POINT,
-		INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), target_, "", FLAGS::INVALID_FLAG) {}
+		INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), target_, "", FLAGS::INVALID_FLAG, 0) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_, sc2::Point2D location_, float proximity_) :
 	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, ability_, INVALID_POINT,
-		location_, INVALID_RADIUS, proximity_, flags_, nullptr, "", FLAGS::INVALID_FLAG) {}
+		location_, INVALID_RADIUS, proximity_, flags_, nullptr, "", FLAGS::INVALID_FLAG, 0) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::ABILITY_ID ability_,
 	sc2::Point2D assignee_location_, sc2::Point2D target_location_, float assignee_proximity_, float target_proximity_) :
 	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, ability_, assignee_location_,
-		target_location_, assignee_proximity_, target_proximity_, flags_, nullptr, "", FLAGS::INVALID_FLAG) {}
+		target_location_, assignee_proximity_, target_proximity_, flags_, nullptr, "", FLAGS::INVALID_FLAG, 0) {}
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, std::string group_name_, sc2::UNIT_TYPEID unit_type_, float assignee_proximity_) :
-	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, group_name_, FLAGS::INVALID_FLAG) {}
+	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, group_name_, FLAGS::INVALID_FLAG, 0) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, FLAGS set_flag_) :
-	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, INVALID_POINT, INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", set_flag_) {}
+	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, INVALID_POINT, INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", set_flag_, 0) {}
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, FLAGS set_flag_, float assignee_proximity_) :
-	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", set_flag_) {}
+	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", set_flag_, 0) {}
 	
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, FLAGS set_flag_) :
-	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, sc2::ABILITY_ID::INVALID, INVALID_POINT, INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, flags_, nullptr, "", set_flag_) {}
+	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, sc2::ABILITY_ID::INVALID, INVALID_POINT, INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, flags_, nullptr, "", set_flag_, 0) {}
 
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::Point2D assignee_location_, FLAGS set_flag_, float assignee_proximity_) :
-	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, flags_, nullptr, "", set_flag_) {}
+	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, flags_, nullptr, "", set_flag_, 0) {}
 
 bool Directive::bundleDirective(Directive directive_) {
 	if (!locked)
@@ -179,7 +188,42 @@ bool Directive::execute(BasicSc2Bot* agent) {
 	if (assignee == MATCH_FLAGS || assignee == MATCH_FLAGS_NEAR_LOCATION) {
 		return executeMatchFlags(agent);
 	}
+
+	if (assignee == GAME_VARIABLES) {
+		assert(action_type == SET_TIMER_1 || action_type == SET_TIMER_2 || action_type == SET_TIMER_3 || 
+			action_type == RESET_TIMER_1 || action_type == RESET_TIMER_2 || action_type == RESET_TIMER_3);
+		return executeModifyTimer(agent);
+	}
+
 	
+	return false;
+}
+
+bool Directive::executeModifyTimer(BasicSc2Bot* agent) {
+	if (action_type == SET_TIMER_1) {
+		agent->setTimer1(steps);
+		return true;
+	}
+	if (action_type == SET_TIMER_2) {
+		agent->setTimer2(steps);
+		return true;
+	}
+	if (action_type == SET_TIMER_3) {
+		agent->setTimer3(steps);
+		return true;
+	}
+	if (action_type == RESET_TIMER_1) {
+		agent->resetTimer1();
+		return true;
+	}
+	if (action_type == RESET_TIMER_2) {
+		agent->resetTimer2();
+		return true;
+	}
+	if (action_type == RESET_TIMER_3) {
+		agent->resetTimer3();
+		return true;
+	}
 	return false;
 }
 

@@ -68,6 +68,15 @@ enum class COND {
 	MIN_NEUTRAL_UNIT_OF_TYPE,
 	MAX_ENEMY_UNITS_NEAR_LOCATION,
 	MIN_ENEMY_UNITS_NEAR_LOCATION,
+	TIMER_1_SET,
+	TIMER_2_SET,
+	TIMER_3_SET,
+	TIMER_1_MIN_STEPS_PAST,
+	TIMER_1_MAX_STEPS_PAST,
+	TIMER_2_MIN_STEPS_PAST,
+	TIMER_2_MAX_STEPS_PAST,
+	TIMER_3_MIN_STEPS_PAST,
+	TIMER_3_MAX_STEPS_PAST,
 };
 
 class Trigger {
@@ -110,8 +119,8 @@ public:
 		COND cond_type;
 		double cond_value;
 		sc2::UNIT_TYPEID unit_of_type;
-		sc2::Point2D location_for_counting_units;
-		float distance_squared;
+		sc2::Point2D location;
+		float radius;
 		BasicSc2Bot* agent;
 		bool debug;
 		bool is_true;
