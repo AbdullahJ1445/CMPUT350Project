@@ -1506,6 +1506,12 @@ MapChunk* LocationHandler::getHighestPathableThreatChunkAwayFromStart()
     return high_threat_pathable_chunk_away_from_start;
 }
 
+bool LocationHandler::PathableThreatExistsNearLocation(sc2::Point2D loc_, float range_) {
+    // check if a threat exists near location
+
+    return getHighestPathableThreatChunkNearLocation(loc_, range_) != nullptr;
+}
+
 MapChunk* LocationHandler::getHighestPathableThreatChunkNearLocation(sc2::Point2D loc_, float range_) {
 
     // determine boundaries of chunks so we don't search the entire map

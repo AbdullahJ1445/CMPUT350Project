@@ -101,6 +101,7 @@ public:
     void setHighestPathableThreatChunkAwayFromStart(MapChunk* chunk_);
     MapChunk* getHighestPathableThreatChunkAwayFromStart();
 
+    bool PathableThreatExistsNearLocation(sc2::Point2D loc_, float range_);
     MapChunk* getHighestPathableThreatChunkNearLocation(sc2::Point2D loc_, float range_);
 
     float distSquaredFromStart(sc2::Point2D loc_);
