@@ -35,6 +35,8 @@ public:
 	// public functions
 
 	BasicSc2Bot();
+	void setLoadingProgress(int loaded_);
+	int getLoadingProgress();
 	void setCurrentStrategy(Strategy* strategy_);
 	void BasicSc2Bot::addStrat(Precept precept_);
 	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
@@ -55,6 +57,7 @@ public:
 	void resetTimer1();
 	void resetTimer2();
 	void resetTimer3();
+	void setInitialized();
 
 	// various bool functions
 	bool haveUpgrade(const sc2::UpgradeID upgrade_);
@@ -86,6 +89,10 @@ public:
 private:
 
 	// private functions
+	void LoadStep_01();
+	void LoadStep_02();
+	void LoadStep_03();
+	void LoadStep_04();
 	void OnStep_100(const sc2::ObservationInterface* obs);
 	void OnStep_1000(const sc2::ObservationInterface* obs);
 	void initVariables();
@@ -126,5 +133,7 @@ private:
 	int timer_1;
 	int timer_2;
 	int timer_3;
+	int loading_progress;
+	bool initialized;
 	int map_index; // 1 = CactusValleyLE,  2 = BelShirVestigeLE,  3 = ProximaStationLE
 };
