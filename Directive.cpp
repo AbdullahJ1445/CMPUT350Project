@@ -97,7 +97,10 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 
 Directive::Directive(ASSIGNEE assignee_, sc2::Point2D assignee_location_, ACTION_TYPE action_type_, sc2::UNIT_TYPEID unit_type_, FLAGS set_flag_, float assignee_proximity_) :
 	Directive(assignee_, action_type_, unit_type_, sc2::ABILITY_ID::INVALID, assignee_location_, INVALID_POINT, assignee_proximity_, INVALID_RADIUS, std::unordered_set<FLAGS>(), nullptr, "", set_flag_, 0) {}
-	
+
+Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_) :
+	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, sc2::ABILITY_ID::INVALID, INVALID_POINT, INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, flags_, nullptr, "", FLAGS::INVALID_FLAG, 0) {}
+
 Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, FLAGS set_flag_) :
 	Directive(assignee_, action_type_, sc2::UNIT_TYPEID::INVALID, sc2::ABILITY_ID::INVALID, INVALID_POINT, INVALID_POINT, INVALID_RADIUS, INVALID_RADIUS, flags_, nullptr, "", set_flag_, 0) {}
 
@@ -485,6 +488,7 @@ bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 	// issue an order to units matching the provided flags
 
+	
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
 	std::unordered_set<Mob*> matching_mobs = agent->mobH->filterByFlags(mobs, flags);
 
@@ -500,6 +504,18 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 	// no units match the condition(s)
 	if (matching_mobs.size() == 0) {
 		return false;
+	}
+
+
+	if (action_type == DISABLE_DEFAULT_DIRECTIVE) {
+		for (Mob* m : matching_mobs) {
+			if (!m->hasFlag(FLAGS::DEF_DIR_DISABLED)) {
+				m->disableDefaultDirective();
+				issueOrder(agent, m, false, sc2::ABILITY_ID::STOP); //override the ability to be STOP
+			}
+			m->setFlag(FLAGS::DEF_DIR_DISABLED);
+		}
+		return true;
 	}
 
 	bool found_valid_unit = false;
@@ -608,10 +624,11 @@ bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
 		return false;
 	}
 
-
-	mobs = filterByHasAbility(agent, mobs, ability);
-	if (mobs.size() == 0) {
-		return false;
+	if (ability != sc2::ABILITY_ID::INVALID) {
+		mobs = filterByHasAbility(agent, mobs, ability);
+		if (mobs.size() == 0) {
+			return false;
+		}
 	}
    
 	// if order is a build structure order, ensure a valid placement location
@@ -870,6 +887,7 @@ std::unordered_set<Mob*> Directive::filterNearLocation(std::unordered_set<Mob*> 
 		[sq_dist, pos_](Mob* m) { return (
 			sc2::DistanceSquared2D(m->unit.pos, pos_) <= sq_dist);
 		});
+
 	return filtered_mobs;
 }
 
@@ -989,26 +1007,15 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 			iter = next;
 		}
 
-		if (debug) {
-			std::cout << "{1}";
-		}
-
 		if (mobs_.empty()) {
 			return false;
 		}		
 		
-		if (debug) {
-			std::cout << "{2}";
-		}
-
 
 		bool action_success = false;
 
 		// target location is specified
 		if (target_loc_ != INVALID_POINT && target_unit_ == nullptr) {
-			if (debug) {
-				std::cout << "{3}";
-			}
 			// if point is SEND_HOME, grab the first unit's home location instead
 			if (target_loc_ == SEND_HOME) {
 				target_loc_ = (*mobs_.begin())->getHomeLocation();
@@ -1016,9 +1023,6 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 			if (isAssignedLocationValue(target_loc_, proximity)) {
 				sc2::Point2D offset = getOffsetAssignedLocation(target_loc_);
 				target_loc_ = (*mobs_.begin())->getAssignedLocation() + offset;
-			}
-			if (debug) {
-				std::cout << "{4}";
 			}
 			if (ignore_distance >= 0) {
 				// when ignore_distance is specified, we must filter out mobs that are within the
@@ -1036,14 +1040,9 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 						it = next;
 					}
 				}
-				if (debug) {
-					std::cout << "{5}";
-				}
+
 				if (mobs_.empty()) {
 					return false;
-				}
-				if (debug) {
-					std::cout << "{6}";
 				}
 			}
 		}
@@ -1054,15 +1053,8 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 			units.push_back(&(m_->unit));
 		}
 
-		if (debug) {
-			std::cout << "{7}";
-		}
-
 		// target location is specified, continued
 		if (target_loc_ != INVALID_POINT && target_unit_ == nullptr) {
-			if (debug) {
-				std::cout << "{8}";
-			}
 			agent->Actions()->UnitCommand(units, ability_, target_loc_, queued_);
 			action_success = true;
 		}
@@ -1081,9 +1073,6 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 			action_success = true;
 		}
 		if (action_success) {
-			if (debug) {
-				std::cout << "{9}";
-			}
 			if (assignee != DEFAULT_DIRECTIVE) {
 				for (auto m_ : mobs_) {
 					assignMob(m_);

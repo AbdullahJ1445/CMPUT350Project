@@ -699,7 +699,6 @@ void LocationHandler::initLocations(int map_index, int p_id) {
     const sc2::ObservationInterface* observation = agent->Observation();
     initSetStartLocation();
     
-
     std::cout << "map index: " << map_index << std::endl;
     std::cout << "p_id: " << p_id << std::endl;
 
@@ -1172,9 +1171,7 @@ void LocationHandler::initMapChunks()
 
     chunks_initialized = true;
     std::cout << std::endl << map_chunks.size() << " chunks initialized (" << pathable_count << " pathable)" << std::endl;
-    std::cout << " minx: " << chunk_min_x << " miny: " << chunk_min_y << 
-        " maxx: " << chunk_max_x << " maxy: " << chunk_max_y << 
-        " spread: " << chunk_spread << " rows: " << chunk_rows << " cols: " << chunk_cols << std::endl;
+    agent->setLoadingProgress(3);
 }
 
 void LocationHandler::setEnemyStartLocation(sc2::Point2D location_)

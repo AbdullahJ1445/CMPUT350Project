@@ -33,6 +33,16 @@ BasicSc2Bot::BasicSc2Bot()
 	timer_1 = -1;
 	timer_2 = -1;
 	timer_3 = -1;
+	loading_progress = 0;
+	initialized = false;
+}
+
+void BasicSc2Bot::setLoadingProgress(int loaded_) {
+	loading_progress = loaded_;
+}
+
+int BasicSc2Bot::getLoadingProgress() {
+	return loading_progress;
 }
 
 void BasicSc2Bot::setCurrentStrategy(Strategy* strategy_) {
@@ -191,6 +201,11 @@ void BasicSc2Bot::resetTimer2() {
 void BasicSc2Bot::resetTimer3() {
 	// resets timer_3 so it can be given a new value
 	timer_3 = -1;
+}
+
+void BasicSc2Bot::setInitialized()
+{
+	initialized = true;
 }
 
 Directive* BasicSc2Bot::getLastStoredDirective()
@@ -380,7 +395,16 @@ float BasicSc2Bot::getValue(const sc2::Unit* unit) {
 	return value;
 }
 
-void BasicSc2Bot::initVariables() {
+void BasicSc2Bot::OnGameStart() {
+	// no longer using this, since the ladder server doesn't jive with it
+}
+
+void::BasicSc2Bot::LoadStep_01() { 
+	// breaking loading into 4 sequential segments, so that nothing is referenced before it is initialized
+
+	mobH = new MobHandler(this); // initialize mob handler 
+	locH = new LocationHandler(this); // initialize locationg handler
+
 	const sc2::ObservationInterface* observation = Observation();
 	map_name = observation->GetGameInfo().map_name;
 
@@ -393,26 +417,28 @@ void BasicSc2Bot::initVariables() {
 				map_index = 1; else
 				map_index = 0;
 
-	player_start_id = locH->getPlayerIDForMap(map_index, observation->GetStartLocation());
-	locH->initLocations(map_index, player_start_id);
 	enemy_race = sc2::Race::Random;
 
-	std::cout << "Map Index " << map_index << std::endl;
 	std::cout << "Map Name: " << map_name << std::endl;
-	std::cout << "Player Start ID: " << player_start_id << std::endl;
+	setLoadingProgress(1);
 }
 
-void BasicSc2Bot::initStartingUnits() {
+void::BasicSc2Bot::LoadStep_02() {
+	// breaking loading into 4 sequential segments, so that nothing is referenced before it is initialized
+
+	Strategy* strategy = new Strategy(this);
+	setCurrentStrategy(strategy);
 	// add all starting units to their respective mobs
+	std::cout << "initializing starting units...";
 	const sc2::ObservationInterface* observation = Observation();
 	sc2::Units units = observation->GetUnits(sc2::Unit::Alliance::Self);
 	for (const sc2::Unit* u : units) {
 		sc2::UNIT_TYPEID u_type = u->unit_type;
 		if (u_type == sc2::UNIT_TYPEID::TERRAN_SCV ||
 			u_type == sc2::UNIT_TYPEID::ZERG_DRONE ||
-			u_type == sc2::UNIT_TYPEID::PROTOSS_PROBE) 
+			u_type == sc2::UNIT_TYPEID::PROTOSS_PROBE)
 		{
-			Mob worker (*u, MOB::MOB_WORKER);
+			Mob worker(*u, MOB::MOB_WORKER);
 			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, u_type, sc2::ABILITY_ID::HARVEST_GATHER, ASSIGNED_LOCATION);
 			storeDirective(directive_get_minerals_near_Base);
 			Directive* dir = getLastStoredDirective();
@@ -432,19 +458,12 @@ void BasicSc2Bot::initStartingUnits() {
 			mobH->addMob(townhall);
 		}
 	}
+	std::cout << "... done." << std::endl;
+	setLoadingProgress(2);
 }
 
-void BasicSc2Bot::OnGameStart() {
-	Strategy* strategy = new Strategy(this);
-	setCurrentStrategy(strategy);
-
-	mobH = new MobHandler(this); // initialize mob handler 
-	locH = new LocationHandler(this);
-	BasicSc2Bot::initVariables(); // initialize this first
-	BasicSc2Bot::initStartingUnits();
-	sc2::Point2D start_location = locH->getStartLocation();
-	sc2::Point2D proxy_location = locH->getProxyLocation();
-	current_strategy->loadStrategies();
+void::BasicSc2Bot::LoadStep_03() { 
+	// breaking loading into 4 sequential segments, so that nothing is referenced before it is initialized
 
 	const sc2::ObservationInterface* obs = Observation();
 	auto utd_fulldata = obs->GetUnitTypeData();
@@ -472,10 +491,40 @@ void BasicSc2Bot::OnGameStart() {
 	}
 	std::cout << " " << data_buildings.size() << " building types." << std::endl;
 
-	std::cout << "Start Location: " << start_location.x << "," << start_location.y << std::endl;
-	std::cout << "Build Area 0: " << locH->bases[0].getBuildArea(0).x << "," << locH->bases[0].getBuildArea(0).y << std::endl;
-	std::cout << "Proxy Location: " << proxy_location.x << "," << proxy_location.y << std::endl;
+	player_start_id = locH->getPlayerIDForMap(map_index, obs->GetStartLocation());
+	sc2::Point2D start_location = locH->getStartLocation();
+	sc2::Point2D proxy_location = locH->getProxyLocation();
+
+	locH->initLocations(map_index, player_start_id);
 }
+
+void::BasicSc2Bot::LoadStep_04() { 
+	// breaking loading into 4 sequential segments, so that nothing is referenced before it is initialized
+
+	// we split the loadStrategies function into several smaller ones
+	// the ladder server was crashing with one larger function
+	std::cout << "Loading Strategies";
+	current_strategy->loadStrategies_01();
+	std::cout << ".";
+	current_strategy->loadStrategies_02();
+	std::cout << ".";
+	current_strategy->loadStrategies_03();
+	std::cout << ".";
+	current_strategy->loadStrategies_04();
+	std::cout << ".";
+	current_strategy->loadStrategies_05();
+	std::cout << ".";
+	current_strategy->loadStrategies_06();
+	std::cout << ".";
+	current_strategy->loadStrategies_07();
+	std::cout << ".";
+	current_strategy->loadStrategies_08();
+	std::cout << ".done." << std::endl;
+	setLoadingProgress(4);
+	setInitialized();
+}
+
+
 
 void::BasicSc2Bot::OnStep_100(const sc2::ObservationInterface* obs) {
 	// occurs every 100 steps
@@ -512,6 +561,21 @@ void BasicSc2Bot::OnStep() {
 	const sc2::ObservationInterface* observation = Observation();
 	int gameloop = observation->GetGameLoop();
 
+	if (gameloop >= 1 && loading_progress == 0) {
+		LoadStep_01();
+	}
+	if (gameloop >= 1 && loading_progress == 1) {
+		LoadStep_02();
+	}
+	if (gameloop >= 1 && loading_progress == 2) {
+		LoadStep_03();
+	}
+	if (gameloop >= 1 && loading_progress == 3) {
+		LoadStep_04();
+	}
+	if (!initialized)
+		return;
+
 	// update visibility data for chunks
 	locH->scanChunks(observation);
 	if (!enemy_units.empty()) {
@@ -532,6 +596,9 @@ void BasicSc2Bot::OnStep() {
 				// increase by a lesser amount adjusted by NEARBY_THREAT_MODIFIER
 				bool found_pathable = false; //whether we have found a pathable chunk near the unit
 				for (auto chunk : chunks) {
+					if (chunk == nullptr) {
+						continue;
+					}
 					if (chunk->isPathable()) {
 						if (!found_pathable) {
 							chunk->increaseThreat(this, *it, 1.0);
@@ -546,7 +613,7 @@ void BasicSc2Bot::OnStep() {
 			++it;
 		}
 	}
-	
+
 	std::unordered_set<Mob*> busy_mobset = mobH->getBusyMobs();
 	if (!busy_mobset.empty()) {
 		for (auto it = busy_mobset.begin(); it != busy_mobset.end(); ) {
@@ -557,7 +624,7 @@ void BasicSc2Bot::OnStep() {
 				Directive* dir = m->getCurrentDirective();
 				if (dir) {
 					// if a busy mob has changed orders
-					
+
 					if (!orders.empty()) {
 						auto order = orders.front();
 						if (dir->getAbilityID() != order.ability_id) {
@@ -575,8 +642,8 @@ void BasicSc2Bot::OnStep() {
 			it = next;
 		}
 	}
-	
-	
+
+
 	std::unordered_set<Mob*> idle_mobs = mobH->getIdleMobs();
 	if (!idle_mobs.empty()) {
 		for (auto it = idle_mobs.begin(); it != idle_mobs.end(); ) {
@@ -608,6 +675,9 @@ void BasicSc2Bot::OnStep() {
 
 void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	const sc2::ObservationInterface* observation = Observation();
+
+	if (!initialized)
+		return;
 	
 	// mob already exists
 	if (mobH->mobExists(*unit))
@@ -692,6 +762,10 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 }
 
 void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
+
+	if (!initialized)
+		return;
+
 	Mob* mob = &mobH->getMob(*unit);
 	sc2::UNIT_TYPEID unit_type = unit->unit_type;
 	bool is_townhall = false;
@@ -731,6 +805,10 @@ void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 }
 
 void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shields) {
+
+	if (!initialized)
+		return;
+
 	const sc2::ObservationInterface* observation = Observation();
 	// make Stalkers Blink away if low health
 	if (unit->unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER) {
@@ -788,6 +866,10 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 }
 
 void BasicSc2Bot::OnUnitIdle(const sc2::Unit* unit) {
+
+	if (!initialized)
+		return;
+
 	Mob* mob = &mobH->getMob(*unit);
 	mobH->setMobIdle(mob, true);
 	if (mob->hasCurrentDirective()) {
@@ -801,6 +883,10 @@ void BasicSc2Bot::OnUnitIdle(const sc2::Unit* unit) {
 }
 
 void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
+	
+	if (!initialized)
+		return;
+
 	if (unit->alliance == sc2::Unit::Alliance::Self) {
 		
 		Mob* mob = &mobH->getMob(*unit);
@@ -816,6 +902,10 @@ void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
 }
 
 void BasicSc2Bot::OnUnitEnterVision(const sc2::Unit* unit) {
+
+	if (!initialized)
+		return;
+
 	addEnemyUnit(unit);
 	if (enemy_race == sc2::Race::Random) {
 		const sc2::ObservationInterface* obs = Observation();
