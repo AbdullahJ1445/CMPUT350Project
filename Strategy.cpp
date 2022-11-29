@@ -624,7 +624,6 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MAX_GAS, 49);
 			t.addCondition(COND::MIN_FOOD, 2);
 			t.addCondition(COND::MAX_FOOD_USED, 109);
-			t.addCondition(COND::MAX_TIME, 19999);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			train_zealot.addDirective(d);
 			train_zealot.addTrigger(t);
@@ -634,7 +633,6 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_FOOD, 2);
 			t2.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy race is not zerg
 			t2.addCondition(COND::MAX_FOOD_USED, 109);
-			t2.addCondition(COND::MAX_TIME, 19999);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			train_zealot.addTrigger(t2);
 			Trigger t3(bot);
@@ -643,7 +641,6 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MIN_FOOD, 4);
 			t3.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg
 			t3.addCondition(COND::MAX_FOOD_USED, 109);
-			t3.addCondition(COND::MAX_TIME, 19999);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 6, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			train_zealot.addTrigger(t3);
 			Trigger t4(bot);
@@ -651,7 +648,6 @@ void Strategy::loadStrategies() {
 			t4.addCondition(COND::MIN_FOOD, 2);
 			t4.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy race is not zerg
 			t4.addCondition(COND::MAX_FOOD_USED, 109);
-			t4.addCondition(COND::MAX_TIME, 19999);
 			t4.addCondition(COND::MIN_FOOD_CAP, 91);
 			train_zealot.addTrigger(t4);
 			bot->addStrat(train_zealot);
@@ -947,6 +943,13 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
 			train_voidray.addDirective(d);
 			train_voidray.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_MINERALS, 250);
+			t2.addCondition(COND::MIN_GAS, 150);
+			t2.addCondition(COND::MIN_FOOD, 4);
+			t2.addCondition(COND::MIN_TIME, 20000);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
+			train_voidray.addTrigger(t2);
 			bot->addStrat(train_voidray);
 		}
 		{	// void rays clean up
