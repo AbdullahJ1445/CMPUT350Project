@@ -556,7 +556,7 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 				location = uniform_random_point_in_circle(target_location, proximity);
 			}
 			// Unit has no orders
-			if ((m->unit.orders).size() == 0) {
+			if ((m->unit.orders).size() == 0 || override_directive) {
 				found_valid_unit = true;
 				filtered_mobs.insert(m);
 			}
@@ -904,6 +904,11 @@ void Directive::excludeFlag(FLAGS exclude_flag_) {
 void Directive::setContinuous(bool is_true) {
 	// when true, this directive will continuously re-issue orders when locations are updated to new values
 	continuous_update = is_true;
+}
+
+void Directive::setOverrideOther(bool is_true) {
+	// when true, will apply order even if mob is doing something else
+	override_directive = is_true;
 }
 
 std::unordered_set<Mob*> Directive::filterNearLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_) {
