@@ -599,7 +599,7 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			//t.addCondition(COND::THREAT_EXISTS_NEAR_LOCATION, bot->getStoredLocation("FORCE_FIELD"), 3.6F);
-			t.addCondition(COND::MIN_ENEMY_UNITS_NEAR_LOCATION, 2, bot->getStoredLocation("FF_CHECK"), 2.0F);
+			t.addCondition(COND::MIN_ENEMY_UNITS_NEAR_LOCATION, 1, bot->locH->bases[1].getRallyPoint(), 7.0F);
 			t.addCondition(COND::MAX_NEUTRAL_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::NEUTRAL_FORCEFIELD);
 			force_field.addTrigger(t);
 			force_field.addDirective(d);
@@ -881,6 +881,7 @@ void Strategy::loadStrategies() {
 			Precept attack_and_explore(bot);
 			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->getStoredLocation("CANNON_1"), 4.0F);
 			Trigger t(bot);
+			d.excludeFlag(FLAGS::IS_FLYING);
 			auto func = [this]() { return bot->locH->smartAttackLocation(); };
 			d.setTargetLocationFunction(this, bot, func);
 			attack_and_explore.addDirective(d);
@@ -905,13 +906,12 @@ void Strategy::loadStrategies() {
 			Precept stargate_1(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_STARGATE, bot->locH->bases[0].getBuildArea(2));
 			Trigger t(bot);
-			d.allowMultiple();
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_GAS, 150);
 			t.addCondition(COND::MIN_FOOD_USED, 110);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_STARGATE, bot->locH->bases[0].getBuildArea(2), 40.0F);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
 			stargate_1.addTrigger(t);
 			stargate_1.addDirective(d);
 			Trigger t2(bot);
@@ -919,8 +919,8 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_MINERALS, 150);
 			t2.addCondition(COND::MIN_GAS, 150);
 			t2.addCondition(COND::MIN_TIME, 20000);
-			t2.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_STARGATE, bot->locH->bases[0].getBuildArea(2), 40.0F);
-			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
 			stargate_1.addTrigger(t2);
 			bot->addStrat(stargate_1);
 		}
@@ -932,6 +932,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_MINERALS, 250);
 			t.addCondition(COND::MIN_GAS, 150);
 			t.addCondition(COND::MIN_FOOD, 4);
+			t.addCondition(COND::MIN_FOOD_USED, 110);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
 			train_voidray.addDirective(d);
 			train_voidray.addTrigger(t);
