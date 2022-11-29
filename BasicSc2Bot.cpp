@@ -928,14 +928,18 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 	// increase threat slightly on damage taken for situations where an enemy out of sight is dealing damage to us
 	bool found_pathable = false; //whether we have found a pathable chunk near the unit taking damage
 	std::vector<MapChunk*> chunks = locH->getLocalChunks(unit->pos);
-	for (auto chunk : chunks) {
-		if (chunk->isPathable()) {
-			if (!found_pathable) {
-				chunk->increaseThreat(this, unit, 0.02);
-				found_pathable = true;
-			}
-			else {
-				chunk->increaseThreat(this, unit, 0.01);
+	if (!chunks.empty()) {
+		for (auto chunk : chunks) {
+			if (chunk != nullptr) {
+				if (chunk->isPathable()) {
+					if (!found_pathable) {
+						chunk->increaseThreat(this, unit, 0.02);
+						found_pathable = true;
+					}
+					else {
+						chunk->increaseThreat(this, unit, 0.01);
+					}
+				}
 			}
 		}
 	}
