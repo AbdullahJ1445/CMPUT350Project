@@ -351,31 +351,6 @@ void LocationHandler::calculateHighestThreatForChunks() {
 
 sc2::Point2D LocationHandler::getHighestThreatLocation(bool pathable_, bool away_) {
     
-    /*
-    std::unordered_set<MapChunk*> chunkset;
-
-    if (pathable_)
-        chunkset = pathable_map_chunks;
-    else
-        chunkset = map_chunks;
-
-    float highest_threat = 0;
-    int highest_id = -99;
-
-    for (auto chunk : chunkset) {
-        if (chunk->getThreat() > highest_threat) {
-            highest_threat = chunk->getThreat();
-            highest_id = chunk->getID();
-        }
-    }
-    if (highest_id != -99) {
-        return map_chunk_by_id[highest_id]->getLocation();
-    }
-    else {
-        return NO_POINT_FOUND;
-    }
-    */
-
     sc2::Point2D return_loc = NO_POINT_FOUND;
     float hi_threat = 0;
     MapChunk* hi_chunk = nullptr;
@@ -411,6 +386,19 @@ MapChunk* LocationHandler::getChunkByCoords(std::pair<float, float> coords) {
     return map_chunk_by_coords[coords];
 }
 
+sc2::Point2D LocationHandler::getCenterOfArmy() {
+    // returns the "center of mass" of army units
+
+    sc2::Point2D point_sum(0.0f, 0.0f);
+
+    std::unordered_set<Mob*> attackers = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_ATTACKER);
+    for (auto it = attackers.begin(); it != attackers.end(); ++it) {
+        point_sum += (*it)->unit.pos;
+    }
+    int army_size = attackers.size();
+    return point_sum / army_size;
+}
+
 sc2::Point2D LocationHandler::getEnemyLocation()
 {
     if (!enemy_start_locations.empty()) {
@@ -430,6 +418,58 @@ sc2::Point2D LocationHandler::smartAttackLocation(bool pathable_) {
     if (high_threat != NO_POINT_FOUND)
         return high_threat;
     return getOldestLocation(pathable_);
+}
+
+sc2::Point2D LocationHandler::smartAttackEnemyBase(bool pathable_) {
+    // first returns the highest threat location away from start
+    // if none found, then returns the highest threat location
+    // if none found, then returns the oldest location
+
+    sc2::Point2D high_threat = getHighestThreatLocation(pathable_, true);
+    if (high_threat != NO_POINT_FOUND)
+        return high_threat;
+    high_threat = getHighestThreatLocation(pathable_);
+    if (high_threat != NO_POINT_FOUND)
+        return high_threat;
+    return getOldestLocation(pathable_);
+}
+
+sc2::Point2D LocationHandler::smartPriorityAttack(bool pathable_) {
+    // will choose whether to attack the enemy base or defend
+    // the player's base, depending on the distance from the center
+    // of the army's mass
+    // helps keep army committed to attack instead of spreading itself thin
+
+    sc2::Point2D threat_away = getHighestThreatLocation(pathable_, true);
+    sc2::Point2D threat_home = getThreatNearStart();
+    sc2::Point2D threat_any = getHighestThreatLocation(pathable_);
+    if (threat_away == NO_POINT_FOUND) {
+        if (threat_home == NO_POINT_FOUND) {
+            if (threat_any == NO_POINT_FOUND) {
+                return getOldestLocation(pathable_);
+            }
+            else {
+                return threat_any;
+            }
+        }
+        else {
+            return threat_home;
+        }
+    }
+    else {
+        if (threat_home == NO_POINT_FOUND) {
+            return threat_away;
+        }
+        else {
+            sc2::Point2D center_of_mass = getCenterOfArmy();
+            if (sc2::DistanceSquared2D(threat_home, center_of_mass) < sc2::DistanceSquared2D(threat_away, center_of_mass)) {
+                return threat_home;
+            }
+            else {
+                return threat_away;
+            }
+        }
+    }
 }
 
 sc2::Point2D LocationHandler::smartAttackFlyingLocation() {
@@ -1374,24 +1414,14 @@ sc2::Point2D LocationHandler::getCenterPathableLocation() {
 }
 
 sc2::Point2D LocationHandler::getRallyPointTowardsThreat()
-// calculate a point between 3 locations:
-//      the player's start location
-//      the center of the map
-//      the highest threat location
-//      (if highest threat is closer than center, then disregard center)
+// calculate a pathable point 2/3 of the way towards the location to send the attack
 {
     sc2::Point2D p1 = start_location;
-    sc2::Point2D p2 = map_center;
-    sc2::Point2D p3 = smartAttackLocation();
-    sc2::Point2D p4 = NO_POINT_FOUND;
+    sc2::Point2D p2 = smartPriorityAttack();
+    sc2::Point2D p3 = NO_POINT_FOUND;
 
-    if (sc2::DistanceSquared2D(p1, p3) < sc2::DistanceSquared2D(p1, p2)) {
-        p4 = (p1 + p2) / 2;
-    }
-    else {
-        p4 = (p1 + p2 + p3) / 3;
-    }
-    MapChunk* best_chunk = getNearestPathableChunk(p4);
+    p3 = ((p2 - p1) * 2 / 3) + p1;
+    MapChunk* best_chunk = getNearestPathableChunk(p3);
     if (best_chunk == nullptr) {
         return NO_POINT_FOUND;
     }

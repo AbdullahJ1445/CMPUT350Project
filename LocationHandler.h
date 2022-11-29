@@ -60,6 +60,8 @@ public:
     sc2::Point2D getHighestThreatLocation(bool pathable_=true, bool away_=true);
 
     sc2::Point2D smartAttackLocation(bool pathable_=true);
+    sc2::Point2D smartAttackEnemyBase(bool pathable_=true);
+    sc2::Point2D smartPriorityAttack(bool pathable_=true);
     sc2::Point2D smartAttackFlyingLocation();
     sc2::Point2D smartStayHomeAndDefend();
 
@@ -74,6 +76,7 @@ public:
     MapChunk* getNearestChunk(sc2::Point2D loc_);
     MapChunk* getNearestPathableChunk(sc2::Point2D loc_);
     MapChunk* getChunkByCoords(std::pair<float, float> coords);
+    sc2::Point2D getCenterOfArmy();
     sc2::Point2D getEnemyLocation();
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();

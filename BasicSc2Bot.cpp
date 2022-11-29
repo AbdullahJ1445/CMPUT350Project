@@ -552,19 +552,6 @@ void BasicSc2Bot::OnStep() {
 				}
 			}
 
-			/*
-			if (map_index == 2) { // Bel'Shir
-				if (p_id == 1) { // top
-					bot->storeLocation("PROXY_INITIAL_LOC", sc2::Point2D(121.0, 122.0));
-					bot->storeLocation("DECOY_LOC", sc2::Point2D(82.0, 28.0));
-				}
-				if (p_id == 2) { // bottom
-					bot->storeLocation("PROXY_INITIAL_LOC", sc2::Point2D(23.0, 38.0));
-					bot->storeLocation("DECOY_LOC", sc2::Point2D(62.0, 132.0));
-				}
-			}
-			*/
-
 			if (proxy_probe != nullptr && decoy_probe != nullptr) {
 				auto GI = observation->GetGameInfo();
 				float width = GI.width;
@@ -747,7 +734,9 @@ void BasicSc2Bot::checkGasStructures() {
 
 	for (auto g : gas_structures) {
 		if (g->getHarvesterCount() < 3) {
-			g->grabNearbyGasHarvester(this);
+			if (mobH->filterByFlag(mobH->getMobs(), FLAGS::IS_MINERAL_GATHERER).size() > 3) {
+				g->grabNearbyGasHarvester(this);
+			}
 		}
 	}
 	
