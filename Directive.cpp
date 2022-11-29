@@ -342,6 +342,15 @@ bool Directive::executeSimpleActionForUnitType(BasicSc2Bot* agent) {
 	if (mobs.size() == 0)
 		return false;
 
+	std::unordered_set<Mob*> filtered_mobs;
+	if (action_type != DISABLE_DEFAULT_DIRECTIVE && agent->isStructure(unit_type)) {
+		// prevent structures from queuing training
+
+		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
+			[this](Mob* m) { return (m->unit.orders).empty(); });
+		mobs = filtered_mobs;
+	}
+
 	mob = getRandomMobFromSet(mobs);
 
 	if (action_type == DISABLE_DEFAULT_DIRECTIVE) {

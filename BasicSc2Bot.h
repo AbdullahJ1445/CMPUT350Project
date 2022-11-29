@@ -63,6 +63,7 @@ public:
 	bool haveUpgrade(const sc2::UpgradeID upgrade_);
 	bool canUnitUseAbility(const sc2::Unit& unit, const sc2::ABILITY_ID ability_);
 	bool isStructure(const sc2::Unit* unit);
+	bool isStructure(sc2::UNIT_TYPEID unit_type);
 	bool isMineralPatch(const sc2::Unit* unit_);
 	bool isGeyser(const sc2::Unit* unit_);
 
@@ -93,12 +94,12 @@ private:
 	void LoadStep_02();
 	void LoadStep_03();
 	void LoadStep_04();
+	void LoadStep_05();
 	void OnStep_100(const sc2::ObservationInterface* obs);
 	void OnStep_1000(const sc2::ObservationInterface* obs);
-	void initVariables();
-	void initStartingUnits();
 	bool addEnemyUnit(const sc2::Unit* unit);
 	bool flushOrders();
+	void checkGasStructures();
 
 	// virtual functions 
 	virtual void OnGameStart();
