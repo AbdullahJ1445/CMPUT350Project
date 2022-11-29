@@ -56,42 +56,6 @@ void BasicSc2Bot::addStrat(Precept precept_) {
 	precepts_onstep.push_back(precept_);
 }
 
-bool BasicSc2Bot::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) {
-	// get a nearby worker unit that is not currently assigned to gas
-	// and assign it to harvest gas
-
-	bool found_viable_unit = false;
-	
-	// get a filtered set of workers that are currently assigned to minerals
-	std::unordered_set<FLAGS> flags{ FLAGS::IS_WORKER, FLAGS::IS_MINERAL_GATHERER };
-	std::unordered_set<Mob*> worker_miners = mobH->filterByFlags(mobH->getMobs(), flags);
-
-	//std::unordered_set<Mob*> worker_miners = filter_by_flag(mobs, FLAGS::IS_MINERAL_GATHERER);
-	float distance = std::numeric_limits<float>::max();
-	Mob* target = nullptr;
-	for (Mob* m : worker_miners) {
-		float d = sc2::DistanceSquared2D(m->unit.pos, gas_structure.pos);
-		if (d < distance) {
-			distance = d;
-			target = m;
-			found_viable_unit = true;
-		}
-	}
-	if (found_viable_unit) {
-		target->removeFlag(FLAGS::IS_MINERAL_GATHERER);
-		target->setFlag(FLAGS::IS_GAS_GATHERER);
-
-		// make the unit continue to mine gas after being idle
-		Directive directive_get_gas(Directive::DEFAULT_DIRECTIVE, Directive::GET_GAS_NEAR_LOCATION, target->unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, gas_structure.pos);
-		target->assignDefaultDirective(directive_get_gas);
-		Actions()->UnitCommand(&(target->unit), sc2::ABILITY_ID::HARVEST_GATHER, &gas_structure);
-
-
-		return true;
-	}
-	return false;
-}
-
 void BasicSc2Bot::storeDirective(Directive directive_)
 {
 	if (directive_by_id[directive_.getID()])

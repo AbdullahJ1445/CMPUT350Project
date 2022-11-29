@@ -286,6 +286,7 @@ bool Mob::grabNearbyGasHarvester(BasicSc2Bot* agent) {
 	Directive directive_get_gas(Directive::DEFAULT_DIRECTIVE, Directive::GET_GAS_NEAR_LOCATION, nearest->unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, unit.pos);
 	nearest->assignDefaultDirective(directive_get_gas);
 	agent->Actions()->UnitCommand(&(nearest->unit), sc2::ABILITY_ID::HARVEST_GATHER, &unit);
+	return true;
 }
 
 

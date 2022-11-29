@@ -39,7 +39,6 @@ public:
 	int getLoadingProgress();
 	void setCurrentStrategy(Strategy* strategy_);
 	void BasicSc2Bot::addStrat(Precept precept_);
-	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
 	void storeDirective(Directive directive_);
 	void storeStrategy(Strategy strategy_);
 	void storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_type_);
