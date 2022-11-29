@@ -364,7 +364,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_GAS, 100);
 			t.addCondition(COND::MIN_FOOD, 4);
 			t.addCondition(COND::ENEMY_RACE_ZERG, 0, false);
-			t.addCondition(COND::MAX_FOOD_USED, 109);
+			t.addCondition(COND::MAX_FOOD_USED, 117);
 			t.addCondition(COND::MAX_TIME, 19999);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
@@ -374,7 +374,7 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_GAS, 150);
 			t2.addCondition(COND::MIN_FOOD, 4);
 			t2.addCondition(COND::ENEMY_RACE_ZERG);
-			t2.addCondition(COND::MAX_FOOD_USED, 109);
+			t2.addCondition(COND::MAX_FOOD_USED, 117);
 			t2.addCondition(COND::MAX_TIME, 19999);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
@@ -384,7 +384,7 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MIN_GAS, 100);
 			t3.addCondition(COND::MIN_FOOD, 4);
 			t3.addCondition(COND::ENEMY_RACE_ZERG, 0, false);
-			t3.addCondition(COND::MAX_FOOD_USED, 109);
+			t3.addCondition(COND::MAX_FOOD_USED, 117);
 			t3.addCondition(COND::MAX_TIME, 19999);
 			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
@@ -413,7 +413,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_GAS, 200);
 			t.addCondition(COND::MIN_FOOD, 6);
 			t.addCondition(COND::ENEMY_RACE_ZERG, 0, false);
-			t.addCondition(COND::MAX_FOOD_USED, 109);
+			t.addCondition(COND::MAX_FOOD_USED, 117);
 			t.addCondition(COND::MAX_TIME, 19999);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
@@ -424,7 +424,7 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_GAS, 200);
 			t2.addCondition(COND::MIN_FOOD, 6);
 			t2.addCondition(COND::ENEMY_RACE_ZERG);
-			t2.addCondition(COND::MAX_FOOD_USED, 109);
+			t2.addCondition(COND::MAX_FOOD_USED, 117);
 			t2.addCondition(COND::MAX_TIME, 19999);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
@@ -497,7 +497,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_MINERALS, 125);
 			t.addCondition(COND::MIN_GAS, 50);
 			t.addCondition(COND::MIN_FOOD, 2);
-			t.addCondition(COND::MAX_FOOD_USED, 109);
+			t.addCondition(COND::MAX_FOOD_USED, 117);
 			t.addCondition(COND::MAX_TIME, 19999);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
@@ -510,7 +510,7 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_FOOD, 2);
 			t2.addCondition(COND::MAX_FOOD_CAP, 90);
 			t2.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy is not zerg, avoid too many stalkers
-			t2.addCondition(COND::MAX_FOOD_USED, 109);
+			t2.addCondition(COND::MAX_FOOD_USED, 117);
 			t2.addCondition(COND::MAX_TIME, 19999);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 12, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
@@ -524,7 +524,7 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MIN_FOOD, 2);
 			t3.addCondition(COND::MAX_FOOD_CAP, 90);
 			t3.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy is not zerg, avoid too many stalkers
-			t3.addCondition(COND::MAX_FOOD_USED, 109);
+			t3.addCondition(COND::MAX_FOOD_USED, 117);
 			t3.addCondition(COND::MAX_TIME, 19999);
 			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 12, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
@@ -536,7 +536,7 @@ void Strategy::loadStrategies() {
 			t4.addCondition(COND::MIN_FOOD, 2);
 			t4.addCondition(COND::MIN_FOOD_CAP, 91);
 			t4.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy is not zerg, avoid too many stalkers
-			t4.addCondition(COND::MAX_FOOD_USED, 109);
+			t4.addCondition(COND::MAX_FOOD_USED, 117);
 			t4.addCondition(COND::MAX_TIME, 19999);
 			t4.addCondition(COND::MAX_UNIT_OF_TYPE, 6, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
@@ -547,7 +547,7 @@ void Strategy::loadStrategies() {
 			t5.addCondition(COND::MIN_GAS, 350);
 			t5.addCondition(COND::MIN_FOOD, 2);
 			t5.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg, build tons
-			t5.addCondition(COND::MAX_FOOD_USED, 109);
+			t5.addCondition(COND::MAX_FOOD_USED, 117);
 			t5.addCondition(COND::MAX_TIME, 19999);
 			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
@@ -558,7 +558,7 @@ void Strategy::loadStrategies() {
 			t6.addCondition(COND::MIN_GAS, 50);
 			t6.addCondition(COND::MIN_FOOD, 2);
 			t6.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg, build tons
-			t6.addCondition(COND::MAX_FOOD_USED, 109);
+			t6.addCondition(COND::MAX_FOOD_USED, 117);
 			t6.addCondition(COND::MAX_TIME, 19999);
 			t6.addCondition(COND::MAX_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t6.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
@@ -569,7 +569,7 @@ void Strategy::loadStrategies() {
 			t7.addCondition(COND::MIN_GAS, 50);
 			t7.addCondition(COND::MIN_FOOD, 2);
 			t7.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg, build tons
-			t7.addCondition(COND::MAX_FOOD_USED, 109);
+			t7.addCondition(COND::MAX_FOOD_USED, 117);
 			t7.addCondition(COND::MAX_TIME, 19999);
 			t7.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
 			t7.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
@@ -585,7 +585,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_MINERALS, 110);
 			t.addCondition(COND::MIN_GAS, 100);
 			t.addCondition(COND::MIN_FOOD, 2);
-			t.addCondition(COND::MAX_FOOD_USED, 109);
+			t.addCondition(COND::MAX_FOOD_USED, 117);
 			t.addCondition(COND::MAX_TIME, 19999);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			t.addCondition(COND::MAX_UNITS_USING_ABILITY, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_SENTRY);
@@ -595,7 +595,7 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_MINERALS, 200);
 			t2.addCondition(COND::MIN_GAS, 100);
 			t2.addCondition(COND::MIN_FOOD, 2);
-			t2.addCondition(COND::MAX_FOOD_USED, 109);
+			t2.addCondition(COND::MAX_FOOD_USED, 117);
 			t2.addCondition(COND::MAX_TIME, 19999);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
@@ -623,7 +623,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_MINERALS, 125);
 			t.addCondition(COND::MAX_GAS, 49);
 			t.addCondition(COND::MIN_FOOD, 2);
-			t.addCondition(COND::MAX_FOOD_USED, 109);
+			t.addCondition(COND::MAX_FOOD_USED, 117);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			train_zealot.addDirective(d);
 			train_zealot.addTrigger(t);
@@ -632,7 +632,7 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_GAS, 50);
 			t2.addCondition(COND::MIN_FOOD, 2);
 			t2.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy race is not zerg
-			t2.addCondition(COND::MAX_FOOD_USED, 109);
+			t2.addCondition(COND::MAX_FOOD_USED, 117);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			train_zealot.addTrigger(t2);
 			Trigger t3(bot);
@@ -640,14 +640,14 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MIN_GAS, 50);
 			t3.addCondition(COND::MIN_FOOD, 4);
 			t3.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg
-			t3.addCondition(COND::MAX_FOOD_USED, 109);
+			t3.addCondition(COND::MAX_FOOD_USED, 117);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 6, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			train_zealot.addTrigger(t3);
 			Trigger t4(bot);
 			t4.addCondition(COND::MIN_MINERALS, 320); // give colossus a chance to build
 			t4.addCondition(COND::MIN_FOOD, 2);
 			t4.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy race is not zerg
-			t4.addCondition(COND::MAX_FOOD_USED, 109);
+			t4.addCondition(COND::MAX_FOOD_USED, 117);
 			t4.addCondition(COND::MIN_FOOD_CAP, 91);
 			train_zealot.addTrigger(t4);
 			bot->addStrat(train_zealot);
@@ -916,7 +916,8 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_GAS, 150);
-			t.addCondition(COND::MIN_FOOD_USED, 110);
+			t.addCondition(COND::MIN_FOOD_USED, 118);
+			t.addCondition(COND::MIN_TIME, 17000);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
 			stargate_1.addTrigger(t);
