@@ -1552,7 +1552,14 @@ MapChunk* LocationHandler::getHighestPathableThreatChunkAwayFromStart()
 bool LocationHandler::PathableThreatExistsNearLocation(sc2::Point2D loc_, float range_) {
     // check if a threat exists near location
 
-    return getHighestPathableThreatChunkNearLocation(loc_, range_) != nullptr;
+    MapChunk* hi_threat = getHighestPathableThreatChunkNearLocation(loc_, range_);
+    if (hi_threat == nullptr)
+        return false;
+    double threat_amt = hi_threat->getThreat();
+    if (threat_amt <= 0) {
+        return false;
+    }
+    return true;
 }
 
 MapChunk* LocationHandler::getHighestPathableThreatChunkNearLocation(sc2::Point2D loc_, float range_) {

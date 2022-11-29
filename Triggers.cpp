@@ -239,6 +239,19 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::MAX_DEAD_MOBS:
 		return (agent->mobH->getNumDeadMobs() <= cond_value) == is_true;
 	case COND::THREAT_EXISTS_NEAR_LOCATION:
+		if (debug && agent->locH->PathableThreatExistsNearLocation(location, radius) != is_true) {
+			MapChunk* threat_chunk = agent->locH->getHighestPathableThreatChunkNearLocation(location, radius);
+			sc2::Point2D threat_loc = NO_POINT_FOUND;
+			if (threat_chunk != nullptr) {
+				threat_loc = threat_chunk->getLocation();
+			}
+			std::cout << " TE_NL(";
+			if (threat_loc != NO_POINT_FOUND)
+				std::cout << threat_loc.x << "," << threat_loc.y;
+			else
+				std::cout << "no-point-found";
+			std::cout << ":" << (int)is_true << ")";
+		}
 		return agent->locH->PathableThreatExistsNearLocation(location, radius) == is_true;
 	case COND::MIN_UNITS_USING_ABILITY:
 	{
@@ -799,7 +812,7 @@ void Trigger::addCondition(COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is
 }
 
 void Trigger::addCondition(COND cond_type_, sc2::Point2D location_, float radius_, bool is_true_) {
-	TriggerCondition tc_(agent, cond_type_, location_, radius_);
+	TriggerCondition tc_(agent, cond_type_, location_, radius_, is_true_);
 	if (debug) {
 		tc_.setDebug(true);
 	}

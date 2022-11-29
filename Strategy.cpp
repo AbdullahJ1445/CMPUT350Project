@@ -348,7 +348,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_FOOD_CAP, 60);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_GAS, 150);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			robotics_bay.addDirective(d);
@@ -903,6 +903,8 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_FOOD_CAP, 105);
 			t.addCondition(COND::MIN_FOOD_USED, 100);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
+			t.setDebug(true);
+			t.addCondition(COND::THREAT_EXISTS_NEAR_LOCATION, bot->locH->bases[0].getTownhall(), 50.0F, false);
 			init_group_timer.addDirective(d);
 			init_group_timer.addTrigger(t);
 			bot->addStrat(init_group_timer);
