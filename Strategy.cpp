@@ -429,6 +429,16 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			train_colossus.addTrigger(t2);
+			Trigger t3(bot);
+			t3.addCondition(COND::MIN_MINERALS, 300);
+			t3.addCondition(COND::MIN_GAS, 200);
+			t3.addCondition(COND::MIN_FOOD, 6);
+			t3.addCondition(COND::MIN_FOOD_USED, 110);
+			t3.addCondition(COND::MAX_TIME, 19999);
+			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			train_colossus.addTrigger(t3);
 			bot->addStrat(train_colossus);
 		}
 		{	// build assimilators at main base
@@ -745,6 +755,7 @@ void Strategy::loadStrategies() {
 			bot->addStrat(upgrade_attack);
 		}
 		{	// upgrade shields at forge when attack is full upgraded
+			// DISABLED this because the game ends before it would ever be worth it.
 			Precept upgrade_shields(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_FORGE, sc2::ABILITY_ID::RESEARCH_PROTOSSSHIELDS);
 			Trigger t(bot);
@@ -768,7 +779,7 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL3, false);
 			upgrade_shields.addTrigger(t3);
 			upgrade_shields.addDirective(d);
-			bot->addStrat(upgrade_shields);
+			//bot->addStrat(upgrade_shields);
 		}
 		{	// handle our nexus using chronoboost
 			Precept use_chrono(bot);
