@@ -34,11 +34,14 @@ void Mob::initVars() {
 	has_default_directive = false;
 	has_bundled_directive = false;
 	has_current_directive = false;
+	is_harvesting_gas = false;
 	birth_location = unit.pos;
 	home_location = unit.pos;
 	assigned_location = unit.pos;
 	current_directive = nullptr;
 	std::unordered_set<FLAGS> flags;
+	std::unordered_set<Mob*> harvesters;
+	gas_structure_harvested = nullptr;
 }
 
 bool Mob::isIdle() {
@@ -197,6 +200,95 @@ Directive* Mob::getCurrentDirective() {
 		return nullptr;
 	}
 }
+
+void Mob::setHarvestingGas(Mob* gas_structure_) {
+	assert(gas_structure_->hasFlag(FLAGS::IS_GAS_STRUCTURE));
+	if (is_harvesting_gas) {
+		if (gas_structure_ == gas_structure_harvested) {
+			return;
+		}
+		if (gas_structure_harvested != nullptr) {
+			gas_structure_harvested->removeHarvester(this);
+		}
+	}
+	gas_structure_harvested = gas_structure_;
+	gas_structure_->addHarvester(this);
+	is_harvesting_gas = true;
+}
+
+Mob* Mob::getGasStructureHarvesting() {
+	return gas_structure_harvested;
+}
+
+bool Mob::isHarvestingGas() {
+	return is_harvesting_gas;
+}
+
+void Mob::stopHarvestingGas() {
+	// set this unit to stop harvesting a gas structure
+	// does not change the default directive (yet)
+
+	if (is_harvesting_gas) {
+		if (gas_structure_harvested != nullptr) {
+			gas_structure_harvested->removeHarvester(this);
+		}
+		gas_structure_harvested = nullptr;
+		is_harvesting_gas = false;
+	}
+}
+
+void Mob::addHarvester(Mob* mob_) {
+	assert(mob_->hasFlag(FLAGS::IS_WORKER));
+	harvesters.insert(mob_);
+}
+
+void Mob::removeHarvester(Mob* mob_) {
+	// remove harvester from this gas structure
+
+	//assert(hasFlag(FLAGS::IS_GAS_STRUCTURE));
+
+	if (!harvesters.empty()) {
+		for (auto it = harvesters.begin(); it != harvesters.end(); ) {
+			auto next = std::next(it);
+			if ((*it) == mob_) {
+				harvesters.erase(*it);
+			}
+			it = next;
+		}
+	}
+}
+
+int Mob::getHarvesterCount() {
+	return harvesters.size();
+}
+
+bool Mob::grabNearbyGasHarvester(BasicSc2Bot* agent) {
+	assert(hasFlag(FLAGS::IS_GAS_STRUCTURE));
+
+	std::unordered_set<Mob*> nearby_workers = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_WORKER);
+	nearby_workers = agent->mobH->filterByFlag(nearby_workers, FLAGS::IS_MINERAL_GATHERER);
+	nearby_workers = Directive::filterNearLocation(nearby_workers, unit.pos, 30.0F);
+	std::unordered_set<Mob*> filtered;
+	std::copy_if(nearby_workers.begin(), nearby_workers.end(), std::inserter(filtered, filtered.begin()),
+		[](Mob* m) { return (!m->isHarvestingGas()); });
+	nearby_workers = filtered;
+	
+	if (nearby_workers.empty())
+		return false;
+
+	Mob* nearest = Directive::getClosestToLocation(nearby_workers, unit.pos);
+
+	nearest->removeFlag(FLAGS::IS_MINERAL_GATHERER);
+	nearest->setFlag(FLAGS::IS_GAS_GATHERER);
+
+	nearest->setHarvestingGas(this);
+
+	Directive directive_get_gas(Directive::DEFAULT_DIRECTIVE, Directive::GET_GAS_NEAR_LOCATION, nearest->unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, unit.pos);
+	nearest->assignDefaultDirective(directive_get_gas);
+	agent->Actions()->UnitCommand(&(nearest->unit), sc2::ABILITY_ID::HARVEST_GATHER, &unit);
+	return true;
+}
+
 
 Directive* Mob::getDefaultDirective() {
 	if (!has_default_directive) {

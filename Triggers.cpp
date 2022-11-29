@@ -207,6 +207,9 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::MIN_FOOD:
 		return (obs->GetFoodCap() - obs->GetFoodUsed() >= cond_value) == is_true;
 	case COND::MIN_FOOD_USED:
+		if (debug && (obs->GetFoodUsed() >= cond_value) != is_true) {
+			std::cout << " MIN_FU(" << obs->GetFoodUsed() << ">=" << cond_value << ")";
+		}
 		return (obs->GetFoodUsed() >= cond_value) == is_true;
 	case COND::MIN_FOOD_CAP:
 		return (obs->GetFoodCap() >= cond_value) == is_true;
@@ -219,6 +222,9 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::MAX_FOOD:
 		return (obs->GetFoodCap() - obs->GetFoodUsed() <= cond_value) == is_true;
 	case COND::MAX_FOOD_USED:
+		if (debug && (obs->GetFoodUsed() <= cond_value) != is_true) {
+			std::cout << " MAX_FU(" << obs->GetFoodUsed() << "<=" << cond_value << ")";
+		}
 		return (obs->GetFoodUsed() <= cond_value) == is_true;
 	case COND::MAX_FOOD_CAP:
 		return (obs->GetFoodCap() <= cond_value) == is_true;
@@ -254,7 +260,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			}
 		}
 		if (debug && ((count >= cond_value) != is_true)) {
-			std::cout << "MIN_U_UA(" << count << ">=" << cond_value << ") ";
+			std::cout << " MIN_U_UA(" << count << ">=" << cond_value << ") ";
 		}
 		return (count >= cond_value) == is_true;
 	}
@@ -278,7 +284,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			}
 		}
 		if (debug && ((count <= cond_value) != is_true)) {
-			std::cout << "MAX_U_UA(" << count << "<=" << cond_value << ") ";
+			std::cout << " MAX_U_UA(" << count << "<=" << cond_value << ") ";
 		}
 		return (count <= cond_value) == is_true;
 	}
@@ -681,7 +687,8 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 
 		int num_units = count_if(units.begin(), units.end(),
 			[this, equivalent_type](const sc2::Unit* u) { 
-				return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) && (u->build_progress == 1.0); });
+				return (u->unit_type == unit_of_type || u->unit_type == equivalent_type)
+					&& (u->build_progress == 1.0) && u->is_alive; });
 
 		// output to debug for checking conditions which are failing
 		if (debug && num_units > cond_value) {
@@ -695,7 +702,8 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Self);
 		std::vector<const sc2::Unit*> filtered_units;
 		std::copy_if(units.begin(), units.end(), std::back_inserter(filtered_units),
-			[this, equivalent_type](const sc2::Unit * u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) && (u->build_progress == 1.0); });
+			[this, equivalent_type](const sc2::Unit * u) { return (u->unit_type == unit_of_type || u->unit_type == equivalent_type) 
+			&& (u->build_progress == 1.0) && u->is_alive; });
 		int num_units = filtered_units.size();
 
 		// output to debug for checking conditions which are failing
@@ -711,6 +719,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		int num_units = count_if(units.begin(), units.end(),
 			[this, radius_sq](const sc2::Unit* u) {
 				return (u->unit_type == unit_of_type
+					&& u->is_alive
 					&& sc2::DistanceSquared2D(u->pos, location) < radius_sq)
 					&& (u->build_progress == 1.0);
 			});
@@ -727,6 +736,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		int num_units = count_if(units.begin(), units.end(),
 			[this, radius_sq](const sc2::Unit* u) {
 				return (u->unit_type == unit_of_type
+					&& u->is_alive
 					&& sc2::DistanceSquared2D(u->pos, location) < radius_sq)
 					&& (u->build_progress == 1.0);
 			});

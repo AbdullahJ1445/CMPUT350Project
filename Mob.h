@@ -35,6 +35,7 @@ enum class FLAGS {
 	BUILDING_GAS,
 	IS_BUILDING_STRUCTURE,
 	IS_IDLE,
+	IS_GAS_STRUCTURE,
 	DEF_DIR_DISABLED,
 	SHORT_RANGE,
 	GROUND
@@ -70,6 +71,14 @@ public:
 	bool setCurrentDirective(Directive* directive_);
 	Directive* getDefaultDirective();
 	Directive* getCurrentDirective();
+	void setHarvestingGas(Mob* gas_structure_);
+	Mob* getGasStructureHarvesting();
+	bool isHarvestingGas();
+	void addHarvester(Mob* mob_);
+	void removeHarvester(Mob* mob_);
+	void stopHarvestingGas();
+	int getHarvesterCount();
+	bool grabNearbyGasHarvester(BasicSc2Bot* agent);
 	bool operator<(const Mob& mob) const { return tag < mob.tag; }
 	const sc2::Unit& unit;
 	
@@ -82,6 +91,9 @@ private:
 	bool has_default_directive;
 	bool has_bundled_directive;
 	bool has_current_directive;
+	bool is_harvesting_gas;
+	std::unordered_set<Mob*> harvesters;
+	Mob* gas_structure_harvested;
 	Directive* default_directive;
 	Directive* bundled_directive;
 	Directive* current_directive;

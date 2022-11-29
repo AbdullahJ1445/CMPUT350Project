@@ -432,6 +432,12 @@ sc2::Point2D LocationHandler::smartAttackLocation(bool pathable_) {
     return getOldestLocation(pathable_);
 }
 
+sc2::Point2D LocationHandler::smartAttackFlyingLocation() {
+    // simply calls smartAttackLocation() with pathable_ = false
+    // allows for easier use in strategies because no parameters needed
+    return smartAttackLocation(false);
+}
+
 sc2::Point2D LocationHandler::smartStayHomeAndDefend()
 {
     sc2::Point2D hi_threat = getThreatNearStart();
@@ -818,7 +824,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
     else if (map_index == 2) {
         // BELSHIR VESTIGE
 
-        if (p_id == 1) {
+        if (p_id == 1) { // bottom
             setProxyLocation(sc2::Point2D(33.0, 98.0));
             initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(29.5, 134.5));
             Base main_base(observation->GetStartLocation());
@@ -843,13 +849,14 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(exp_6);
 
             Base exp_7(28.5, 96.5);
+            exp_7.setRallyPoint(40.0F, 102.0F);
             bases.push_back(exp_7);
 
             Base exp_8(61.5, 136.5);
             bases.push_back(exp_8);
 
         } 
-        else if (p_id == 2) {
+        else if (p_id == 2) { // top
 
             setProxyLocation(sc2::Point2D(111.0, 62.0));
             initAddEnemyStartLocation(sc2::Point2D(114.5, 25.5));
@@ -875,6 +882,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(exp_6);
 
             Base exp_7(115.5, 63.5);
+            exp_7.setRallyPoint(104.0F, 58.0F);
             bases.push_back(exp_7);
 
             Base exp_8(82.5, 23.5);
@@ -885,14 +893,15 @@ void LocationHandler::initLocations(int map_index, int p_id) {
         
         // PROXIMA STATION
 
-        if (p_id == 1) {
-            setProxyLocation(sc2::Point2D(28.0, 56.0));
+        if (p_id == 1) { // top
+            setProxyLocation(sc2::Point2D(45.0, 103.0));
             initAddEnemyStartLocation(sc2::Point2D(62.5, 28.5));
 
             Base main_base(observation->GetStartLocation());
             main_base.addBuildArea(146.0, 128.0);
             main_base.addBuildArea(132.0, 132.0);
             main_base.addDefendPoint(149.0, 120.0);
+            main_base.setRallyPoint(149.0, 120.0);
             main_base.setActive();
             bases.push_back(main_base);
 
@@ -948,6 +957,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(exp_11);
 
             Base exp_12(33.5, 98.5);
+            exp_12.setRallyPoint(49.0, 91.0);
             exp_12.addBuildArea(39.0, 89.0);
             exp_12.addDefendPoint(45.0, 99.0);
             bases.push_back(exp_12);
@@ -955,20 +965,23 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             Base exp_13(50.5, 65.5);
             exp_13.addBuildArea(56.0, 62.0);
             exp_13.addDefendPoint(59.0, 73.0);
+            exp_13.setRallyPoint(27.5, 66.5); // our proxy is close to this base, so want to set rally here
             bases.push_back(exp_13);
 
             Base exp_14(35.5, 27.5);
             exp_14.addBuildArea(35.0, 33.0);
             exp_14.addDefendPoint(32.0, 36.0);
+            exp_14.setRallyPoint(27.5, 66.5); // our proxy is close to this base, so want to set rally here
             bases.push_back(exp_14);
         }
-        else if (p_id == 2) {
-            setProxyLocation(sc2::Point2D(172.0, 112.0));
+        else if (p_id == 2) { // bottom
+            setProxyLocation(sc2::Point2D(155.0, 65.0));
             initAddEnemyStartLocation(sc2::Point2D(137.5, 139.5));
             Base main_base(observation->GetStartLocation());
             main_base.addBuildArea(54.0, 40.0);
             main_base.addBuildArea(68.0, 36.0);
             main_base.addDefendPoint(51.0, 48.0);
+            main_base.setRallyPoint(51.0, 48.0);
             main_base.setActive();
             bases.push_back(main_base);
 
@@ -1024,6 +1037,7 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             bases.push_back(exp_11);
 
             Base exp_12(166.5, 69.5);
+            exp_12.setRallyPoint(151.0, 77.0);
             exp_12.addBuildArea(161.0, 79.0);
             exp_12.addDefendPoint(155.0, 69.0);
             bases.push_back(exp_12);
@@ -1031,11 +1045,13 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             Base exp_13(149.5, 102.5);
             exp_13.addBuildArea(144.0, 106.0);
             exp_13.addDefendPoint(141.0, 95.0);
+            exp_13.setRallyPoint(172.5, 101.5); // our proxy is close to this base, so want to set rally here
             bases.push_back(exp_13);
 
             Base exp_14(164.5, 140.5);
             exp_14.addBuildArea(165.0, 135.0);
             exp_14.addDefendPoint(168.0, 132.0);
+            exp_14.setRallyPoint(172.5, 101.5); // our proxy is close to this base, so want to set rally here
             bases.push_back(exp_14);
         }
     }
@@ -1171,7 +1187,7 @@ void LocationHandler::initMapChunks()
 
     chunks_initialized = true;
     std::cout << std::endl << map_chunks.size() << " chunks initialized (" << pathable_count << " pathable)" << std::endl;
-    agent->setLoadingProgress(3);
+    agent->setLoadingProgress(4);
 }
 
 void LocationHandler::setEnemyStartLocation(sc2::Point2D location_)

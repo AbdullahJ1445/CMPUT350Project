@@ -60,6 +60,7 @@ public:
     sc2::Point2D getHighestThreatLocation(bool pathable_=true, bool away_=true);
 
     sc2::Point2D smartAttackLocation(bool pathable_=true);
+    sc2::Point2D smartAttackFlyingLocation();
     sc2::Point2D smartStayHomeAndDefend();
 
     void calculateHighestThreatForChunks();

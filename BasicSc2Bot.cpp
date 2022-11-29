@@ -56,42 +56,6 @@ void BasicSc2Bot::addStrat(Precept precept_) {
 	precepts_onstep.push_back(precept_);
 }
 
-bool BasicSc2Bot::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) {
-	// get a nearby worker unit that is not currently assigned to gas
-	// and assign it to harvest gas
-
-	bool found_viable_unit = false;
-	
-	// get a filtered set of workers that are currently assigned to minerals
-	std::unordered_set<FLAGS> flags{ FLAGS::IS_WORKER, FLAGS::IS_MINERAL_GATHERER };
-	std::unordered_set<Mob*> worker_miners = mobH->filterByFlags(mobH->getMobs(), flags);
-
-	//std::unordered_set<Mob*> worker_miners = filter_by_flag(mobs, FLAGS::IS_MINERAL_GATHERER);
-	float distance = std::numeric_limits<float>::max();
-	Mob* target = nullptr;
-	for (Mob* m : worker_miners) {
-		float d = sc2::DistanceSquared2D(m->unit.pos, gas_structure.pos);
-		if (d < distance) {
-			distance = d;
-			target = m;
-			found_viable_unit = true;
-		}
-	}
-	if (found_viable_unit) {
-		target->removeFlag(FLAGS::IS_MINERAL_GATHERER);
-		target->setFlag(FLAGS::IS_GAS_GATHERER);
-
-		// make the unit continue to mine gas after being idle
-		Directive directive_get_gas(Directive::DEFAULT_DIRECTIVE, Directive::GET_GAS_NEAR_LOCATION, target->unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, gas_structure.pos);
-		target->assignDefaultDirective(directive_get_gas);
-		Actions()->UnitCommand(&(target->unit), sc2::ABILITY_ID::HARVEST_GATHER, &gas_structure);
-
-
-		return true;
-	}
-	return false;
-}
-
 void BasicSc2Bot::storeDirective(Directive directive_)
 {
 	if (directive_by_id[directive_.getID()])
@@ -241,6 +205,11 @@ bool BasicSc2Bot::canUnitUseAbility(const sc2::Unit& unit, const sc2::ABILITY_ID
 bool BasicSc2Bot::isStructure(const sc2::Unit* unit) {
 	// check if unit is a structure
 	return (std::find(data_buildings.begin(), data_buildings.end(), unit->unit_type) != data_buildings.end());
+}
+
+bool BasicSc2Bot::isStructure(sc2::UNIT_TYPEID unit_type) {
+	// check if unit type is a structure
+	return (std::find(data_buildings.begin(), data_buildings.end(), unit_type) != data_buildings.end());
 }
 
 void BasicSc2Bot::storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_type_)
@@ -400,10 +369,7 @@ void BasicSc2Bot::OnGameStart() {
 }
 
 void::BasicSc2Bot::LoadStep_01() { 
-	// breaking loading into 4 sequential segments, so that nothing is referenced before it is initialized
-
-	mobH = new MobHandler(this); // initialize mob handler 
-	locH = new LocationHandler(this); // initialize locationg handler
+	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
 
 	const sc2::ObservationInterface* observation = Observation();
 	map_name = observation->GetGameInfo().map_name;
@@ -424,7 +390,14 @@ void::BasicSc2Bot::LoadStep_01() {
 }
 
 void::BasicSc2Bot::LoadStep_02() {
-	// breaking loading into 4 sequential segments, so that nothing is referenced before it is initialized
+	mobH = new MobHandler(this); // initialize mob handler 
+	locH = new LocationHandler(this); // initialize locationg handler
+	setLoadingProgress(2);
+}
+
+void::BasicSc2Bot::LoadStep_03() {
+	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
+
 
 	Strategy* strategy = new Strategy(this);
 	setCurrentStrategy(strategy);
@@ -459,11 +432,11 @@ void::BasicSc2Bot::LoadStep_02() {
 		}
 	}
 	std::cout << "... done." << std::endl;
-	setLoadingProgress(2);
+	setLoadingProgress(3);
 }
 
-void::BasicSc2Bot::LoadStep_03() { 
-	// breaking loading into 4 sequential segments, so that nothing is referenced before it is initialized
+void::BasicSc2Bot::LoadStep_04() { 
+	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
 
 	const sc2::ObservationInterface* obs = Observation();
 	auto utd_fulldata = obs->GetUnitTypeData();
@@ -498,29 +471,15 @@ void::BasicSc2Bot::LoadStep_03() {
 	locH->initLocations(map_index, player_start_id);
 }
 
-void::BasicSc2Bot::LoadStep_04() { 
-	// breaking loading into 4 sequential segments, so that nothing is referenced before it is initialized
+void::BasicSc2Bot::LoadStep_05() { 
+	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
 
 	// we split the loadStrategies function into several smaller ones
 	// the ladder server was crashing with one larger function
-	std::cout << "Loading Strategies";
-	current_strategy->loadStrategies_01();
-	std::cout << ".";
-	current_strategy->loadStrategies_02();
-	std::cout << ".";
-	current_strategy->loadStrategies_03();
-	std::cout << ".";
-	current_strategy->loadStrategies_04();
-	std::cout << ".";
-	current_strategy->loadStrategies_05();
-	std::cout << ".";
-	current_strategy->loadStrategies_06();
-	std::cout << ".";
-	current_strategy->loadStrategies_07();
-	std::cout << ".";
-	current_strategy->loadStrategies_08();
-	std::cout << ".done." << std::endl;
-	setLoadingProgress(4);
+	std::cout << "Loading Strategies..";
+	current_strategy->loadStrategies();
+	std::cout << "..done." << std::endl;
+	setLoadingProgress(5);
 	setInitialized();
 }
 
@@ -561,18 +520,117 @@ void BasicSc2Bot::OnStep() {
 	const sc2::ObservationInterface* observation = Observation();
 	int gameloop = observation->GetGameLoop();
 
+	// this block of code allows the proxy worker to be sent immediately, without waiting for loading to complete on Bel'Shir VestigeLE and ProximStationLE
+	static bool proxy_sent = false;
+	if (!proxy_sent) {
+		const sc2::Units allied_units = observation->GetUnits(sc2::Unit::Alliance::Self);
+		
+		// make nexus train first probe
+		for (auto it = allied_units.begin(); it != allied_units.end(); ++it) {
+			if ((*it)->unit_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS) {
+				Actions()->UnitCommand((*it), sc2::ABILITY_ID::TRAIN_PROBE);
+				break;
+			}
+		}
+
+		if (map_index == 2 || map_index == 3) {
+			const sc2::Unit* proxy_probe = nullptr;
+			const sc2::Unit* decoy_probe = nullptr;
+			int num_set = 0;
+			for (auto it = allied_units.begin(); it != allied_units.end(); ++it) {
+				if ((*it)->unit_type == sc2::UNIT_TYPEID::PROTOSS_PROBE) {
+					if (num_set == 1) {
+						proxy_probe = (*it);
+						num_set++;
+						break;
+					}
+					if (num_set == 0) {
+						decoy_probe = (*it);
+						num_set++;
+						continue;
+					}
+				}
+			}
+
+			/*
+			if (map_index == 2) { // Bel'Shir
+				if (p_id == 1) { // top
+					bot->storeLocation("PROXY_INITIAL_LOC", sc2::Point2D(121.0, 122.0));
+					bot->storeLocation("DECOY_LOC", sc2::Point2D(82.0, 28.0));
+				}
+				if (p_id == 2) { // bottom
+					bot->storeLocation("PROXY_INITIAL_LOC", sc2::Point2D(23.0, 38.0));
+					bot->storeLocation("DECOY_LOC", sc2::Point2D(62.0, 132.0));
+				}
+			}
+			*/
+
+			if (proxy_probe != nullptr && decoy_probe != nullptr) {
+				auto GI = observation->GetGameInfo();
+				float width = GI.width;
+				float height = GI.height;
+				sc2::Point2D center_bot(width / 2, 0.0F);
+				sc2::Point2D center_top(width / 2, height);
+				sc2::Point2D send_proxy_to_1 = INVALID_POINT;
+				sc2::Point2D send_proxy_to_2 = INVALID_POINT;
+				sc2::Point2D send_decoy_to = INVALID_POINT;
+				bool near_bot = (sc2::DistanceSquared2D(proxy_probe->pos, center_bot) < sc2::DistanceSquared2D(proxy_probe->pos, center_top));
+				if (map_index == 3) { // proxy locations for ProximaStationLE
+					if (near_bot) {
+						send_decoy_to = sc2::Point2D(122.0, 79.0);
+						send_proxy_to_1 = sc2::Point2D(52.0, 30.0);
+						send_proxy_to_2 = sc2::Point2D(108.0, 29.0);
+					}
+					else {
+						send_decoy_to = sc2::Point2D(78.0, 96.0);
+						send_proxy_to_1 = sc2::Point2D(148.0, 138.0);
+						send_proxy_to_2 = sc2::Point2D(92.0, 139.0); // avoid being detected en route
+					}
+				}
+				if (map_index == 2) { // proxy locations for Bel'ShirVestigeLE
+					if (near_bot) {
+						send_decoy_to = sc2::Point2D(62.0, 132.0);
+						send_proxy_to_1 = sc2::Point2D(23.0, 38.0);
+					}
+					else {
+						send_decoy_to = sc2::Point2D(82.0, 28.0);
+						send_proxy_to_1 = sc2::Point2D(121.0, 122.0);
+					}
+				}
+				if (send_decoy_to != INVALID_POINT) {
+					Actions()->UnitCommand(decoy_probe, sc2::ABILITY_ID::ATTACK, send_decoy_to);
+				}
+				if (send_proxy_to_1 != INVALID_POINT && send_proxy_to_2 != INVALID_POINT) {
+					Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_1);
+					Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_2, true);
+				}
+				if (send_proxy_to_1 != INVALID_POINT && send_proxy_to_2 == INVALID_POINT) {
+					Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_1);
+				}
+				if (send_proxy_to_1 == INVALID_POINT && send_proxy_to_2 != INVALID_POINT) {
+					Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_2);
+				}
+			}
+		}
+		proxy_sent = true;
+	}
+
 	if (gameloop >= 1 && loading_progress == 0) {
 		LoadStep_01();
 	}
-	if (gameloop >= 1 && loading_progress == 1) {
+	if (gameloop >= 2 && loading_progress == 1) {
 		LoadStep_02();
 	}
-	if (gameloop >= 1 && loading_progress == 2) {
+	if (gameloop >= 3 && loading_progress == 2) {
 		LoadStep_03();
 	}
-	if (gameloop >= 1 && loading_progress == 3) {
+	if (gameloop >= 4 && loading_progress == 3) {
 		LoadStep_04();
 	}
+	if (gameloop >= 5 && loading_progress == 4) {
+		LoadStep_05();
+	}
+
 	if (!initialized)
 		return;
 
@@ -671,6 +729,30 @@ void BasicSc2Bot::OnStep() {
 	if (gameloop % 1000 == 0) {
 		OnStep_1000(observation);
 	}
+	checkGasStructures();
+}
+
+void BasicSc2Bot::checkGasStructures() {
+	std::unordered_set<Mob*> gas_structures = mobH->getMobs();
+	gas_structures = mobH->filterByFlag(gas_structures, FLAGS::IS_GAS_STRUCTURE);
+	
+	std::unordered_set<Mob*> built; // filter by those that are fully constructed
+	std::copy_if(gas_structures.begin(), gas_structures.end(), std::inserter(built, built.begin()),
+		[](Mob* m) { return (m->unit.build_progress == 1.0); });
+	gas_structures = built;
+
+	if (gas_structures.empty()) {
+		return;
+	}
+
+	for (auto g : gas_structures) {
+		if (g->getHarvesterCount() < 3) {
+			g->grabNearbyGasHarvester(this);
+		}
+	}
+	
+
+
 }
 
 void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
@@ -731,6 +813,12 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 		new_mob.setFlag(FLAGS::GROUND);
 	}
 
+	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR || unit_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATORRICH ||
+		unit_type == sc2::UNIT_TYPEID::TERRAN_REFINERY || unit_type == sc2::UNIT_TYPEID::TERRAN_REFINERYRICH ||
+		unit_type == sc2::UNIT_TYPEID::ZERG_EXTRACTOR || unit_type == sc2::UNIT_TYPEID::ZERG_EXTRACTORRICH) {
+		new_mob.setFlag(FLAGS::IS_GAS_STRUCTURE);
+	}
+
 	if (mob_type == MOB::MOB_ARMY) {
 		// todo: implement assigning flags for other races and units
 		if (unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER ||
@@ -783,17 +871,6 @@ void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 		unit_type == sc2::UNIT_TYPEID::ZERG_SPINECRAWLER ||
 		unit_type == sc2::UNIT_TYPEID::ZERG_SPORECRAWLER) {
 		mob->setFlag(FLAGS::IS_DEFENSE);
-	}
-	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR ||
-		unit_type == sc2::UNIT_TYPEID::TERRAN_REFINERY ||
-		unit_type == sc2::UNIT_TYPEID::ZERG_EXTRACTOR ||
-		unit_type == sc2::UNIT_TYPEID::PROTOSS_ASSIMILATORRICH ||
-		unit_type == sc2::UNIT_TYPEID::TERRAN_REFINERYRICH ||
-		unit_type == sc2::UNIT_TYPEID::ZERG_EXTRACTORRICH) {
-
-		// assign 3 workers to harvest this
-		for (int i = 0; i < 3; i++)
-			AssignNearbyWorkerToGasStructure(*unit);
 	}
 
 	// set all buildings rally point (except townhalls)

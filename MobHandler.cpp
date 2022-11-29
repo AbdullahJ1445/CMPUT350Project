@@ -75,6 +75,7 @@ void MobHandler::mobDeath(Mob* mob_)
 	for (auto f : mob->getFlags()) {
 		mob->removeFlag(f);
 	}
+	mob->stopHarvestingGas();
 	dead_mobs.insert(mob);
 	mobs.erase(mob);
 }
