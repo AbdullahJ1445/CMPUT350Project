@@ -100,6 +100,7 @@ public:
 	void excludeFlag(FLAGS exclude_flag_);
 	void setContinuous(bool is_true=true);
 	void setDebug(bool is_true=true);
+	void setOverrideOther(bool is_true=true);
 	void setIgnoreDistance(float range_);
 	bool allowsMultiple();
 	bool hasAssignedMob();
@@ -151,6 +152,7 @@ private:
 
 	bool locked;
 	bool allow_multiple;
+	bool override_directive;
 	bool update_target_location;
 	bool update_assignee_location;
 	bool continuous_update;

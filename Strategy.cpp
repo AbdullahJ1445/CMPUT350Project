@@ -914,6 +914,7 @@ void Strategy::loadStrategies() {
 			auto func = [this]() { return bot->locH->getRallyPointTowardsThreat(); };
 			d.setTargetLocationFunction(this, bot, func);
 			d.setIgnoreDistance(7.0F);
+			d.setOverrideOther(); // grab mobs who were on their way to attack the enemy
 			//t.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
 			t.addCondition(COND::TIMER_1_MIN_STEPS_PAST, 0);
 			t.addCondition(COND::TIMER_1_MAX_STEPS_PAST, 849);
@@ -927,6 +928,7 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->getStoredLocation("CANNON_1"), 4.0F);
 			Trigger t(bot);
 			d.excludeFlag(FLAGS::IS_FLYING);
+			d.setContinuous();
 			auto func = [this]() { return bot->locH->smartPriorityAttack(); };
 			d.setTargetLocationFunction(this, bot, func);
 			attack_and_explore.addDirective(d);
