@@ -353,7 +353,8 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Enemy);
 		int count = std::count_if(units.begin(), units.end(),
 			[this, radius_sq](const sc2::Unit* u) { return (
-				sc2::DistanceSquared2D(u->pos, location) <= radius_sq);
+				(sc2::DistanceSquared2D(u->pos, location) <= radius_sq) 
+				&& u->is_alive);
 			});
 
 		// output to debug for checking conditions which are failing
@@ -368,7 +369,8 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Enemy);
 		int count = std::count_if(units.begin(), units.end(),
 			[this, radius_sq](const sc2::Unit* u) { return (
-				sc2::DistanceSquared2D(u->pos, location) <= radius_sq);
+				(sc2::DistanceSquared2D(u->pos, location) <= radius_sq)
+				&& u->is_alive);
 			});
 		
 		// output to debug for checking conditions which are failing

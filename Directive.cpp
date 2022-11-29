@@ -351,6 +351,25 @@ bool Directive::executeSimpleActionForUnitType(BasicSc2Bot* agent) {
 		mobs = filtered_mobs;
 	}
 
+	if (mobs.size() == 0)
+		return false;
+
+	
+	std::vector<int> hallucination_types{ 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 2114, 2389, 2391 }; // all abilities that are hallucinations
+	
+	bool is_hallucination = (std::find(hallucination_types.begin(), hallucination_types.end(), (int)ability) != hallucination_types.end());
+	
+	std::unordered_set<Mob*> filtered_hal;
+	if (is_hallucination) {
+		// require 150 energy to use hallucination, so there is enough left for guardian shield
+		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_hal, filtered_hal.begin()),
+			[this](Mob* m) { return (m->unit.energy >= 150); });
+		mobs = filtered_hal;
+	}
+
+	if (mobs.size() == 0)
+		return false;
+
 	mob = getRandomMobFromSet(mobs);
 
 	if (action_type == DISABLE_DEFAULT_DIRECTIVE) {
