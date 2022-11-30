@@ -156,10 +156,8 @@ static void runBot(int argc, char *argv[], sc2::Agent *Agent, sc2::Race race)
 		coordinator.LoadSettings(1, argv);
 
 		// my code
-		//coordinator.SetRealtime(true);
-		//coordinator.SetStepSize(10);
-
-
+		//coordinator.SetRealtime(true); // real-time simulations
+		//coordinator.SetStepSize(25);   // super speedy simulations
 
 		coordinator.LaunchStarcraft();
 		coordinator.StartGame(Options.map);

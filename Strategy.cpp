@@ -305,8 +305,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_FOOD, 4);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_GAS, 100);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 4, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
 			t.addCondition(COND::ENEMY_RACE_ZERG); // if zerg require 4 gateways first
@@ -318,10 +317,31 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_GAS, 100);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
-			t2.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // if not zerg start after 2 gateways
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
+			t2.addCondition(COND::ENEMY_RACE_ZERG); // if zerg and have robo_bay and colossus
 			robotics_1.addTrigger(t2);
+			Trigger t3(bot);
+			t3.addCondition(COND::MIN_FOOD, 4);
+			t3.addCondition(COND::MIN_MINERALS, 150);
+			t3.addCondition(COND::MIN_GAS, 100);
+			t3.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+			t3.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // if not zerg start after 2 gateways
+			robotics_1.addTrigger(t3);
+			Trigger t4(bot);
+			t4.addCondition(COND::MIN_FOOD, 4);
+			t4.addCondition(COND::MIN_MINERALS, 150);
+			t4.addCondition(COND::MIN_GAS, 100);
+			t4.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 3, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t4.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
+			t4.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t4.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
+			t4.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // if not zerg and have robo_Bay and colossus
+			robotics_1.addTrigger(t4);
 			bot->addStrat(robotics_1);
 		}
 		{	// build robotics facilities in main base build area 2
@@ -334,6 +354,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_GAS, 100);
 			t.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // build more against non-zerg
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 3, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
