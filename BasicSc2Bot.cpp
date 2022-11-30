@@ -551,7 +551,7 @@ void BasicSc2Bot::OnStep() {
 	// this block of code allows the proxy worker to be sent immediately, without waiting for loading to complete on Bel'Shir VestigeLE and ProximStationLE
 	static bool proxy_sent = false;
 
-	if (!proxy_sent) {
+	if (!proxy_sent && map_index > 0) {
 		const sc2::Units allied_units = observation->GetUnits(sc2::Unit::Alliance::Self);
 		
 		// make nexus train first probe
