@@ -35,6 +35,7 @@ BasicSc2Bot::BasicSc2Bot()
 	timer_3 = -1;
 	loading_progress = 0;
 	initialized = false;
+	time_of_first_attack = -1;
 }
 
 void BasicSc2Bot::setLoadingProgress(int loaded_) {
@@ -212,6 +213,10 @@ bool BasicSc2Bot::isStructure(sc2::UNIT_TYPEID unit_type) {
 	return (std::find(data_buildings.begin(), data_buildings.end(), unit_type) != data_buildings.end());
 }
 
+void BasicSc2Bot::storeInt(std::string identifier_, int value_) {
+	special_ints[identifier_] = value_;
+}
+
 void BasicSc2Bot::storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_type_)
 {
 	// store a special unit, used for certain functions
@@ -261,6 +266,11 @@ std::unordered_set<const sc2::Unit*> BasicSc2Bot::getEnemyUnits()
 sc2::Point2D BasicSc2Bot::getStoredLocation(std::string identifier_)
 {
 	return special_locations[identifier_];
+}
+
+int BasicSc2Bot::getStoredInt(std::string identifier_)
+{
+	return special_ints[identifier_];
 }
 
 int BasicSc2Bot::getMapIndex()
@@ -516,12 +526,42 @@ void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
 	prev_threat_amount = threat_amount;
 }
 
+void BasicSc2Bot::OnGameEnd() {
+	const sc2::ObservationInterface* obs = Observation();
+	auto results = obs->GetResults();
+
+	if (results[0].result == sc2::GameResult::Win) {
+		std::cout << "The Player has won the match." << std::endl;
+	}
+	if (results[0].result == sc2::GameResult::Loss) {
+		std::cout << "The Player has lost the match." << std::endl;
+	}
+
+	if (time_of_first_attack != -1) {
+		std::cout << "First attack sent at gamestep " << time_of_first_attack << " (" << gameTime(time_of_first_attack) << ")" << std::endl;
+	}
+
+	std::cout << "Total gamesteps: " << obs->GetGameLoop() << " (" << gameTime(obs->GetGameLoop()) << ")" << std::endl;
+}
+
 void BasicSc2Bot::OnStep() {
 	const sc2::ObservationInterface* observation = Observation();
 	int gameloop = observation->GetGameLoop();
 
 	// this block of code allows the proxy worker to be sent immediately, without waiting for loading to complete on Bel'Shir VestigeLE and ProximStationLE
 	static bool proxy_sent = false;
+
+	static bool loss_msg = false;
+	if (gameloop >= 1500 && !loss_msg) {
+		
+		std::unordered_set<Mob*> structures = mobH->filterByFlag(mobH->getMobs(), FLAGS::IS_STRUCTURE);
+		if (structures.size() <= 1) {
+			std::cout << std::endl << "(THIS IS A LOSS)" << std::endl;
+		}
+		loss_msg = true;
+	}
+
+
 	if (!proxy_sent) {
 		const sc2::Units allied_units = observation->GetUnits(sc2::Unit::Alliance::Self);
 		
@@ -742,6 +782,23 @@ void BasicSc2Bot::checkGasStructures() {
 	
 
 
+}
+
+std::string BasicSc2Bot::gameTime(int steps_)
+{
+	// return a roughly estimated gametime based on steps
+	std::string out_str = "";
+	int seconds = (steps_ * 0.0446);
+	int minutes;
+	for (minutes = 0; seconds >= 60; seconds -= 60) {
+		minutes++;
+	}
+
+	out_str += std::to_string(minutes);
+	out_str += ":";
+	out_str += std::to_string(seconds);
+
+	return out_str;
 }
 
 void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {

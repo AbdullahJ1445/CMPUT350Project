@@ -157,8 +157,9 @@ static void runBot(int argc, char *argv[], sc2::Agent *Agent, sc2::Race race)
 
 		// my code
 		//coordinator.SetRealtime(true);
-		coordinator.SetFullScreen(false);
-		coordinator.SetWindowSize(640, 480);
+		//coordinator.SetStepSize(10);
+
+
 
 		coordinator.LaunchStarcraft();
 		coordinator.StartGame(Options.map);

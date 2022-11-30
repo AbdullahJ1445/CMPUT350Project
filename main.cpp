@@ -11,6 +11,7 @@
 // LadderInterface allows the bot to be tested against the built-in AI or
 // played against other bots
 int main(int argc, char* argv[]) {
-	runBot(argc, argv, new BasicSc2Bot(), sc2::Race::Protoss);
+	BasicSc2Bot* mybot = new BasicSc2Bot();
+	runBot(argc, argv, mybot, sc2::Race::Protoss);
 	return 0;
 }

@@ -106,7 +106,7 @@ public:
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_id_, bool is_true_=true);
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::UPGRADE_ID upgrade_id_, bool is_true_=true);
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, sc2::Point2D location_, float radius=DEFAULT_RADIUS, bool is_true_=true);
-		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::Point2D location_, float radius = DEFAULT_RADIUS, bool is_true_ = true);
+		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS, bool is_true_=true);
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_);
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, sc2::UNIT_TYPEID unit_of_type_, sc2::ABILITY_ID ability_, bool is_true_=true);
 		TriggerCondition(BasicSc2Bot* agent_, COND cond_type_, double cond_value_, std::unordered_set<FLAGS> flags_, sc2::Point2D location_, float radius_=DEFAULT_RADIUS);

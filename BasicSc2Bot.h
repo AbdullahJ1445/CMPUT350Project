@@ -63,6 +63,7 @@ public:
 	bool canUnitUseAbility(const sc2::Unit& unit, const sc2::ABILITY_ID ability_);
 	bool isStructure(const sc2::Unit* unit);
 	bool isStructure(sc2::UNIT_TYPEID unit_type);
+	void storeInt(std::string identifier_, int value_);
 	bool isMineralPatch(const sc2::Unit* unit_);
 	bool isGeyser(const sc2::Unit* unit_);
 
@@ -75,6 +76,7 @@ public:
 	float getValue(const sc2::Unit* unit);
 	sc2::UNIT_TYPEID getUnitType(std::string identifier_);
 	sc2::Point2D getStoredLocation(std::string identifier_);
+	int getStoredInt(std::string identifier_);
 	Directive* getLastStoredDirective();
 	sc2::Race getEnemyRace();
 	std::unordered_set<const sc2::Unit*> getEnemyUnits();
@@ -85,6 +87,7 @@ public:
 	Mob* proxy_worker;
 	std::unordered_map<size_t, Directive*> directive_by_id;
 	Strategy* current_strategy;
+	int time_of_first_attack; // recorded for testing purposes
 
 private:
 
@@ -99,10 +102,12 @@ private:
 	bool addEnemyUnit(const sc2::Unit* unit);
 	bool flushOrders();
 	void checkGasStructures();
+	std::string gameTime(int steps_);
 
 	// virtual functions 
 	virtual void OnGameStart();
 	virtual void OnStep();
+	virtual void OnGameEnd();
 	virtual void OnBuildingConstructionComplete(const sc2::Unit* unit);
 	virtual void OnUnitCreated(const sc2::Unit* unit);
 	virtual void OnUnitIdle(const sc2::Unit* unit);
@@ -117,6 +122,7 @@ private:
 	std::unordered_set<Directive*> stored_directives;
 	std::unordered_map<std::string, sc2::UNIT_TYPEID> special_units;
 	std::unordered_map<std::string, sc2::Point2D> special_locations;
+	std::unordered_map<std::string, int> special_ints;
 	std::vector<std::unique_ptr<Strategy>> strategy_storage;
 	std::vector<sc2::UNIT_TYPEID> data_buildings;
 	std::unordered_set<const sc2::Unit*> enemy_units;
@@ -135,5 +141,6 @@ private:
 	int timer_3;
 	int loading_progress;
 	bool initialized;
+	
 	int map_index; // 1 = CactusValleyLE,  2 = BelShirVestigeLE,  3 = ProximaStationLE
 };

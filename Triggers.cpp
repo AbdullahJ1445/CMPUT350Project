@@ -158,6 +158,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 
 	// assign equivalent_type for the same units that might have an alternate ID
 	sc2::UNIT_TYPEID equivalent_type = unit_of_type;
+	
 	float radius_sq = pow(radius, 2);
 
 	if (unit_of_type == sc2::UNIT_TYPEID::TERRAN_SUPPLYDEPOT) {
@@ -365,7 +366,8 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	{
 		const sc2::Units units = obs->GetUnits(sc2::Unit::Alliance::Enemy);
 		int count = std::count_if(units.begin(), units.end(),
-			[this, radius_sq](const sc2::Unit* u) { return (
+			[this, radius_sq](const sc2::Unit* u) { 
+				return (
 				(sc2::DistanceSquared2D(u->pos, location) <= radius_sq) 
 				&& u->is_alive);
 			});

@@ -75,6 +75,7 @@ void Strategy::loadStrategies() {
 			bot->storeLocation("FORCE_FIELD", sc2::Point2D(40, 73.5));
 			bot->storeLocation("FF_CHECK", sc2::Point2D(38, 71.5));
 		}
+		bot->storeLocation("DEBUG_TEST", sc2::Point2D(-777, -777));
 
 		{	// Train Probes at our main Nexus
 			Precept base_probe(bot);
@@ -637,7 +638,7 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::UNIT_TYPE_NEAR_LOCATION, bot->locH->bases[1].getRallyPoint(), Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_SENTRY, sc2::ABILITY_ID::EFFECT_FORCEFIELD, bot->getStoredLocation("FORCE_FIELD"), 8.0F);
 			Trigger t(bot);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
-			//t.addCondition(COND::THREAT_EXISTS_NEAR_LOCATION, bot->getStoredLocation("FORCE_FIELD"), 3.6F);
+			t.addCondition(COND::THREAT_EXISTS_NEAR_LOCATION, bot->getStoredLocation("FORCE_FIELD"), 12.0F);
 			t.addCondition(COND::MIN_ENEMY_UNITS_NEAR_LOCATION, 1, bot->locH->bases[1].getRallyPoint(), 7.0F);
 			t.addCondition(COND::MAX_NEUTRAL_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::NEUTRAL_FORCEFIELD);
 			force_field.addTrigger(t);
@@ -903,7 +904,6 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_FOOD_CAP, 105);
 			t.addCondition(COND::MIN_FOOD_USED, 100);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
-			t.setDebug(true);
 			t.addCondition(COND::THREAT_EXISTS_NEAR_LOCATION, bot->locH->bases[0].getTownhall(), 50.0F, false);
 			init_group_timer.addDirective(d);
 			init_group_timer.addTrigger(t);
@@ -927,8 +927,9 @@ void Strategy::loadStrategies() {
 		}
 		{	// after 850 gameloop steps, send in the attack
 			Precept attack_and_explore(bot);
-			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->getStoredLocation("CANNON_1"), 4.0F);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, sc2::Point2D(1,1) , 4.0F);
 			Trigger t(bot);
+			bot->storeInt("ATTACK_DIR_ID", d.getID());
 			d.excludeFlag(FLAGS::IS_FLYING);
 			d.setContinuous();
 			auto func = [this]() { return bot->locH->smartPriorityAttack(); };
