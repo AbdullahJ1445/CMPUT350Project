@@ -133,6 +133,13 @@ bool Directive::execute(BasicSc2Bot* agent) {
 		std::cout << "(exe)";
 	}
 
+	if (id == agent->getStoredInt("ATTACK_DIR_ID")) {
+		int time = agent->time_of_first_attack; // recorded for testing purposes
+		if (time == -1) {
+			agent->time_of_first_attack = agent->Observation()->GetGameLoop();
+		}
+	}
+
 	// ensure proper variables are set for the specified ASSIGNEE and ACTION_TYPE
 
 	if (assignee == ASSIGNEE::UNIT_TYPE || assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION) {
