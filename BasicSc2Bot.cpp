@@ -551,17 +551,6 @@ void BasicSc2Bot::OnStep() {
 	// this block of code allows the proxy worker to be sent immediately, without waiting for loading to complete on Bel'Shir VestigeLE and ProximStationLE
 	static bool proxy_sent = false;
 
-	static bool loss_msg = false;
-	if (gameloop >= 1500 && !loss_msg) {
-		
-		std::unordered_set<Mob*> structures = mobH->filterByFlag(mobH->getMobs(), FLAGS::IS_STRUCTURE);
-		if (structures.size() <= 1) {
-			std::cout << std::endl << "(THIS IS A LOSS)" << std::endl;
-		}
-		loss_msg = true;
-	}
-
-
 	if (!proxy_sent) {
 		const sc2::Units allied_units = observation->GetUnits(sc2::Unit::Alliance::Self);
 		
@@ -796,6 +785,9 @@ std::string BasicSc2Bot::gameTime(int steps_)
 
 	out_str += std::to_string(minutes);
 	out_str += ":";
+	if (seconds < 10) {
+		out_str += "0";
+	}
 	out_str += std::to_string(seconds);
 
 	return out_str;

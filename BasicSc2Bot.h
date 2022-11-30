@@ -57,6 +57,7 @@ public:
 	void resetTimer2();
 	void resetTimer3();
 	void setInitialized();
+	std::string gameTime(int steps_);
 
 	// various bool functions
 	bool haveUpgrade(const sc2::UpgradeID upgrade_);
@@ -102,7 +103,6 @@ private:
 	bool addEnemyUnit(const sc2::Unit* unit);
 	bool flushOrders();
 	void checkGasStructures();
-	std::string gameTime(int steps_);
 
 	// virtual functions 
 	virtual void OnGameStart();
