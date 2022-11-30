@@ -1,10 +1,10 @@
 #pragma once
 #include "sc2api/sc2_api.h"
 #include "Directive.h"
-#include "Agents.h"
+#include "BasicSc2Bot.h"
 
 class Directive;
-class BotAgent;
+class BasicSc2Bot;
 
 enum class MOB {
 	MOB_STRUCTURE,
@@ -15,6 +15,7 @@ enum class MOB {
 };
 
 enum class FLAGS {
+	INVALID_FLAG,
 	IS_STRUCTURE,
 	IS_CONSTRUCTING,
 	IS_TOWNHALL,
@@ -30,36 +31,54 @@ enum class FLAGS {
 	IS_ATTACKING,
 	IS_FLYING,
 	IS_INVISIBLE,
+	IS_SCOUT,
 	BUILDING_GAS,
 	IS_BUILDING_STRUCTURE,
-	IS_IDLE
+	IS_IDLE,
+	IS_GAS_STRUCTURE,
+	DEF_DIR_DISABLED,
+	SHORT_RANGE,
+	GROUND
 };
 
 class Mob {
 public:
 	Mob(const sc2::Unit& unit_, MOB mobs_type);
 	void initVars();
-	bool is_idle();
-	bool has_flag(FLAGS flag);
+	bool isIdle();
+	bool hasFlag(FLAGS flag);
 	void assignDefaultDirective(Directive directive_);
+	void assignDirective(Directive* directive_);
+	void unassignDirective();
 	bool hasDefaultDirective();
 	bool hasBundledDirective();
-	bool executeDefaultDirective(BotAgent* agent);
+	bool hasCurrentDirective();
+	bool executeDefaultDirective(BasicSc2Bot* agent);
+	void disableDefaultDirective();
 	Directive popBundledDirective();
-	bool is_carrying_minerals();
-	bool is_carrying_gas();
-	void set_flag(FLAGS flag);
-	void remove_flag(FLAGS flag);
-	sc2::Point2D get_birth_location();
-	sc2::Point2D get_home_location();
-	sc2::Point2D get_assigned_location();
-	void set_home_location(sc2::Point2D location);
-	void set_assigned_location(sc2::Point2D location);
-	void bundle_directives(std::vector<Directive> dir_vec);
-	std::unordered_set<FLAGS> get_flags();
-	sc2::Tag get_tag();
+	bool isCarryingMinerals();
+	bool isCarryingGas();
+	void setFlag(FLAGS flag);
+	void removeFlag(FLAGS flag);
+	sc2::Point2D getBirthLocation();
+	sc2::Point2D getHomeLocation();
+	sc2::Point2D getAssignedLocation();
+	void setHomeLocation(sc2::Point2D location);
+	void setAssignedLocation(sc2::Point2D location);
+	void bundleDirectives(std::vector<Directive> dir_vec);
+	std::unordered_set<FLAGS> getFlags();
+	sc2::Tag getTag();
 	bool setCurrentDirective(Directive* directive_);
+	Directive* getDefaultDirective();
 	Directive* getCurrentDirective();
+	void setHarvestingGas(Mob* gas_structure_);
+	Mob* getGasStructureHarvesting();
+	bool isHarvestingGas();
+	void addHarvester(Mob* mob_);
+	void removeHarvester(Mob* mob_);
+	void stopHarvestingGas();
+	int getHarvesterCount();
+	bool grabNearbyGasHarvester(BasicSc2Bot* agent);
 	bool operator<(const Mob& mob) const { return tag < mob.tag; }
 	const sc2::Unit& unit;
 	
@@ -71,6 +90,10 @@ private:
 	sc2::Tag tag; // a unique identifier given to units
 	bool has_default_directive;
 	bool has_bundled_directive;
+	bool has_current_directive;
+	bool is_harvesting_gas;
+	std::unordered_set<Mob*> harvesters;
+	Mob* gas_structure_harvested;
 	Directive* default_directive;
 	Directive* bundled_directive;
 	Directive* current_directive;
