@@ -284,6 +284,20 @@ void Strategy::loadStrategies() {
 			main_gateway.addTrigger(t2);
 			bot->addStrat(main_gateway);
 		}
+		{	// build a second forge
+			Precept main_forge(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_FORGE, bot->locH->bases[0].getBuildArea(0));
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 150);
+			t.addCondition(COND::MIN_FOOD_USED, 25);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[0].getBuildArea(0), 8.0F);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::ENEMY_RACE_PROTOSS, 0, false); // for whatever reason having double forge seems to make it lose more against protoss
+			main_forge.addDirective(d);
+			main_forge.addTrigger(t);
+			bot->addStrat(main_forge);
+		}
 		{	// build gateways at main base build area 1
 			Precept gateway_2(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_GATEWAY, bot->locH->bases[0].getBuildArea(1), 10.0F);
@@ -848,20 +862,19 @@ void Strategy::loadStrategies() {
 			upgrade_attack.addDirective(d);
 			bot->addStrat(upgrade_attack);
 		}
-		{	// upgrade shields at forge when attack is full upgraded
-			// DISABLED this because the game ends before it would ever be worth it.
+		{	
 			Precept upgrade_shields(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_FORGE, sc2::ABILITY_ID::RESEARCH_PROTOSSSHIELDS);
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_GAS, 150);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL1, false);
-			t.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSGROUNDWEAPONSLEVEL3, true);
 			upgrade_shields.addTrigger(t);
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_MINERALS, 225);
 			t2.addCondition(COND::MIN_GAS, 225);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
 			t2.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL1);
 			t2.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL2, false);
@@ -870,10 +883,11 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MIN_MINERALS, 200);
 			t3.addCondition(COND::MIN_GAS, 200);
 			t3.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL2);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t3.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL3, false);
 			upgrade_shields.addTrigger(t3);
 			upgrade_shields.addDirective(d);
-			//bot->addStrat(upgrade_shields);
+			bot->addStrat(upgrade_shields);
 		}
 		{	// handle our nexus using chronoboost
 			Precept use_chrono(bot);
