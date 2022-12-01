@@ -137,7 +137,7 @@ bool Directive::execute(BasicSc2Bot* agent) {
 		int time = agent->time_of_first_attack; // recorded for testing purposes
 		if (time == -1) {
 			agent->time_of_first_attack = agent->Observation()->GetGameLoop();
-			std::cout << "First attack sent at gamestep " << agent->time_of_first_attack << " (" << agent->gameTime(agent->time_of_first_attack) << ")" << std::endl;
+			std::cout << "[" << agent->time_of_first_attack << "] First attack sent at " << agent->gameTime(agent->time_of_first_attack) << "." << std::endl;
 		}
 	}
 
