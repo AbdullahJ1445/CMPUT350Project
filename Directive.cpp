@@ -564,10 +564,18 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 				location = uniform_random_point_in_circle(target_location, proximity);
 			}
 			// Unit has no orders
-			if ((m->unit.orders).size() == 0 || override_directive) {
+			if ((m->unit.orders).size() == 0) {
 				found_valid_unit = true;
 				filtered_mobs.insert(m);
 			}
+			else if (override_directive) {
+					auto order = m->unit.orders.front(); // do not override certain abilties
+					if (order.ability_id != sc2::ABILITY_ID::EFFECT_GRAVITONBEAM &&
+						order.ability_id != sc2::ABILITY_ID::EFFECT_FORCEFIELD) {
+						found_valid_unit = true;
+						filtered_mobs.insert(m);
+					}
+				}
 			// or if unit is performing default directive
 			else if ((m->unit.orders).size() > 0 && m->hasDefaultDirective()) {
 				auto order_ability = m->unit.orders.front().ability_id;

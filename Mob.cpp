@@ -7,7 +7,6 @@ Mob::Mob(const sc2::Unit& unit_, MOB mobs_type) : unit(unit_) {
 		// default all trained workers to be mineral gatherers for now
 		// true flags
 		flags.insert(FLAGS::IS_WORKER);
-		flags.insert(FLAGS::IS_MINERAL_GATHERER);
 	}
 
 	if (mobs_type == MOB::MOB_ARMY) {
@@ -35,6 +34,7 @@ void Mob::initVars() {
 	has_bundled_directive = false;
 	has_current_directive = false;
 	is_harvesting_gas = false;
+	is_harvesting_minerals = false;
 	birth_location = unit.pos;
 	home_location = unit.pos;
 	assigned_location = unit.pos;
@@ -42,6 +42,7 @@ void Mob::initVars() {
 	std::unordered_set<FLAGS> flags;
 	std::unordered_set<Mob*> harvesters;
 	gas_structure_harvested = nullptr;
+	townhall_for_minerals = nullptr;
 }
 
 bool Mob::isIdle() {
@@ -201,6 +202,21 @@ Directive* Mob::getCurrentDirective() {
 	}
 }
 
+void Mob::setHarvestingMinerals(Mob* townhall_) {
+	assert(townhall_->hasFlag(FLAGS::IS_TOWNHALL));
+	if (is_harvesting_minerals) {
+		if (townhall_ == townhall_for_minerals) {
+			return;
+		}
+		if (townhall_for_minerals != nullptr) {
+			townhall_for_minerals->removeHarvester(this);
+	}
+		townhall_for_minerals = townhall_;
+		townhall_->addHarvester(this);
+		is_harvesting_minerals = true;
+	}
+}
+
 void Mob::setHarvestingGas(Mob* gas_structure_) {
 	assert(gas_structure_->hasFlag(FLAGS::IS_GAS_STRUCTURE));
 	if (is_harvesting_gas) {
@@ -220,15 +236,24 @@ Mob* Mob::getGasStructureHarvesting() {
 	return gas_structure_harvested;
 }
 
+Mob* Mob::getTownhallForMinerals() {
+	return townhall_for_minerals;
+}
+
 bool Mob::isHarvestingGas() {
 	return is_harvesting_gas;
 }
 
+bool Mob::isHarvestingMinerals() {
+	return is_harvesting_minerals;
+}
+
 void Mob::stopHarvestingGas() {
 	// set this unit to stop harvesting a gas structure
-	// does not change the default directive (yet)
+	// does not change the default directive
 
 	if (is_harvesting_gas) {
+		removeFlag(FLAGS::IS_GAS_GATHERER);
 		if (gas_structure_harvested != nullptr) {
 			gas_structure_harvested->removeHarvester(this);
 		}
@@ -237,15 +262,30 @@ void Mob::stopHarvestingGas() {
 	}
 }
 
+void Mob::stopHarvestingMinerals() {
+	// set this unit to stop harvesting minerals
+	// does not change the default directive
+
+	if (is_harvesting_minerals) {
+		removeFlag(FLAGS::IS_MINERAL_GATHERER);
+		if (townhall_for_minerals != nullptr) {
+			townhall_for_minerals->removeHarvester(this);
+		}
+		townhall_for_minerals = nullptr;
+		is_harvesting_minerals = false;
+	}
+}
+
 void Mob::addHarvester(Mob* mob_) {
+	assert(hasFlag(FLAGS::IS_GAS_STRUCTURE) || hasFlag(FLAGS::IS_TOWNHALL));
 	assert(mob_->hasFlag(FLAGS::IS_WORKER));
 	harvesters.insert(mob_);
 }
 
 void Mob::removeHarvester(Mob* mob_) {
-	// remove harvester from this gas structure
+	// remove harvester from this gas structure or townhall (for minerals)
 
-	//assert(hasFlag(FLAGS::IS_GAS_STRUCTURE));
+	//assert(hasFlag(FLAGS::IS_GAS_STRUCTURE) || hasFlag(FLAGS::IS_TOWNHALL));
 
 	if (!harvesters.empty()) {
 		for (auto it = harvesters.begin(); it != harvesters.end(); ) {
@@ -262,7 +302,88 @@ int Mob::getHarvesterCount() {
 	return harvesters.size();
 }
 
+bool Mob::grabNearbyMineralHarvester(BasicSc2Bot* agent, bool grab_from_gas, bool grab_from_other_townhall) {
+	// called from a townhall to grab a nearby mob from gas and assign to minerals
+	assert(hasFlag(FLAGS::IS_TOWNHALL));
+
+	std::unordered_set<Mob*> nearby_workers = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_WORKER);
+	if (nearby_workers.empty()) {
+		return false;
+	}
+
+	if (!grab_from_other_townhall) {
+		nearby_workers = agent->mobH->filterByFlag(nearby_workers, FLAGS::IS_MINERAL_GATHERER, false);
+	}
+	else {
+		std::unordered_set<Mob*> filtered;
+		for (auto w : nearby_workers) {
+			if (w->isHarvestingMinerals()) {
+				if (w->getTownhallForMinerals() != this) {
+					filtered.insert(w);
+				}
+			}
+			else {
+				filtered.insert(w);
+			}
+		}
+		nearby_workers = filtered;
+	}
+
+	if (nearby_workers.empty()) {
+		return false;
+	}
+
+	std::unordered_set<Mob*> unassigned = agent->mobH->filterByFlag(nearby_workers, FLAGS::IS_GAS_GATHERER, false);
+	unassigned = agent->mobH->filterByFlag(unassigned, FLAGS::IS_MINERAL_GATHERER, false);
+	if (!unassigned.empty()) {
+		if (!grab_from_gas && !grab_from_other_townhall) {
+			return false;
+		}
+		nearby_workers = unassigned;
+	}
+	if (!grab_from_other_townhall) {
+		nearby_workers = Directive::filterNearLocation(nearby_workers, unit.pos, 30.0F);
+	}
+
+	if (nearby_workers.empty()) {
+		return false;
+	}
+
+	Mob* nearest = Directive::getClosestToLocation(nearby_workers, unit.pos);
+
+	if (nearest->isHarvestingGas()) {
+		nearest->stopHarvestingGas();
+	}
+
+	nearest->setFlag(FLAGS::IS_MINERAL_GATHERER);
+
+	nearest->setHarvestingMinerals(this);
+	nearest->setAssignedLocation(unit.pos);
+	Directive directive_get_minerals(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, nearest->unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, unit.pos);
+	agent->storeDirective(directive_get_minerals);
+	Directive* dir = agent->getLastStoredDirective();
+	nearest->assignDefaultDirective(*dir);
+	const sc2::Unit* mineral_target = agent->locH->getNearestMineralPatch(unit.pos);
+	if (grab_from_other_townhall) {
+		if (nearest->isCarryingMinerals()) {
+			auto town = agent->locH->getNearestTownhall(nearest->unit.pos);
+			agent->Actions()->UnitCommand(&(nearest->unit), sc2::ABILITY_ID::HARVEST_RETURN, &town);
+			agent->Actions()->UnitCommand(&(nearest->unit), sc2::ABILITY_ID::GENERAL_MOVE, mineral_target->pos, true);
+		}
+		else {
+			agent->Actions()->UnitCommand(&(nearest->unit), sc2::ABILITY_ID::GENERAL_MOVE, mineral_target->pos);
+		}
+	}
+	else {
+		agent->Actions()->UnitCommand(&(nearest->unit), sc2::ABILITY_ID::HARVEST_GATHER, &mineral_target);
+	}
+	return true;
+
+
+}
+
 bool Mob::grabNearbyGasHarvester(BasicSc2Bot* agent) {
+	// called from a gas structure to take a nearby mob off of minerals
 	assert(hasFlag(FLAGS::IS_GAS_STRUCTURE));
 
 	std::unordered_set<Mob*> nearby_workers = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_WORKER);
@@ -278,7 +399,10 @@ bool Mob::grabNearbyGasHarvester(BasicSc2Bot* agent) {
 
 	Mob* nearest = Directive::getClosestToLocation(nearby_workers, unit.pos);
 
-	nearest->removeFlag(FLAGS::IS_MINERAL_GATHERER);
+	if (nearest->isHarvestingMinerals()) {
+		nearest->stopHarvestingMinerals();
+	}
+
 	nearest->setFlag(FLAGS::IS_GAS_GATHERER);
 
 	nearest->setHarvestingGas(this);

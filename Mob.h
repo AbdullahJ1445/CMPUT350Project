@@ -71,13 +71,19 @@ public:
 	bool setCurrentDirective(Directive* directive_);
 	Directive* getDefaultDirective();
 	Directive* getCurrentDirective();
+	void setHarvestingMinerals(Mob* townhall_);
 	void setHarvestingGas(Mob* gas_structure_);
 	Mob* getGasStructureHarvesting();
+	Mob* getTownhallForMinerals();
 	bool isHarvestingGas();
+	bool isHarvestingMinerals();
 	void addHarvester(Mob* mob_);
+	void removeMineralHarvester(Mob* mob_);
 	void removeHarvester(Mob* mob_);
 	void stopHarvestingGas();
+	void stopHarvestingMinerals();
 	int getHarvesterCount();
+	bool grabNearbyMineralHarvester(BasicSc2Bot* agent, bool grab_from_gas=true, bool grab_from_other_townhall=false);
 	bool grabNearbyGasHarvester(BasicSc2Bot* agent);
 	bool operator<(const Mob& mob) const { return tag < mob.tag; }
 	const sc2::Unit& unit;
@@ -92,8 +98,10 @@ private:
 	bool has_bundled_directive;
 	bool has_current_directive;
 	bool is_harvesting_gas;
+	bool is_harvesting_minerals;
 	std::unordered_set<Mob*> harvesters;
 	Mob* gas_structure_harvested;
+	Mob* townhall_for_minerals;
 	Directive* default_directive;
 	Directive* bundled_directive;
 	Directive* current_directive;
