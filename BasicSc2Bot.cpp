@@ -540,17 +540,12 @@ void BasicSc2Bot::OnGameEnd() {
 	auto results = obs->GetResults();
 
 	if (results[0].result == sc2::GameResult::Win) {
-		std::cout << "The Player has won the match." << std::endl;
+		std::cout << "[" << obs->GetGameLoop() << "] The Player has won the match at " << gameTime(obs->GetGameLoop()) << "." << std::endl;
 	}
 	if (results[0].result == sc2::GameResult::Loss) {
-		std::cout << "The Player has lost the match." << std::endl;
+		std::cout << "[" << obs->GetGameLoop() << "] The Player has lost the match at " << gameTime(obs->GetGameLoop()) << "." << std::endl;
 	}
 
-	if (time_of_first_attack != -1) {
-		std::cout << "First attack sent at gamestep " << time_of_first_attack << " (" << gameTime(time_of_first_attack) << ")" << std::endl;
-	}
-
-	std::cout << "Total gamesteps: " << obs->GetGameLoop() << " (" << gameTime(obs->GetGameLoop()) << ")" << std::endl;
 }
 
 void BasicSc2Bot::OnStep() {
@@ -916,13 +911,12 @@ void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 		unit_type == sc2::UNIT_TYPEID::ZERG_HATCHERY) {
 		int base_index = locH->getIndexOfClosestBase(unit->pos);
 		is_townhall = true;
-		std::cout << "expansion " << base_index << " has been activated." << std::endl;
+		std::cout << "[" << Observation()->GetGameLoop() << "] Expansion " << base_index << " has been activated." << std::endl;
 		locH->bases[base_index].setActive();
 		
 		int num_grab = getStoredInt("_GRAB_WORKERS_ON_EXPAND");
 		if (num_grab > 0) {
 			for (int i = 0; i < num_grab; i++) {
-				std::cout << "x";
 				mob->grabNearbyMineralHarvester(this, false, true);
 			}
 		}
@@ -1055,6 +1049,7 @@ void BasicSc2Bot::OnUnitEnterVision(const sc2::Unit* unit) {
 		auto utd_vector = obs->GetUnitTypeData();
 		auto utd = utd_vector[unit->unit_type];
 		enemy_race = utd.race;
+		std::cout << "[" << obs->GetGameLoop() << "] ";
 		if (enemy_race == sc2::Race::Protoss) {
 			std::cout << "Enemy Race Detected: Protoss" << std::endl;
 		}
