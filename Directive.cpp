@@ -1075,3 +1075,10 @@ sc2::Point2D Directive::uniform_random_point_in_circle(sc2::Point2D center, floa
 	float y = center.y + r * sin(theta);
 	return sc2::Point2D(x, y);
 }
+
+void Directive::setPriority(int priority) {
+	this->priority = priority;
+}
+int Directive::getPriority(){
+	return this->priority;
+}

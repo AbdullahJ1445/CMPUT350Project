@@ -91,6 +91,8 @@ public:
 	std::unordered_set<Mob*> getAssignedMobs();
 	static Mob* getClosestToLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_);
 	size_t getID();
+	void setPriority(int priority);
+	int getPriority();
 	Strategy* strategy_ref;    // testing this pointer
 	
 private:
@@ -157,4 +159,5 @@ private:
 	std::vector<Directive> directive_bundle;
 	std::unordered_set<Mob*> assigned_mobs;
 	std::string group_name;
+	int priority;
 };
