@@ -973,6 +973,11 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
 			t2.addCondition(COND::THREAT_EXISTS_NEAR_LOCATION, bot->locH->bases[0].getTownhall(), 50.0F, false);
 			init_group_timer.addTrigger(t2);
+			Trigger t3(bot);  // if our economy is f***ed, go all in
+			t3.addCondition(COND::TIMER_1_SET, 0, false);
+			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_PROBE);
+			t3.addCondition(COND::MAX_MINERALS, 49);
+			init_group_timer.addTrigger(t3);
 			bot->addStrat(init_group_timer);
 		}
 		{	// send all army units to group at a rally point en route to the attack location and wait for 850 gameloop steps
@@ -1014,7 +1019,6 @@ void Strategy::loadStrategies() {
 			auto func = [this]() { return bot->locH->smartPriorityAttack(); };
 			d.setTargetLocationFunction(this, bot, func);
 			attack_and_explore_late.addDirective(d);
-			t.addCondition(COND::TIMER_1_MIN_STEPS_PAST, 750);
 			t.addCondition(COND::MIN_TIME, 22000);
 			attack_and_explore_late.addTrigger(t);
 			bot->addStrat(attack_and_explore_late);
