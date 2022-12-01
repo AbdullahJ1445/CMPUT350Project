@@ -94,7 +94,7 @@ void Strategy::loadStrategies() {
 			bot->addStrat(base_probe);
 		}
 
-		bot->storeInt("_GRAB_WORKERS_ON_EXPAND", 14); // identifier use to determine number of workers to grab after expansion is built
+		bot->storeInt("_GRAB_WORKERS_ON_EXPAND", 15); // identifier use to determine number of workers to grab after expansion is built
 
 		{	// Expand to the first expansion almost immediately
 			Precept first_expansion(bot);
