@@ -422,10 +422,10 @@ void::BasicSc2Bot::LoadStep_03() {
 			u_type == sc2::UNIT_TYPEID::PROTOSS_PROBE)
 		{
 			Mob worker(*u, MOB::MOB_WORKER);
-			Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, u_type, sc2::ABILITY_ID::HARVEST_GATHER, ASSIGNED_LOCATION);
-			storeDirective(directive_get_minerals_near_Base);
-			Directive* dir = getLastStoredDirective();
-			worker.assignDefaultDirective(*dir);
+			//Directive directive_get_minerals_near_Base(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, u_type, sc2::ABILITY_ID::HARVEST_GATHER, ASSIGNED_LOCATION);
+			//storeDirective(directive_get_minerals_near_Base);
+			//Directive* dir = getLastStoredDirective();
+			//worker.assignDefaultDirective(*dir);
 			mobH->addMob(worker);
 		}
 		if (u_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS ||
@@ -440,6 +440,15 @@ void::BasicSc2Bot::LoadStep_03() {
 			Mob townhall(*u, MOB::MOB_TOWNHALL);
 			mobH->addMob(townhall);
 		}
+	}
+	std::unordered_set<Mob*> workers = mobH->filterByFlag(mobH->getMobs(), FLAGS::IS_WORKER);
+	std::unordered_set<Mob*> townhalls = mobH->filterByFlag(mobH->getMobs(), FLAGS::IS_TOWNHALL);
+	assert(townhalls.size() == 1);
+	Mob* townhall = *townhalls.begin();
+	for (auto w : workers) {
+		
+		townhall->grabNearbyMineralHarvester(this);
+		
 	}
 	std::cout << "... done." << std::endl;
 	setLoadingProgress(3);
@@ -551,7 +560,7 @@ void BasicSc2Bot::OnStep() {
 	// this block of code allows the proxy worker to be sent immediately, without waiting for loading to complete on Bel'Shir VestigeLE and ProximStationLE
 	static bool proxy_sent = false;
 
-	if (!proxy_sent) {
+	if (!proxy_sent && map_index > 0) {
 		const sc2::Units allied_units = observation->GetUnits(sc2::Unit::Alliance::Self);
 		
 		// make nexus train first probe
@@ -649,7 +658,7 @@ void BasicSc2Bot::OnStep() {
 
 	if (!initialized)
 		return;
-
+ 
 	// update visibility data for chunks
 	locH->scanChunks(observation);
 	if (!enemy_units.empty()) {
@@ -745,10 +754,13 @@ void BasicSc2Bot::OnStep() {
 	if (gameloop % 1000 == 0) {
 		OnStep_1000(observation);
 	}
+
 	checkGasStructures();
 }
 
 void BasicSc2Bot::checkGasStructures() {
+	// make sure the proper amount of workers are assigned to gas
+
 	std::unordered_set<Mob*> gas_structures = mobH->getMobs();
 	gas_structures = mobH->filterByFlag(gas_structures, FLAGS::IS_GAS_STRUCTURE);
 	
@@ -760,6 +772,10 @@ void BasicSc2Bot::checkGasStructures() {
 	if (gas_structures.empty()) {
 		return;
 	}
+
+	std::unordered_set<Mob*> mineral_gatherers = mobH->filterByFlag(mobH->getMobs(), FLAGS::IS_MINERAL_GATHERER);
+	if (mineral_gatherers.size() < 6)
+		return;
 
 	for (auto g : gas_structures) {
 		if (g->getHarvesterCount() < 3) {
@@ -902,6 +918,14 @@ void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 		is_townhall = true;
 		std::cout << "expansion " << base_index << " has been activated." << std::endl;
 		locH->bases[base_index].setActive();
+		
+		int num_grab = getStoredInt("_GRAB_WORKERS_ON_EXPAND");
+		if (num_grab > 0) {
+			for (int i = 0; i < num_grab; i++) {
+				std::cout << "x";
+				mob->grabNearbyMineralHarvester(this, false, true);
+			}
+		}
 	}
 	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON ||
 		unit_type == sc2::UNIT_TYPEID::TERRAN_BUNKER ||
