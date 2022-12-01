@@ -586,7 +586,7 @@ sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
 }
 
 sc2::Point2D LocationHandler::getFurthestUnseenLocation(bool pathable_) {
-    // checks for the unseen MapChunk point where the closest mob to it is as far away as possible
+    // checks for the unseen MapChunk point furthest from the start location
 
     std::unordered_set<MapChunk*> chunkset;
     std::unordered_set<MapChunk*> unseen_chunks;
@@ -618,19 +618,7 @@ sc2::Point2D LocationHandler::getFurthestUnseenLocation(bool pathable_) {
 
     for (auto it = unseen_chunks.begin(); it != unseen_chunks.end(); ++it) {
         sc2::Point2D loc = (*it)->getLocation();
-        Mob* closest_mob = nullptr;
-        if (!pathable_ && !(*it)->isPathable()) {
-            // if a chunk can only be reached by flying units
-            closest_mob = Directive::getClosestToLocation(flying_mobs, loc);
-        }
-        else {
-            closest_mob = Directive::getClosestToLocation(mobs, loc);
-        }
-
-        if (closest_mob == nullptr)
-            continue;
-
-        float dist = sc2::DistanceSquared2D(closest_mob->unit.pos, loc);
+        float dist = sc2::DistanceSquared2D(start_location, loc);
         if (dist > furthest_dist) {
             furthest_loc = loc;
             furthest_dist = dist;
