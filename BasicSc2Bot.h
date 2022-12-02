@@ -96,7 +96,7 @@ public:
 private:
 
 	// private functions
-	void loadStep_01();
+	void loadStep_01(); // breaking loading into sequential segments, so that nothing is referenced before it is initialized
 	void loadStep_02();
 	void loadStep_03();
 	void loadStep_04();

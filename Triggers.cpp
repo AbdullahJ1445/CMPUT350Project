@@ -268,7 +268,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			for (auto m : filtered_mobs) {
 				if (!m->unit.orders.empty()) {
 					if (m->unit.orders.front().ability_id == ability_id) {
-						count++;
+						++count;
 					}
 				}
 			}
@@ -292,7 +292,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			for (auto m : filtered_mobs) {
 				if (!m->unit.orders.empty()) {
 					if (m->unit.orders.front().ability_id == ability_id) {
-						count++;
+						++count;
 					}
 				}
 			}

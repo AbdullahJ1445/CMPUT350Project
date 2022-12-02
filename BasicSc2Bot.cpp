@@ -418,7 +418,6 @@ void BasicSc2Bot::onGameStart() {
 }
 
 void::BasicSc2Bot::loadStep_01() { 
-	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
 
 	const sc2::ObservationInterface* observation = Observation();
 	map_name = observation->GetGameInfo().map_name;
@@ -442,7 +441,6 @@ void::BasicSc2Bot::loadStep_02() {
 }
 
 void::BasicSc2Bot::loadStep_03() {
-	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
 
 	Strategy* strategy = new Strategy(this);
 	setCurrentStrategy(strategy);
@@ -488,7 +486,6 @@ void::BasicSc2Bot::loadStep_03() {
 }
 
 void::BasicSc2Bot::loadStep_04() { 
-	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
 
 	const sc2::ObservationInterface* obs = Observation();
 	auto utd_fulldata = obs->GetUnitTypeData();
@@ -508,7 +505,7 @@ void::BasicSc2Bot::loadStep_04() {
 			gas_cost[(int)utd.unit_type_id] = utd.vespene_cost;
 			food_cost[(int)utd.unit_type_id] = utd.food_required;
 		}
-		i++;
+		++i;
 	}
 	player_start_id = locH->getPlayerIDForMap(map_index, obs->GetStartLocation());
 	sc2::Point2D start_location = locH->getStartLocation();
@@ -518,7 +515,6 @@ void::BasicSc2Bot::loadStep_04() {
 }
 
 void::BasicSc2Bot::loadStep_05() { 
-	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
 
 	current_strategy->loadStrategies();
 	setLoadingProgress(5);
@@ -610,12 +606,12 @@ void BasicSc2Bot::onStep() {
 				if ((*it)->unit_type == sc2::UNIT_TYPEID::PROTOSS_PROBE) {
 					if (num_set == 1) {
 						proxy_probe = (*it);
-						num_set++;
+						++num_set;
 						break;
 					}
 					if (num_set == 0) {
 						decoy_probe = (*it);
-						num_set++;
+						++num_set;
 						continue;
 					}
 				}
@@ -829,7 +825,7 @@ std::string BasicSc2Bot::gameTime(int steps_)
 	int seconds = (steps_ * 0.0446);
 	int minutes;
 	for (minutes = 0; seconds >= 60; seconds -= 60) {
-		minutes++;
+		++minutes;
 	}
 
 	out_str += std::to_string(minutes);
@@ -957,7 +953,7 @@ void BasicSc2Bot::onBuildingConstructionComplete(const sc2::Unit* unit) {
 		
 		int num_grab = getStoredInt("_GRAB_WORKERS_ON_EXPAND");
 		if (num_grab > 0) {
-			for (int i = 0; i < num_grab; i++) {
+			for (int i = 0; i < num_grab; ++i) {
 				mob->grabNearbyMineralHarvester(this, false, true);
 			}
 		}
