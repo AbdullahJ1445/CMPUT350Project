@@ -80,6 +80,7 @@ bool Mob::hasDefaultDirective() {
 }
 
 bool Mob::hasBundledDirective() {
+	// Return whether the mob has bundled directives in queue 
 	return has_bundled_directive;
 }
 
@@ -185,6 +186,8 @@ std::unordered_set<FLAGS> Mob::getFlags() {
 }
 
 bool Mob::setCurrentDirective(Directive* directive_) {
+	// Do not allow if the directive does not allow for multiple mobs and already has an associated mob
+	
 	if (!directive_->allowsMultiple() && directive_->hasAssignedMob()) {
 		return false;
 	}
