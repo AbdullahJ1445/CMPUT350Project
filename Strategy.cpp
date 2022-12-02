@@ -40,6 +40,9 @@ void Strategy::loadStrategies() {
 			bot->storeLocation("PYLON_1", sc2::Point2D(68.0, 153.0));
 			bot->storeLocation("PYLON_2", sc2::Point2D(68, 155));
 			bot->storeLocation("CANNON_1", sc2::Point2D(67.0, 151.0));
+			bot->storeLocation("CANNON_2", sc2::Point2D(71, 148));
+			bot->storeLocation("SHIELD_1", sc2::Point2D(65, 151));
+			bot->storeLocation("SHIELD_2", sc2::Point2D(70, 154.5));
 			bot->storeLocation("GATEWAY_1", sc2::Point2D(71.5, 150.5));
 			bot->storeLocation("CYBER_1", sc2::Point2D(67.5, 157.5));
 			bot->storeLocation("FORCE_FIELD", sc2::Point2D(73.5, 152));
@@ -50,6 +53,9 @@ void Strategy::loadStrategies() {
 			bot->storeLocation("PYLON_1", sc2::Point2D(153, 124));
 			bot->storeLocation("PYLON_2", sc2::Point2D(155, 124));
 			bot->storeLocation("CANNON_1", sc2::Point2D(151, 125));
+			bot->storeLocation("CANNON_2", sc2::Point2D(148, 121));
+			bot->storeLocation("SHIELD_1", sc2::Point2D(151, 127));
+			bot->storeLocation("SHIELD_2", sc2::Point2D(154.5, 122));
 			bot->storeLocation("GATEWAY_1", sc2::Point2D(150.5, 120.5));
 			bot->storeLocation("CYBER_1", sc2::Point2D(157.5, 124.5));
 			bot->storeLocation("FORCE_FIELD", sc2::Point2D(152, 118.5));
@@ -60,6 +66,9 @@ void Strategy::loadStrategies() {
 			bot->storeLocation("PYLON_1", sc2::Point2D(124, 39));
 			bot->storeLocation("PYLON_2", sc2::Point2D(124, 37));
 			bot->storeLocation("CANNON_1", sc2::Point2D(125, 41));
+			bot->storeLocation("CANNON_2", sc2::Point2D(121, 44));
+			bot->storeLocation("SHIELD_1", sc2::Point2D(127, 41));
+			bot->storeLocation("SHIELD_2", sc2::Point2D(122, 37.5));
 			bot->storeLocation("GATEWAY_1", sc2::Point2D(120.5, 41.5));
 			bot->storeLocation("CYBER_1", sc2::Point2D(124.5, 34.5));
 			bot->storeLocation("FORCE_FIELD", sc2::Point2D(118.5, 40));
@@ -70,6 +79,9 @@ void Strategy::loadStrategies() {
 			bot->storeLocation("PYLON_1", sc2::Point2D(39, 68));
 			bot->storeLocation("PYLON_2", sc2::Point2D(37, 68));
 			bot->storeLocation("CANNON_1", sc2::Point2D(41, 67));
+			bot->storeLocation("CANNON_2", sc2::Point2D(44, 71));
+			bot->storeLocation("SHIELD_1", sc2::Point2D(41, 65));
+			bot->storeLocation("SHIELD_2", sc2::Point2D(37.5, 70));
 			bot->storeLocation("GATEWAY_1", sc2::Point2D(41.5, 71.5));
 			bot->storeLocation("CYBER_1", sc2::Point2D(34.5, 67.5));
 			bot->storeLocation("FORCE_FIELD", sc2::Point2D(40, 73.5));
@@ -101,7 +113,8 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_NEXUS, bot->locH->bases[1].getTownhall());
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 400);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			//t.addCondition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall());
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall(), 0.5F);
 			first_expansion.addDirective(d);
@@ -109,9 +122,10 @@ void Strategy::loadStrategies() {
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_MINERALS, 400);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall());
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall(), 0.5F);
-			first_expansion.addTrigger(t2);
+			//first_expansion.addTrigger(t2);
 			bot->addStrat(first_expansion);
 		}
 		{	// Train Probes at Expansion
@@ -133,6 +147,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_MINERALS, 100);
 			//t.addCondition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON);
+			//t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->getStoredLocation("PYLON_1"), 0.5F);
 			pylon_1.addDirective(d);
 			pylon_1.addTrigger(t);
@@ -150,7 +165,9 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			forge_1.addDirective(d);
 			forge_1.addTrigger(t);
@@ -158,6 +175,7 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_MINERALS, 150);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall());
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			forge_1.addTrigger(t2);
 			bot->addStrat(forge_1);
@@ -167,7 +185,8 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_GATEWAY, bot->getStoredLocation("GATEWAY_1"));
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 150);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			//t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, bot->getStoredLocation("GATEWAY_1"), 0.5F);
 			gateway_1.addDirective(d);
 			gateway_1.addTrigger(t);
@@ -184,9 +203,11 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			d.allowMultiple();
 			t.addCondition(COND::MIN_MINERALS, 100);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->getStoredLocation("PYLON_2"), 0.5F);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+			//t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			pylon_2.addDirective(d);
 			pylon_2.addTrigger(t);
@@ -198,11 +219,51 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_1"), 0.5F);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_1"), 0.5F);
 			cannon_1.addDirective(d);
 			cannon_1.addTrigger(t);
 			bot->addStrat(cannon_1);
+		}
+		{	// build shield battery #1 at our pre-defined wall location
+			Precept shield_1(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_SHIELDBATTERY, bot->getStoredLocation("SHIELD_1"));
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 75);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY, bot->getStoredLocation("SHIELD_1"), 0.5F);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY, bot->getStoredLocation("SHIELD_1"), 0.5F);
+			shield_1.addDirective(d);
+			shield_1.addTrigger(t);
+			bot->addStrat(shield_1);
+		}
+		{	// build shield battery #2 at our pre-defined wall location
+			Precept shield_2(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_SHIELDBATTERY, bot->getStoredLocation("SHIELD_2"));
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 75);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY, bot->getStoredLocation("SHIELD_2"), 0.5F);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY, bot->getStoredLocation("SHIELD_2"), 0.5F);
+			shield_2.addDirective(d);
+			shield_2.addTrigger(t);
+			bot->addStrat(shield_2);
+		}
+		{	// build cannon #1 at our pre-defined wall location
+			Precept cannon_2(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, bot->getStoredLocation("CANNON_2"));
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 150);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_2"), 0.5F);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_2"), 0.5F);
+			t.addCondition(COND::MAX_TIME, 7000); // do not keep rebuilding this if it gets destroyed - its purpose is to prevent an encroaching cannon rush
+			cannon_2.addDirective(d);
+			cannon_2.addTrigger(t);
+			bot->addStrat(cannon_2);
 		}
 		{	// build our cybernetics core at our pre-defined wall location
 			Precept cyber_1(bot);
@@ -210,6 +271,7 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+			//t.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE, bot->getStoredLocation("CYBER_1"), 0.5F);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE, bot->getStoredLocation("CYBER_1"), 0.5F);
 			cyber_1.addDirective(d);
@@ -221,7 +283,8 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->locH->bases[0].getBuildArea(0), 4.0F);
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 100);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
+			//t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[0].getBuildArea(0), 6.0F);
 			main_pylon.addDirective(d);
 			main_pylon.addTrigger(t);
@@ -234,6 +297,8 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 100);
 			t.addCondition(COND::MAX_FOOD, 6);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 8, sc2::UNIT_TYPEID::PROTOSS_PYLON);
@@ -246,6 +311,7 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PYLON, bot->locH->bases[0].getBuildArea(1), 4.0F);
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 100);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[0].getBuildArea(1), 6.0F);
 			main_pylon_3.addDirective(d);
@@ -259,6 +325,7 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 100);
 			t.addCondition(COND::MAX_FOOD, 7);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 9, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 14, sc2::UNIT_TYPEID::PROTOSS_PYLON);
@@ -271,18 +338,35 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_GATEWAY, bot->locH->bases[0].getBuildArea(0));
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 100);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[0].getBuildArea(0), 8.0F);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 4, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 3, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
 			t.addCondition(COND::ENEMY_RACE_ZERG);
 			main_gateway.addDirective(d);
 			main_gateway.addTrigger(t);
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_MINERALS, 100);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[0].getBuildArea(0), 8.0F);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
 			t2.addCondition(COND::ENEMY_RACE_ZERG, 0, false);
 			main_gateway.addTrigger(t2);
 			bot->addStrat(main_gateway);
+		}
+		{	// build a second forge
+			Precept main_forge(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_FORGE, bot->locH->bases[0].getBuildArea(0));
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 150);
+			t.addCondition(COND::MIN_FOOD_USED, 25);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[0].getBuildArea(0), 8.0F);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::ENEMY_RACE_PROTOSS, 0, false); // for whatever reason having double forge seems to make it lose more against protoss
+			main_forge.addDirective(d);
+			main_forge.addTrigger(t);
+			bot->addStrat(main_forge);
 		}
 		{	// build gateways at main base build area 1
 			Precept gateway_2(bot);
@@ -292,7 +376,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_FOOD, 4);
 			t.addCondition(COND::MIN_MINERALS, 300);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 4, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 3, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
 			t.addCondition(COND::ENEMY_RACE_ZERG);
 			gateway_2.addDirective(d);
 			gateway_2.addTrigger(t);
@@ -343,7 +427,7 @@ void Strategy::loadStrategies() {
 			t4.addCondition(COND::MIN_FOOD, 4);
 			t4.addCondition(COND::MIN_MINERALS, 150);
 			t4.addCondition(COND::MIN_GAS, 100);
-			t4.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 3, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t4.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			t4.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t4.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			t4.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
@@ -361,7 +445,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_GAS, 100);
 			t.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // build more against non-zerg
-			t.addCondition(COND::MAX_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
@@ -487,6 +571,8 @@ void Strategy::loadStrategies() {
 		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_1"), 0.5F));
 		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, bot->getStoredLocation("GATEWAY_1"), 0.5F));
 		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE, bot->getStoredLocation("CYBER_1"), 0.5F));
+		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY, bot->getStoredLocation("SHIELD_1"), 0.5F));
+		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY, bot->getStoredLocation("SHIELD_2"), 0.5F));
 
 		{	// train collosus
 			Precept train_colossus(bot);
@@ -532,14 +618,16 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			d.allowMultiple();
 			t.addCondition(COND::MIN_MINERALS, 75);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			//t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			//t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->locH->bases[0].getTownhall(), 10.0F);
 			assim_1.addDirective(d);
 			assim_1.addTrigger(t);
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_MINERALS, 75);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON);
+			//t2.addCondition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->locH->bases[0].getTownhall(), 10.0F);
 			assim_1.addTrigger(t2);
 			bot->addStrat(assim_1);
@@ -553,6 +641,8 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_MINERALS, 100);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON);
 			t.addCondition(COND::MAX_FOOD, 6);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[1].getDefendPoint(0), 2.5F);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			defense_pylon.addDirective(d);
@@ -568,7 +658,8 @@ void Strategy::loadStrategies() {
 				t.addCondition(tc);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[1].getDefendPoint(0), 12.0F);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].getDefendPoint(0), 8.0F);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].getDefendPoint(0), 12.0F);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 2, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].getDefendPoint(0), 6.0F);
 			more_cannons.addDirective(d);
 			more_cannons.addTrigger(t);
@@ -584,9 +675,9 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_FOOD, 2);
 			t.addCondition(COND::MAX_FOOD_USED, 120);
 			t.addCondition(COND::MAX_TIME, 19999);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 2, sc2::UNIT_TYPEID::PROTOSS_STALKER, bot->locH->bases[1].getRallyPoint());
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			train_stalker.addDirective(d);
 			train_stalker.addTrigger(t);
 			Trigger t2(bot);
@@ -597,10 +688,9 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy is not zerg, avoid too many stalkers
 			t2.addCondition(COND::MAX_FOOD_USED, 120);
 			t2.addCondition(COND::MAX_TIME, 19999);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 12, sc2::UNIT_TYPEID::PROTOSS_STALKER, bot->locH->bases[1].getRallyPoint());
-			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			train_stalker.addDirective(d);
 			train_stalker.addTrigger(t2);
 			Trigger t3(bot);
@@ -611,9 +701,9 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy is not zerg, avoid too many stalkers
 			t3.addCondition(COND::MAX_FOOD_USED, 120);
 			t3.addCondition(COND::MAX_TIME, 19999);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t3.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 12, sc2::UNIT_TYPEID::PROTOSS_STALKER, bot->locH->bases[1].getRallyPoint());
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			train_stalker.addTrigger(t3);
 			Trigger t4(bot);
 			t4.addCondition(COND::MIN_MINERALS, 400);
@@ -623,10 +713,10 @@ void Strategy::loadStrategies() {
 			t4.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy is not zerg, avoid too many stalkers
 			t4.addCondition(COND::MAX_FOOD_USED, 120);
 			t4.addCondition(COND::MAX_TIME, 19999);
+			t4.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t4.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 12, sc2::UNIT_TYPEID::PROTOSS_STALKER, bot->locH->bases[1].getRallyPoint());
 			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			train_stalker.addTrigger(t4);
 			Trigger t5(bot);
 			t5.addCondition(COND::MIN_MINERALS, 400);
@@ -635,9 +725,8 @@ void Strategy::loadStrategies() {
 			t5.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg, build tons
 			t5.addCondition(COND::MAX_FOOD_USED, 120);
 			t5.addCondition(COND::MAX_TIME, 19999);
-			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
+			t5.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			train_stalker.addTrigger(t5);
 			Trigger t6(bot);
 			t6.addCondition(COND::MIN_MINERALS, 125);
@@ -646,10 +735,10 @@ void Strategy::loadStrategies() {
 			t6.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg, build tons
 			t6.addCondition(COND::MAX_FOOD_USED, 120);
 			t6.addCondition(COND::MAX_TIME, 19999);
+			t6.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t6.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL, bot->locH->bases[1].getRallyPoint());
 			t6.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 20, sc2::UNIT_TYPEID::PROTOSS_STALKER, bot->locH->bases[1].getRallyPoint());
 			t6.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-			t6.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			train_stalker.addTrigger(t6);
 			Trigger t7(bot);
 			t7.addCondition(COND::MIN_MINERALS, 290);
@@ -658,9 +747,9 @@ void Strategy::loadStrategies() {
 			t7.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg, build tons
 			t7.addCondition(COND::MAX_FOOD_USED, 120);
 			t7.addCondition(COND::MAX_TIME, 19999);
+			t7.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t7.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
 			t7.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
-			t7.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			train_stalker.addTrigger(t7);
 			bot->addStrat(train_stalker);
 		}
@@ -674,7 +763,9 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_FOOD, 2);
 			t.addCondition(COND::MAX_FOOD_USED, 109);
 			t.addCondition(COND::MAX_TIME, 19999);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MAX_UNITS_USING_ABILITY, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_SENTRY);
 			train_sentry.addDirective(d);
 			train_sentry.addTrigger(t);
@@ -716,38 +807,53 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_ZEALOT);
 			d.allowMultiple();
 			Trigger t(bot); // always build zealots if gas is low
-			t.addCondition(COND::MIN_MINERALS, 125);
+			t.addCondition(COND::MIN_MINERALS, 100);
 			t.addCondition(COND::MAX_GAS, 49);
 			t.addCondition(COND::MIN_FOOD, 2);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			//t.addCondition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			train_zealot.addDirective(d);
 			train_zealot.addTrigger(t);
 			Trigger t2(bot);
-			t2.addCondition(COND::MIN_MINERALS, 320); // give colossus a chance to build
-			t2.addCondition(COND::MIN_GAS, 50);
+			t2.addCondition(COND::MIN_MINERALS, 100);
 			t2.addCondition(COND::MIN_FOOD, 2);
-			t2.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy race is not zerg
-			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			train_zealot.addTrigger(t2);
 			Trigger t3(bot);
 			t3.addCondition(COND::MIN_MINERALS, 320); // give colossus a chance to build
 			t3.addCondition(COND::MIN_GAS, 50);
-			t3.addCondition(COND::MIN_FOOD, 4);
-			t3.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg
+			t3.addCondition(COND::MIN_FOOD, 2);
+			t3.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy race is not zerg
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 6, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			train_zealot.addTrigger(t3);
 			Trigger t4(bot);
 			t4.addCondition(COND::MIN_MINERALS, 320); // give colossus a chance to build
-			t4.addCondition(COND::MIN_FOOD, 2);
-			t4.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy race is not zerg
-			t4.addCondition(COND::MIN_FOOD_CAP, 91);
+			t4.addCondition(COND::MIN_GAS, 50);
+			t4.addCondition(COND::MIN_FOOD, 4);
+			t4.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg
+			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 8, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			train_zealot.addTrigger(t4);
 			Trigger t5(bot);
-			t5.addCondition(COND::MIN_MINERALS, 400); // remove stalker requirement but increase mineral requirement
-			t5.addCondition(COND::MIN_GAS, 50);
+			t5.addCondition(COND::MIN_MINERALS, 320); // give colossus a chance to build
 			t5.addCondition(COND::MIN_FOOD, 2);
-			t5.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg
+			t5.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
+			t5.addCondition(COND::ENEMY_RACE_ZERG, 0, false); // enemy race is not zerg
+			t5.addCondition(COND::MIN_FOOD_CAP, 91);
 			train_zealot.addTrigger(t5);
+			Trigger t6(bot);
+			t6.addCondition(COND::MIN_MINERALS, 400); // remove stalker requirement but increase mineral requirement
+			t6.addCondition(COND::MIN_GAS, 50);
+			t6.addCondition(COND::MIN_FOOD, 2);
+			t6.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
+			t6.addCondition(COND::ENEMY_RACE_ZERG); // enemy race is zerg
+			train_zealot.addTrigger(t6);
+			Trigger t7(bot);
+			t7.addCondition(COND::MIN_MINERALS, 100);
+			t7.addCondition(COND::MIN_FOOD, 2);
+			t7.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			train_zealot.addTrigger(t7);
 			bot->addStrat(train_zealot);
 		}
 		{	// build twilight council at main base build area 0
@@ -757,6 +863,7 @@ void Strategy::loadStrategies() {
 			d.allowMultiple();
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_GAS, 150);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 0, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
 			twilight_council.addDirective(d);
@@ -848,20 +955,19 @@ void Strategy::loadStrategies() {
 			upgrade_attack.addDirective(d);
 			bot->addStrat(upgrade_attack);
 		}
-		{	// upgrade shields at forge when attack is full upgraded
-			// DISABLED this because the game ends before it would ever be worth it.
+		{	
 			Precept upgrade_shields(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_FORGE, sc2::ABILITY_ID::RESEARCH_PROTOSSSHIELDS);
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_GAS, 150);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL1, false);
-			t.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSGROUNDWEAPONSLEVEL3, true);
 			upgrade_shields.addTrigger(t);
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_MINERALS, 225);
 			t2.addCondition(COND::MIN_GAS, 225);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL);
 			t2.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL1);
 			t2.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL2, false);
@@ -870,10 +976,11 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MIN_MINERALS, 200);
 			t3.addCondition(COND::MIN_GAS, 200);
 			t3.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL2);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t3.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSSHIELDSLEVEL3, false);
 			upgrade_shields.addTrigger(t3);
 			upgrade_shields.addDirective(d);
-			//bot->addStrat(upgrade_shields);
+			bot->addStrat(upgrade_shields);
 		}
 		{	// handle our nexus using chronoboost
 			Precept use_chrono(bot);
@@ -898,10 +1005,11 @@ void Strategy::loadStrategies() {
 		}
 		{	// set our first unit (a zealot) to be a scout
 			Precept set_scout(bot);
-			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::SET_FLAG, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, FLAGS::IS_SCOUT);
+			Directive d(Directive::UNIT_TYPE, Directive::ACTION_TYPE::SET_FLAG, sc2::UNIT_TYPEID::PROTOSS_PROBE, FLAGS::IS_SCOUT);
 			Trigger t(bot);
 			t.addCondition(COND::MAX_DEAD_MOBS, 0);
 			t.addCondition(COND::MAX_UNIT_WITH_FLAGS, 0, std::unordered_set<FLAGS>{FLAGS::IS_SCOUT});
+			t.addCondition(COND::MIN_TIME, 3500);
 			set_scout.addDirective(d);
 			set_scout.addTrigger(t);
 			bot->addStrat(set_scout);
