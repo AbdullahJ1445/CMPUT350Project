@@ -246,6 +246,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY, bot->getStoredLocation("SHIELD_2"), 0.5F);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY, bot->getStoredLocation("SHIELD_2"), 0.5F);
+			t.addCondition(COND::ENEMY_RACE_TERRAN, 0, false);
 			shield_2.addDirective(d);
 			shield_2.addTrigger(t);
 			bot->addStrat(shield_2);
@@ -258,11 +259,21 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY);
+			t.addCondition(COND::ENEMY_RACE_TERRAN, 0, false); // if not terran, build 2 shield batteries
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_2"), 0.5F);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_2"), 0.5F);
 			t.addCondition(COND::MAX_TIME, 7000); // do not keep rebuilding this if it gets destroyed - its purpose is to prevent an encroaching cannon rush
 			cannon_2.addDirective(d);
 			cannon_2.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_MINERALS, 150);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY);
+			t2.addCondition(COND::ENEMY_RACE_TERRAN); // if terran, only build one shield battery
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_2"), 0.5F);
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_2"), 0.5F);
+			t2.addCondition(COND::MAX_TIME, 7000); // do not keep rebuilding this if it gets destroyed - its purpose is to prevent an encroaching cannon rush
 			bot->addStrat(cannon_2);
 		}
 		{	// build our cybernetics core at our pre-defined wall location
@@ -572,7 +583,7 @@ void Strategy::loadStrategies() {
 		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, bot->getStoredLocation("GATEWAY_1"), 0.5F));
 		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE, bot->getStoredLocation("CYBER_1"), 0.5F));
 		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY, bot->getStoredLocation("SHIELD_1"), 0.5F));
-		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY, bot->getStoredLocation("SHIELD_2"), 0.5F));
+		//startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY, bot->getStoredLocation("SHIELD_2"), 0.5F));
 
 		{	// train collosus
 			Precept train_colossus(bot);
@@ -1009,7 +1020,7 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			t.addCondition(COND::MAX_DEAD_MOBS, 0);
 			t.addCondition(COND::MAX_UNIT_WITH_FLAGS, 0, std::unordered_set<FLAGS>{FLAGS::IS_SCOUT});
-			t.addCondition(COND::MIN_TIME, 3500);
+			t.addCondition(COND::MIN_TIME, 1500);
 			set_scout.addDirective(d);
 			set_scout.addTrigger(t);
 			bot->addStrat(set_scout);

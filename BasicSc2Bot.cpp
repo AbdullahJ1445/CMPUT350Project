@@ -565,10 +565,20 @@ void BasicSc2Bot::OnGameEnd() {
 
 	if (results[0].result == sc2::GameResult::Win) {
 		std::cout << "[" << obs->GetGameLoop() << "] The Player has won the match at " << gameTime(obs->GetGameLoop()) << "." << std::endl;
+		std::cout << "WIN AGAINST ";
 	}
 	if (results[0].result == sc2::GameResult::Loss) {
 		std::cout << "[" << obs->GetGameLoop() << "] The Player has lost the match at " << gameTime(obs->GetGameLoop()) << "." << std::endl;
+		std::cout << "LOSS AGAINST ";
 	}
+	
+	if (enemy_race == sc2::Race::Protoss)
+		std::cout << "PROTOSS";
+	if (enemy_race == sc2::Race::Zerg)
+		std::cout << "ZERG";
+	if (enemy_race == sc2::Race::Terran)
+		std::cout << "TERRAN";
+	std::cout << " AT " << obs->GetGameLoop() << std::endl;
 
 	//listUnitSummary();
 
