@@ -30,7 +30,7 @@ void BasicSc2Bot::addStrat(Precept precept_) {
 	precepts_onstep.push_back(precept_);
 }
 
-bool BasicSc2Bot::AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) {
+bool BasicSc2Bot::assignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure) {
 	// get a nearby worker unit that is not currently assigned to gas
 	// and assign it to harvest gas
 
@@ -234,6 +234,8 @@ float BasicSc2Bot::getValue(const sc2::Unit* unit) {
 }
 
 void BasicSc2Bot::initVariables() {
+	// initalize map index and player start id
+	
 	const sc2::ObservationInterface* observation = Observation();
 	map_name = observation->GetGameInfo().map_name;
 	if (map_name.find("Proxima") != std::string::npos) {
@@ -294,12 +296,12 @@ void BasicSc2Bot::initStartingUnits() {
 	}
 }
 
-void BasicSc2Bot::OnGameStart() {
+void BasicSc2Bot::onGameStart() {
 	Strategy* strategy = new Strategy(this);
 	setCurrentStrategy(strategy);
 
 	mobH = new MobHandler(this); // initialize mob handler 
-	locH = new LocationHandler(this);
+	locH = new LocationHandler(this); // initalize location handler
 	BasicSc2Bot::initVariables(); // initialize this first
 	BasicSc2Bot::initStartingUnits();
 	sc2::Point2D start_location = locH->getStartLocation();
@@ -337,7 +339,7 @@ void BasicSc2Bot::OnGameStart() {
 	std::cout << "Proxy Location: " << proxy_location.x << "," << proxy_location.y << std::endl;
 }
 
-void::BasicSc2Bot::OnStep_100(const sc2::ObservationInterface* obs) {
+void::BasicSc2Bot::onStep_100(const sc2::ObservationInterface* obs) {
 	// occurs every 100 steps
 	if (locH->chunksInitialized()) {
 		sc2::Point2D threat_spot = locH->getHighestThreatLocation();
@@ -351,20 +353,20 @@ void::BasicSc2Bot::OnStep_100(const sc2::ObservationInterface* obs) {
 	}
 }
 
-void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
+void::BasicSc2Bot::onStep_1000(const sc2::ObservationInterface* obs) {
 	// occurs every 1000 steps
-
-
 }
 
-void BasicSc2Bot::OnStep() {
+void BasicSc2Bot::onStep() {
+	// Executed on every step of the game
+
 	const sc2::ObservationInterface* observation = Observation();
 	int gameloop = observation->GetGameLoop();
 	if (gameloop % 100 == 0) {
-		OnStep_100(observation);
+		onStep_100(observation);
 	}
 	if (gameloop % 1000 == 0) {
-		OnStep_1000(observation);
+		onStep_1000(observation);
 	}
 
 	// update visibility data for chunks
@@ -427,6 +429,7 @@ void BasicSc2Bot::OnStep() {
 	}
 	*/
 	
+	// tell idle mobs to process directives in their queue, if any
 	std::unordered_set<Mob*> idle_mobs = mobH->getIdleMobs();
 	if (!idle_mobs.empty()) {
 		for (auto it = idle_mobs.begin(); it != idle_mobs.end(); ) {
@@ -442,6 +445,7 @@ void BasicSc2Bot::OnStep() {
 		}
 	}
 
+	// execute directives that have their conditions satisfied
 	for (Precept s : precepts_onstep) {
 		if (s.checkTriggerConditions()) {
 			s.execute();
@@ -449,7 +453,9 @@ void BasicSc2Bot::OnStep() {
 	}
 }
 
-void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
+void BasicSc2Bot::onUnitCreated(const sc2::Unit* unit) {
+	// Called upon building a new unit, initalizes key information for that unit
+
 	const sc2::ObservationInterface* observation = Observation();
 	
 	// mob already exists
@@ -527,7 +533,7 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	} */
 }
 
-void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
+void BasicSc2Bot::onBuildingConstructionComplete(const sc2::Unit* unit) {
 	Mob* mob = &mobH->getMob(*unit);
 	sc2::UNIT_TYPEID unit_type = unit->unit_type;
 	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS ||
@@ -553,11 +559,11 @@ void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 
 		// assign 3 workers to harvest this
 		for (int i = 0; i < 3; i++)
-			AssignNearbyWorkerToGasStructure(*unit);
+			assignNearbyWorkerToGasStructure(*unit);
 	}
 }
 
-void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shields) {
+void BasicSc2Bot::onUnitDamaged(const sc2::Unit* unit, float health, float shields) {
 	const sc2::ObservationInterface* observation = Observation();
 	// make Stalkers Blink away if low health
 	if (unit->unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER) {
@@ -573,7 +579,7 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 	}
 }
 
-void BasicSc2Bot::OnUnitIdle(const sc2::Unit* unit) {
+void BasicSc2Bot::onUnitIdle(const sc2::Unit* unit) {
 	Mob* mob = &mobH->getMob(*unit);
 	mobH->setMobIdle(mob, true);
 	if (mob->hasCurrentDirective()) {
@@ -586,7 +592,7 @@ void BasicSc2Bot::OnUnitIdle(const sc2::Unit* unit) {
 
 }
 
-void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
+void BasicSc2Bot::onUnitDestroyed(const sc2::Unit* unit) {
 	if (unit->alliance == sc2::Unit::Alliance::Self) {
 		
 		Mob* mob = &mobH->getMob(*unit);
@@ -601,6 +607,6 @@ void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
 	}
 }
 
-void BasicSc2Bot::OnUnitEnterVision(const sc2::Unit* unit) {
+void BasicSc2Bot::onUnitEnterVision(const sc2::Unit* unit) {
 	addEnemyUnit(unit);
 }

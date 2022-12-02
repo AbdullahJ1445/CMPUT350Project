@@ -786,9 +786,9 @@ std::unordered_set<Mob*> Directive::filterNotAssignedToThis(std::unordered_set<M
 Mob* Directive::getRandomMobFromSet(std::unordered_set<Mob*> mob_set) {
 	int index = rand() % mob_set.size();
 	auto it = mob_set.begin();
-	for (int i = 0; i < index; i++)
+	for (int i = 0; i < index; ++i)
 	{
-		it++;
+		++it;
 	}
 	return *it;
 }

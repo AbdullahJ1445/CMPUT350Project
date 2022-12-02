@@ -69,6 +69,7 @@ sc2::Point2D Base::getDefendPoint(int index) {
 }
 
 sc2::Point2D Base::getTownhall() {
+	// return the location of the main base
 	return location_townhall;
 }
 int Base::getNumBuildAreas() { 

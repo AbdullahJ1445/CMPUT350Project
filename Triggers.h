@@ -107,7 +107,11 @@ private:
 	bool debug;
 };
 
+
 class Precept {
+// Precepts are made up of one or more Directives
+// those of which get executed when all the TriggerConditions of the associated Trigger are satisfied
+
 public:
 	Precept(BasicSc2Bot* agent_);
 	~Precept();

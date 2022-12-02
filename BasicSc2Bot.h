@@ -37,7 +37,7 @@ public:
 	// public functions
 	void setCurrentStrategy(Strategy* strategy_);
 	void BasicSc2Bot::addStrat(Precept precept_);
-	bool AssignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
+	bool assignNearbyWorkerToGasStructure(const sc2::Unit& gas_structure);
 	void storeDirective(Directive directive_);
 	void storeStrategy(Strategy strategy_);
 	Directive* getLastStoredDirective();
@@ -73,21 +73,21 @@ public:
 private:
 
 	// private functions
-	void OnStep_100(const sc2::ObservationInterface* obs);
-	void OnStep_1000(const sc2::ObservationInterface* obs);
+	void onStep_100(const sc2::ObservationInterface* obs);
+	void onStep_1000(const sc2::ObservationInterface* obs);
 	void initVariables();
 	void initStartingUnits();
 	bool addEnemyUnit(const sc2::Unit* unit);
 
 	// virtual functions 
-	virtual void OnGameStart();
-	virtual void OnStep();
-	virtual void OnBuildingConstructionComplete(const sc2::Unit* unit);
-	virtual void OnUnitCreated(const sc2::Unit* unit);
-	virtual void OnUnitIdle(const sc2::Unit* unit);
-	virtual void OnUnitDamaged(const sc2::Unit* unit, float health, float shields);
-	virtual void OnUnitDestroyed(const sc2::Unit* unit);
-	virtual void OnUnitEnterVision(const sc2::Unit* unit);
+	virtual void onGameStart();
+	virtual void onStep();
+	virtual void onBuildingConstructionComplete(const sc2::Unit* unit);
+	virtual void onUnitCreated(const sc2::Unit* unit);
+	virtual void onUnitIdle(const sc2::Unit* unit);
+	virtual void onUnitDamaged(const sc2::Unit* unit, float health, float shields);
+	virtual void onUnitDestroyed(const sc2::Unit* unit);
+	virtual void onUnitEnterVision(const sc2::Unit* unit);
 
 
 	// data containers

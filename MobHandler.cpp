@@ -28,7 +28,7 @@ void MobHandler::setMobIdle(Mob* mob_, bool is_true) {
 
 void MobHandler::setMobBusy(Mob* mob_, bool is_true) {
 	// set a mob as busy
-	// a mob may be neither busy or idle (e.g. a worker harvesting minerals will be available to build)
+	// a mob may not be either busy or idle (e.g. a worker harvesting minerals will be available to build)
 
 	Mob* mob = &getMob(mob_->unit); // ensure we are pointing to the mob in our storage
 	if (is_true) {
@@ -47,7 +47,6 @@ bool MobHandler::addMob(Mob mob_) {
 		return false;
 
 	mobs_storage.emplace_back(std::make_unique<Mob>(mob_));
-	int size = mobs_storage.size();
 
 	mobs.insert(mobs_storage.back().get());
 	mob_by_tag[mob_.unit.tag] = mobs_storage.back().get();
@@ -67,8 +66,9 @@ Mob& MobHandler::getMob(const sc2::Unit& unit) {
 	return *mob_by_tag[unit.tag];
 }
 
-void MobHandler::mobDeath(Mob* mob_)
-{
+void MobHandler::mobDeath(Mob* mob_) {
+	// Remove mob from the mobs set if it is killed
+	
 	Mob* mob = &getMob(mob_->unit);
 	setMobIdle(mob, false);
 	setMobIdle(mob, false);
@@ -79,6 +79,8 @@ void MobHandler::mobDeath(Mob* mob_)
 }
 
 std::unordered_set<Mob*> MobHandler::getIdleWorkers() {
+	// get idle mobs, but specifically those that are workers
+
 	return filterByFlag(idle_mobs, FLAGS::IS_WORKER);
 }
 

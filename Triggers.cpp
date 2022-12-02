@@ -530,6 +530,8 @@ Precept::~Precept() {
 
 
 bool Precept::execute() {
+	// Execute all valid directives in the precept, will only ever be called if all trigger conditions are also met
+	
 	bool any_executed = false;
 	for (auto d : directives) {
 		if (d->execute(agent))
