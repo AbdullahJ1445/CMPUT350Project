@@ -547,7 +547,6 @@ sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
     }
 
     if (unseen_chunks.empty()) {
-        std::cout << "unseen_chunks.empty() ";
         return NO_POINT_FOUND;
     }
 
@@ -602,7 +601,6 @@ sc2::Point2D LocationHandler::getFurthestUnseenLocation(bool pathable_) {
     }
 
     if (unseen_chunks.empty()) {
-        std::cout << "unseen_chunks.empty() ";
         return NO_POINT_FOUND;
     }
 
@@ -644,7 +642,6 @@ sc2::Point2D LocationHandler::getClosestUnseenLocationToLastThreat(bool pathable
     }
 
     if (unseen_chunks.empty()) {
-        std::cout << "unseen_chunks.empty() ";
         return NO_POINT_FOUND;
     }
 
@@ -733,9 +730,6 @@ void LocationHandler::initLocations(int map_index, int p_id) {
     const sc2::ObservationInterface* observation = agent->Observation();
     initSetStartLocation();
     
-    std::cout << "map index: " << map_index << std::endl;
-    std::cout << "p_id: " << p_id << std::endl;
-
     if (map_index == 1) {
         // CACTUS VALLEY
         if (p_id == 1) {
@@ -1214,7 +1208,7 @@ void LocationHandler::initMapChunks()
     }
 
     chunks_initialized = true;
-    std::cout << std::endl << map_chunks.size() << " chunks initialized (" << pathable_count << " pathable)" << std::endl;
+    std::cout << " " << map_chunks.size() << " chunks initialized (" << pathable_count << " pathable)" << std::endl;
     agent->setLoadingProgress(4);
 }
 

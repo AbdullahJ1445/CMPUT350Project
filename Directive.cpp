@@ -378,6 +378,40 @@ bool Directive::executeSimpleActionForUnitType(BasicSc2Bot* agent) {
 	if (mobs.size() == 0)
 		return false;
 
+
+	// prefer workers that aren't carrying resources
+	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_PROBE ||
+		unit_type == sc2::UNIT_TYPEID::TERRAN_SCV ||
+		unit_type == sc2::UNIT_TYPEID::ZERG_DRONE) {
+		std::unordered_set<Mob*> not_carrying_resources;
+		std::copy_if(mobs.begin(), mobs.end(), std::inserter(not_carrying_resources, not_carrying_resources.begin()),
+			[this](Mob* m) {
+
+				// populate resource buff vector
+				std::vector<sc2::BUFF_ID> resources{
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGAS,
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASPROTOSS,
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASZERG,
+					sc2::BUFF_ID::CARRYHIGHYIELDMINERALFIELDMINERALS,
+					sc2::BUFF_ID::CARRYMINERALFIELDMINERALS
+				};
+				auto buffs = m->unit.buffs;
+				if (buffs.empty())
+					return true;
+				for (auto b : buffs) {
+					sc2::BuffID buff = b.ToType();
+					if (std::find(resources.begin(), resources.end(), b.ToType()) != resources.end()) {
+						return false;
+					}
+				}
+				return true;
+			});
+
+		if (!not_carrying_resources.empty()) {
+			mobs = not_carrying_resources;
+		}
+	}
+
 	mob = getRandomMobFromSet(mobs);
 
 	if (action_type == DISABLE_DEFAULT_DIRECTIVE) {
@@ -716,6 +750,39 @@ bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
 
 	if (mobs.size() == 0) {
 		return false;
+	}
+
+	// prefer workers that aren't carrying resources
+	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_PROBE ||
+		unit_type == sc2::UNIT_TYPEID::TERRAN_SCV ||
+		unit_type == sc2::UNIT_TYPEID::ZERG_DRONE) {
+		std::unordered_set<Mob*> not_carrying_resources;
+		std::copy_if(mobs.begin(), mobs.end(), std::inserter(not_carrying_resources, not_carrying_resources.begin()),
+			[this](Mob* m) {
+
+				// populate resource buff vector
+				std::vector<sc2::BUFF_ID> resources{
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGAS,
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASPROTOSS,
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASZERG,
+					sc2::BUFF_ID::CARRYHIGHYIELDMINERALFIELDMINERALS,
+					sc2::BUFF_ID::CARRYMINERALFIELDMINERALS
+				};
+				auto buffs = m->unit.buffs;
+				if (buffs.empty())
+					return true;
+				for (auto b : buffs) {
+					sc2::BuffID buff = b.ToType();
+					if (std::find(resources.begin(), resources.end(), b.ToType()) != resources.end()) {
+						return false;
+					}
+				}
+				return true;
+			});
+
+		if (!not_carrying_resources.empty()) {
+			mobs = not_carrying_resources;
+		}
 	}
 
 	if (action_type == SET_FLAG) {

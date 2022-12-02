@@ -79,6 +79,8 @@ public:
 	sc2::Point2D getStoredLocation(std::string identifier_);
 	int getStoredInt(std::string identifier_);
 	Directive* getLastStoredDirective();
+	void checkBuildingQueues();
+	void listUnitSummary();
 	sc2::Race getEnemyRace();
 	std::unordered_set<const sc2::Unit*> getEnemyUnits();
 
@@ -88,7 +90,8 @@ public:
 	Mob* proxy_worker;
 	std::unordered_map<size_t, Directive*> directive_by_id;
 	Strategy* current_strategy;
-	int time_of_first_attack; // recorded for testing purposes
+	int time_of_first_attack; // recorded for data gathering purposes
+	int time_first_attacked;   // recorded for data gathering purposes
 
 private:
 
@@ -130,6 +133,7 @@ private:
 	std::unordered_map<int, int> mineral_cost;
 	std::unordered_map<int, int> gas_cost;
 	std::unordered_map<int, int> food_cost;
+	std::vector<std::pair<int, sc2::UNIT_TYPEID>> units_created;     // record the timestep that each unit was created
 
 	// private variables
 	int player_start_id;

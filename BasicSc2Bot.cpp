@@ -36,6 +36,7 @@ BasicSc2Bot::BasicSc2Bot()
 	loading_progress = 0;
 	initialized = false;
 	time_of_first_attack = -1;
+	time_first_attacked = -1;
 }
 
 void BasicSc2Bot::setLoadingProgress(int loaded_) {
@@ -176,6 +177,44 @@ void BasicSc2Bot::setInitialized()
 Directive* BasicSc2Bot::getLastStoredDirective()
 {
 	return directive_storage.back().get();
+}
+
+void BasicSc2Bot::checkBuildingQueues() {
+	// cancel any queued units
+	// we only want a structure to train one unit at a time
+	const sc2::ObservationInterface* obs = Observation();
+	auto ad = obs->GetAbilityData();
+	sc2::QueryInterface* query = Query();
+	std::unordered_set<Mob*> buildings = mobH->filterByFlag(mobH->getMobs(), FLAGS::IS_STRUCTURE);
+	for (auto m : buildings) {
+		if (m->unit.orders.size() > 1) {
+			/*
+			auto ab = query->GetAbilitiesForUnit(&m->unit);
+			auto abs = ab.abilities;
+			for (auto a : abs) {
+				std::cout << "(" << ad[a.ability_id].friendly_name << " " << a.ability_id << ")";
+			}*/
+			Actions()->UnitCommand(&m->unit, sc2::ABILITY_ID::CANCEL_LAST);
+		}
+	}
+}
+
+void BasicSc2Bot::listUnitSummary() {
+	const sc2::ObservationInterface* obs = Observation();
+	auto utd = obs->GetUnitTypeData();
+	std::map<std::string, int> first_7000_steps;
+	
+	for (auto u : units_created) {
+		if (u.first <= 7000) {
+			first_7000_steps[utd[(int)u.second].name]++;
+		}
+	}
+	
+	std::cout << "Units created in first 7000 steps:" << std::endl;
+	for (auto it = first_7000_steps.begin(); it != first_7000_steps.end(); ++it) {
+		std::cout << "\t" << (*it).first << ": " << (*it).second << std::endl;
+	}
+
 }
 
 
@@ -384,7 +423,6 @@ void::BasicSc2Bot::LoadStep_01() {
 	const sc2::ObservationInterface* observation = Observation();
 	map_name = observation->GetGameInfo().map_name;
 
-	std::cout << "map_name: " << map_name;
 	if (map_name.find("Proxima") != std::string::npos)
 		map_index = 3; else
 		if (map_name.find("Vestige") != std::string::npos)
@@ -394,8 +432,6 @@ void::BasicSc2Bot::LoadStep_01() {
 				map_index = 0;
 
 	enemy_race = sc2::Race::Random;
-
-	std::cout << "Map Name: " << map_name << std::endl;
 	setLoadingProgress(1);
 }
 
@@ -412,7 +448,6 @@ void::BasicSc2Bot::LoadStep_03() {
 	Strategy* strategy = new Strategy(this);
 	setCurrentStrategy(strategy);
 	// add all starting units to their respective mobs
-	std::cout << "initializing starting units...";
 	const sc2::ObservationInterface* observation = Observation();
 	sc2::Units units = observation->GetUnits(sc2::Unit::Alliance::Self);
 	for (const sc2::Unit* u : units) {
@@ -450,7 +485,6 @@ void::BasicSc2Bot::LoadStep_03() {
 		townhall->grabNearbyMineralHarvester(this);
 		
 	}
-	std::cout << "... done." << std::endl;
 	setLoadingProgress(3);
 }
 
@@ -462,12 +496,8 @@ void::BasicSc2Bot::LoadStep_04() {
 	auto atd_fulldata = obs->GetAbilityData();
 
 	// populate data_buildings - vector of all unit types which are buildings
-	std::cout << "populating data_buildings";
 	int i = 0;
 	for (auto utd : utd_fulldata) {
-		if (i % 500 == 0) {
-			std::cout << ".";
-		}
 		if (utd.mineral_cost > 0 && std::find(utd.attributes.begin(), utd.attributes.end(), sc2::Attribute::Structure) != utd.attributes.end()) {
 			//std::cout << utd.name << " id: " << utd.unit_type_id << "  alias: " << utd.unit_alias << std::endl;
 			data_buildings.push_back(utd.unit_type_id);
@@ -481,8 +511,6 @@ void::BasicSc2Bot::LoadStep_04() {
 		}
 		i++;
 	}
-	std::cout << " " << data_buildings.size() << " building types." << std::endl;
-
 	player_start_id = locH->getPlayerIDForMap(map_index, obs->GetStartLocation());
 	sc2::Point2D start_location = locH->getStartLocation();
 	sc2::Point2D proxy_location = locH->getProxyLocation();
@@ -493,11 +521,7 @@ void::BasicSc2Bot::LoadStep_04() {
 void::BasicSc2Bot::LoadStep_05() { 
 	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
 
-	// we split the loadStrategies function into several smaller ones
-	// the ladder server was crashing with one larger function
-	std::cout << "Loading Strategies..";
 	current_strategy->loadStrategies();
-	std::cout << "..done." << std::endl;
 	setLoadingProgress(5);
 	setInitialized();
 }
@@ -525,10 +549,10 @@ void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
 	}
 	if (pathable_threat_chunk != prev_threat_chunk || threat_amount != prev_threat_amount) {
 		if (pathable_threat_spot != NO_POINT_FOUND) {
-			std::cout << "[" << obs->GetGameLoop() << "] highest threat at " << pathable_threat_spot.x << ", " << pathable_threat_spot.y << " = " << pathable_threat_chunk->getThreat() << std::endl;;
+			//std::cout << "[" << obs->GetGameLoop() << "] highest threat at " << pathable_threat_spot.x << ", " << pathable_threat_spot.y << " = " << pathable_threat_chunk->getThreat() << std::endl;;
 		}
 		else {
-			std::cout << "[" << obs->GetGameLoop() << "] no threats found." << std::endl;
+			//std::cout << "[" << obs->GetGameLoop() << "] no threats found." << std::endl;
 		}
 	}
 	prev_threat_chunk = pathable_threat_chunk;
@@ -545,6 +569,8 @@ void BasicSc2Bot::OnGameEnd() {
 	if (results[0].result == sc2::GameResult::Loss) {
 		std::cout << "[" << obs->GetGameLoop() << "] The Player has lost the match at " << gameTime(obs->GetGameLoop()) << "." << std::endl;
 	}
+
+	//listUnitSummary();
 
 }
 
@@ -751,6 +777,7 @@ void BasicSc2Bot::OnStep() {
 	}
 
 	checkGasStructures();
+	checkBuildingQueues();
 }
 
 void BasicSc2Bot::checkGasStructures() {
@@ -806,6 +833,9 @@ std::string BasicSc2Bot::gameTime(int steps_)
 
 void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	const sc2::ObservationInterface* observation = Observation();
+
+	// keep a record of the order and time in which units were created
+	units_created.push_back(std::make_pair<int, sc2::UNIT_TYPEID>(observation->GetGameLoop(), unit->unit_type)); 
 
 	if (!initialized)
 		return;
@@ -1035,6 +1065,14 @@ void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
 			dir->unassignMob(mob);
 		}
 		mobH->mobDeath(mob);
+
+		if (time_first_attacked == -1) {
+			if (sc2::DistanceSquared2D(unit->pos, locH->getStartLocation()) <= 50.0F) {
+				int gameloop = Observation()->GetGameLoop();
+				time_first_attacked = gameloop;
+				std::cout << "[" << gameloop << "] First attack by opponent at " << gameTime(gameloop) << "." << std::endl;
+			}
+		}
 	}
 }
 
