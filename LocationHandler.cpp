@@ -192,7 +192,7 @@ int LocationHandler::getIndexOfClosestBase(sc2::Point2D location_) {
 // get the index of the closest base to a location
     float distance = std::numeric_limits<float>::max();
     int lowest_index = 0;
-    for (int i = 0; i < bases.size(); i++) {
+    for (int i = 0; i < bases.size(); ++i) {
         float b_dist = sc2::DistanceSquared2D(bases[i].getTownhall(), location_);
         if (b_dist < distance) {
             lowest_index = i;
@@ -1134,11 +1134,11 @@ void LocationHandler::initMapChunks()
     // set maximums to correspond to chunk locations
     for (float x_ = min_x; x_ < game_info.playable_max.x; x_ += chunk_size) { 
         max_x = x_;
-        width++;
+        ++width;
     }
     for (float y_ = min_y; y_ < game_info.playable_max.y; y_ += chunk_size) { 
         max_y = y_; 
-        height++;
+        ++height;
     }
 
     // store information
@@ -1166,10 +1166,10 @@ void LocationHandler::initMapChunks()
     
     assert(offsets.size() == 5);
 
-    for (int j = 0; j < height; j++) {
+    for (int j = 0; j < height; ++j) {
         if (j % 2 == 0)
             std::cout << ".";
-        for (int i = 0; i < width; i++) {
+        for (int i = 0; i < width; ++i) {
             sc2::Point2D loc_ = sc2::Point2D(min_x + (i * chunk_size), min_y + (j * chunk_size));
             bool pathable_ = true;
 
@@ -1182,7 +1182,7 @@ void LocationHandler::initMapChunks()
             }
 
             if (pathable_)
-                pathable_count++;
+                ++pathable_count;
                 
             MapChunk chunk(agent, loc_, pathable_);
             map_chunk_storage.emplace_back(std::make_unique<MapChunk>(chunk));
@@ -1216,7 +1216,7 @@ void LocationHandler::setEnemyStartLocation(sc2::Point2D location_)
 {
     sc2::Point2D enemy_loc = getNearestStartLocation(location_);
 
-    for (int i = 0; i < enemy_start_locations.size(); i++) {
+    for (int i = 0; i < enemy_start_locations.size(); ++i) {
         if (enemy_start_locations[i] == enemy_loc) {
             enemy_start_location_index = i;
         }
@@ -1562,15 +1562,15 @@ MapChunk* LocationHandler::getHighestPathableThreatChunkNearLocation(sc2::Point2
 
     for (float x = chunk_min_x; x < max_x && x < chunk_max_x; x += chunk_spread) { 
         if (x < min_x) {
-            i1++;
+            ++i1;
         }
-        i2++;
+        ++i2;
     }
     for (float y = chunk_min_y; y < max_y && y < chunk_max_y; y += chunk_spread) {
         if (y < min_y) {
-            j1++;
+            ++j1;
         }
-        j2++;
+        ++j2;
     }
 
     // iterate through chunks to determine the highest threat.
@@ -1580,8 +1580,8 @@ MapChunk* LocationHandler::getHighestPathableThreatChunkNearLocation(sc2::Point2
 
     assert(map_chunk_storage.size() > (j2 * chunk_rows + i2));
 
-    for (size_t j = j1; j <= j2; j++) {
-        for (size_t i = i1; i <= i2; i++) {
+    for (size_t j = j1; j <= j2; ++j) {
+        for (size_t i = i1; i <= i2; ++i) {
             MapChunk* chunk = map_chunk_storage[j * chunk_rows + i].get();
             if (chunk->isPathable()) {
                 if (sc2::DistanceSquared2D(chunk->getLocation(), loc_) <= sq_dist) {
