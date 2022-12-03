@@ -157,7 +157,7 @@ static void runBot(int argc, char *argv[], sc2::Agent *Agent, sc2::Race race)
 
 		// my code
 		//coordinator.SetRealtime(true); // real-time simulations
-		coordinator.SetStepSize(15);   // super speedy simulations
+		coordinator.SetStepSize(7);   // super speedy simulations
 
 		coordinator.LaunchStarcraft();
 		coordinator.StartGame(Options.map);

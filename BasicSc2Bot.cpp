@@ -43,6 +43,7 @@ BasicSc2Bot::BasicSc2Bot()
 	robotics_idle = 0;
 	max_minerals = 0;
 	max_gas = 0;
+	reset_shield_overcharge = 0;
 }
 
 void BasicSc2Bot::setLoadingProgress(int loaded_) {
