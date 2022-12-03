@@ -212,6 +212,10 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << " MIN_FU(" << obs->GetFoodUsed() << ">=" << cond_value << ")";
 		}
 		return (obs->GetFoodUsed() >= cond_value) == is_true;
+	case COND::MIN_FOOD_ARMY:
+		return (obs->GetFoodArmy() >= cond_value) == is_true;
+	case COND::MAX_FOOD_ARMY:
+		return (obs->GetFoodArmy() <= cond_value) == is_true;
 	case COND::MIN_FOOD_CAP:
 		return (obs->GetFoodCap() >= cond_value) == is_true;
 	case COND::MAX_MINERALS:

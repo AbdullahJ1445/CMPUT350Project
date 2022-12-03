@@ -450,7 +450,7 @@ float BasicSc2Bot::getValue(const sc2::Unit* unit) {
 	return value;
 }
 
-void BasicSc2Bot::onGameStart() {
+void BasicSc2Bot::OnGameStart() {
 	// no longer using this, since the ladder server doesn't jive with it
 }
 
@@ -592,7 +592,7 @@ void::BasicSc2Bot::onStep_1000(const sc2::ObservationInterface* obs) {
 	prev_threat_amount = threat_amount;
 }
 
-void BasicSc2Bot::onGameEnd() {
+void BasicSc2Bot::OnGameEnd() {
 	const sc2::ObservationInterface* obs = Observation();
 	auto results = obs->GetResults();
 
@@ -600,8 +600,6 @@ void BasicSc2Bot::onGameEnd() {
 	if (results[0].result == sc2::GameResult::Win) {
 		result = "W";
 	}
-
-	std::cout << "Policies: build-" << getStoredInt("POL_BUILD_ORDER") << result << std::endl;
 
 	std::cout << "Gateway uptime: " << (int)((float) (gateways_busy * 100) / ((float)gateways_busy + (float)gateways_idle)) << "% "
 			  "\tRobotics uptime: " << (int)((float) (robotics_busy * 100) / ((float)robotics_busy + (float)robotics_idle)) << "% " << std::endl;
@@ -632,7 +630,7 @@ void BasicSc2Bot::onGameEnd() {
 
 }
 
-void BasicSc2Bot::onStep() {
+void BasicSc2Bot::OnStep() {
 	// This function is executed on every frame
 	const sc2::ObservationInterface* observation = Observation();
 	int gameloop = observation->GetGameLoop();
@@ -901,7 +899,7 @@ std::string BasicSc2Bot::gameTime(int steps_)
 	return out_str;
 }
 
-void BasicSc2Bot::onUnitCreated(const sc2::Unit* unit) {
+void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	const sc2::ObservationInterface* observation = Observation();
 
 	// keep a record of the order and time in which units were created
@@ -998,7 +996,7 @@ void BasicSc2Bot::onUnitCreated(const sc2::Unit* unit) {
 	Mob* mob = &mobH->getMob(*unit);
 }
 
-void BasicSc2Bot::onBuildingConstructionComplete(const sc2::Unit* unit) {
+void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 
 	if (!initialized)
 		return;
@@ -1037,7 +1035,7 @@ void BasicSc2Bot::onBuildingConstructionComplete(const sc2::Unit* unit) {
 	}
 }
 
-void BasicSc2Bot::onUnitDamaged(const sc2::Unit* unit, float health, float shields) {
+void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shields) {
 
 	if (!initialized)
 		return;
@@ -1102,7 +1100,7 @@ void BasicSc2Bot::onUnitDamaged(const sc2::Unit* unit, float health, float shiel
 
 }
 
-void BasicSc2Bot::onUnitIdle(const sc2::Unit* unit) {
+void BasicSc2Bot::OnUnitIdle(const sc2::Unit* unit) {
 
 	if (!initialized)
 		return;
@@ -1119,7 +1117,7 @@ void BasicSc2Bot::onUnitIdle(const sc2::Unit* unit) {
 
 }
 
-void BasicSc2Bot::onUnitDestroyed(const sc2::Unit* unit) {
+void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
 	
 	if (!initialized)
 		return;
@@ -1146,7 +1144,7 @@ void BasicSc2Bot::onUnitDestroyed(const sc2::Unit* unit) {
 	}
 }
 
-void BasicSc2Bot::onUnitEnterVision(const sc2::Unit* unit) {
+void BasicSc2Bot::OnUnitEnterVision(const sc2::Unit* unit) {
 
 	if (!initialized)
 		return;

@@ -49,6 +49,8 @@ private:
 class LocationHandler {
 public:
     LocationHandler(BasicSc2Bot* agent_);
+    MapChunk* getNextUnseenChunk(bool pathable_=true);
+    void setNextUnseenChunk(bool pathable_=true);
     sc2::Point2D getNearestStartLocation(sc2::Point2D spot);
     int getIndexOfClosestBase(sc2::Point2D location_);
     void scanChunks(const sc2::ObservationInterface* obs);
@@ -155,5 +157,7 @@ private:
     float sq_dist_threshold;
     sc2::Point2D map_center;
     MapChunk* center_chunk;
+    MapChunk* next_unseen_pathable_chunk;
+    MapChunk* next_unseen_chunk;
     
 };
