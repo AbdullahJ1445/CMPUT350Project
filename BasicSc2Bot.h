@@ -105,6 +105,7 @@ private:
 	void OnStep_1000(const sc2::ObservationInterface* obs);
 	bool addEnemyUnit(const sc2::Unit* unit);
 	bool flushOrders();
+	void checkBuildingsStatus();
 	void checkGasStructures();
 
 	// virtual functions 
@@ -145,6 +146,12 @@ private:
 	int timer_3;
 	int loading_progress;
 	bool initialized;
+	int gateways_busy;
+	int gateways_idle;
+	int robotics_busy;
+	int robotics_idle;
+	int max_minerals;
+	int max_gas;
 	
 	int map_index; // 1 = CactusValleyLE,  2 = BelShirVestigeLE,  3 = ProximaStationLE
 };
