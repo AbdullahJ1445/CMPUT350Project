@@ -37,6 +37,7 @@ bool MapChunk::wasSeen() {
 }
 
 bool MapChunk::isPathable() {
+    // return whether or not a unit can walk on this spot
     return pathable;
 }
 
@@ -45,6 +46,7 @@ bool MapChunk::hasEnemyUnits() {
 }
 
 bool MapChunk::hasEnemyStructures() {
+    // return whether or not enemies have buildings on this spot
     return enemy_structure_count > 0;
 }
 
@@ -53,6 +55,7 @@ double MapChunk::getThreat() {
 }
 
 float MapChunk::distSquaredFromStart() {
+    // squared distance for efficency
     return dist_squared_from_start;
 }
 
@@ -1148,8 +1151,7 @@ bool LocationHandler::spotReachable(const sc2::ObservationInterface* obs_, sc2::
     return true;
 }
 
-void LocationHandler::initMapChunks()
-{
+void LocationHandler::initMapChunks() {
     std::cout << "initializing map chunks";
     int pathable_count = 0;
 
@@ -1416,8 +1418,7 @@ sc2::Point2D LocationHandler::getProxyLocation() {
     return proxy_location;
 }
 
-sc2::Point2D LocationHandler::getStartLocation()
-{
+sc2::Point2D LocationHandler::getStartLocation() {
     return start_location;
 }
 
