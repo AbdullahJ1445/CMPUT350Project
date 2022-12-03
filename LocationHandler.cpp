@@ -171,6 +171,101 @@ LocationHandler::LocationHandler(BasicSc2Bot* agent_){
     high_threat_pathable_chunk_away_from_start = nullptr;
     map_center = INVALID_POINT;
     center_chunk = nullptr;
+    next_unseen_chunk = nullptr;
+    next_unseen_pathable_chunk = nullptr;
+}
+
+sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
+    // Gets the closest unseen location to the center of mass of our army.
+    // Only changes values once the previous one has been searched.
+
+    MapChunk* next = getNextUnseenChunk();
+    if (next != nullptr) {
+        return next->getLocation();
+    }
+    else {
+        return NO_POINT_FOUND;
+    }
+}
+
+
+MapChunk* LocationHandler::getNextUnseenChunk(bool pathable_) {
+    // gets the next unseen chunk that should be searched when exploring the map
+    if (pathable_) {
+        if (next_unseen_pathable_chunk == nullptr) {
+            setNextUnseenChunk(pathable_);
+        }
+        else {
+            if (next_unseen_pathable_chunk->wasSeen()) {
+                setNextUnseenChunk(pathable_);
+            }
+        }
+        
+        return next_unseen_pathable_chunk;
+    }
+    else {
+        if (next_unseen_chunk == nullptr) {
+            setNextUnseenChunk(pathable_);
+        }
+        else {
+            if (next_unseen_chunk->wasSeen()) {
+                setNextUnseenChunk(pathable_);
+            }
+        }
+        return next_unseen_chunk;
+    }
+}
+
+void LocationHandler::setNextUnseenChunk(bool pathable_) {
+    // sets the next unseen chunk to be the closest unseen chunk to the center of mass of our army
+
+    sc2::Point2D center_of_mass = getCenterOfArmy();
+
+    MapChunk* nearest_chunk = nullptr;
+
+    // gets the closest chunk location to any of the player's units
+    std::unordered_set<MapChunk*> chunkset;
+    std::unordered_set<MapChunk*> unseen_chunks;
+    if (pathable_)
+        chunkset = pathable_map_chunks;
+    else
+        chunkset = map_chunks;
+
+    for (auto it = chunkset.begin(); it != chunkset.end(); ++it) {
+        if (!(*it)->wasSeen()) {
+            unseen_chunks.insert(*it);
+        }
+    }
+
+    if (unseen_chunks.empty()) {
+        if (pathable_) {
+            next_unseen_pathable_chunk = nullptr;
+        }
+        else {
+            next_unseen_chunk = nullptr;
+        }
+    }
+
+    MapChunk* closest_chunk = nullptr;
+    float closest_dist = std::numeric_limits<float>::max();
+
+    for (auto it = unseen_chunks.begin(); it != unseen_chunks.end(); ++it) {
+        sc2::Point2D loc = (*it)->getLocation();
+
+        float dist = sc2::DistanceSquared2D(center_of_mass, loc);
+        if (dist < closest_dist) {
+            closest_chunk = (*it);
+            closest_dist = dist;
+        }
+    }
+
+    if (pathable_) {
+        next_unseen_pathable_chunk = closest_chunk;
+    }
+    else {
+        next_unseen_chunk = closest_chunk;
+    }
+
 }
 
 sc2::Point2D LocationHandler::getNearestStartLocation(sc2::Point2D spot) {
@@ -511,7 +606,7 @@ sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
     if (unseen) {
         
         //return getClosestUnseenLocation(pathable_);
-        return getFurthestUnseenLocation(pathable_);
+        return getClosestUnseenLocation(pathable_);
         //return getClosestUnseenLocationToLastThreat(pathable_);
     }
     //std::cout << "(no-unseen)";
@@ -529,59 +624,6 @@ sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
     //std::cout << "(return[" << lowest_loc.x << "," << lowest_loc.y << "])";
 
     return lowest_loc;
-}
-
-sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
-    // gets the closest chunk location to any of the player's units
-    std::unordered_set<MapChunk*> chunkset;
-    std::unordered_set<MapChunk*> unseen_chunks;
-    if (pathable_)
-        chunkset = pathable_map_chunks;
-    else
-        chunkset = map_chunks;
-
-    for (auto it = chunkset.begin(); it != chunkset.end(); ++it) {
-        if (!(*it)->wasSeen()) {
-            unseen_chunks.insert(*it);
-        }
-    }
-
-    if (unseen_chunks.empty()) {
-        return NO_POINT_FOUND;
-    }
-
-    std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
-    std::unordered_set<Mob*> flying_mobs = agent->mobH->filterByFlag(mobs, FLAGS::IS_FLYING);
-    
-    // should not happen, but lets make sure... this would mean game over
-    if (mobs.empty())
-        return NO_POINT_FOUND;
-
-    float closest_dist = std::numeric_limits<float>::max();
-    sc2::Point2D closest_loc = NO_POINT_FOUND;
-
-    for (auto it = unseen_chunks.begin(); it != unseen_chunks.end(); ++it) {
-        sc2::Point2D loc = (*it)->getLocation();
-        Mob* closest_mob = nullptr;
-        if (!pathable_ && !(*it)->isPathable()) {
-            // if a chunk can only be reached by flying units
-            closest_mob = Directive::getClosestToLocation(flying_mobs , loc);
-        }
-        else {
-            closest_mob = Directive::getClosestToLocation(mobs, loc);
-        }
-
-        if (closest_mob == nullptr)
-            continue;
-
-        float dist = sc2::DistanceSquared2D(closest_mob->unit.pos, loc);
-        if (dist < closest_dist) {
-            closest_loc = loc;
-            closest_dist = dist;
-        }
-    }
-
-    return closest_loc;
 }
 
 sc2::Point2D LocationHandler::getFurthestUnseenLocation(bool pathable_) {

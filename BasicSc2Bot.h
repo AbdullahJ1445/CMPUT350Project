@@ -109,15 +109,15 @@ private:
 	void checkGasStructures();
 
 	// virtual functions 
-	virtual void onGameStart();
-	virtual void onStep();
-	virtual void onGameEnd();
-	virtual void onBuildingConstructionComplete(const sc2::Unit* unit);
-	virtual void onUnitCreated(const sc2::Unit* unit);
-	virtual void onUnitIdle(const sc2::Unit* unit);
-	virtual void onUnitDamaged(const sc2::Unit* unit, float health, float shields);
-	virtual void onUnitDestroyed(const sc2::Unit* unit);
-	virtual void onUnitEnterVision(const sc2::Unit* unit);
+	virtual void OnGameStart();
+	virtual void OnStep();
+	virtual void OnGameEnd();
+	virtual void OnBuildingConstructionComplete(const sc2::Unit* unit);
+	virtual void OnUnitCreated(const sc2::Unit* unit);
+	virtual void OnUnitIdle(const sc2::Unit* unit);
+	virtual void OnUnitDamaged(const sc2::Unit* unit, float health, float shields);
+	virtual void OnUnitDestroyed(const sc2::Unit* unit);
+	virtual void OnUnitEnterVision(const sc2::Unit* unit);
 
 
 	// data containers
