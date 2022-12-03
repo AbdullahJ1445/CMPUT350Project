@@ -1908,6 +1908,7 @@ void Strategy::loadStrategies() {
 			bot->addStrat(train_voidray);
 		}
 		{	// void rays clean up
+			// in case opponent tries to drag game out with flying buildings
 			Precept flyers_search(bot);
 			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_FLYING}, sc2::ABILITY_ID::ATTACK, bot->locH->getBestEnemyLocation(), 4.0F);
 			Trigger t(bot);

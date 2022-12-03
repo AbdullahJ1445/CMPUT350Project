@@ -109,6 +109,7 @@ private:
 	void checkGasStructures();
 
 	// virtual functions 
+	// These functions must use PascalCase instead of camelCase since they must match the sc2 api's function names
 	virtual void OnGameStart();
 	virtual void OnStep();
 	virtual void OnGameEnd();
