@@ -36,6 +36,7 @@ BasicSc2Bot::BasicSc2Bot()
 	loading_progress = 0;
 	initialized = false;
 	time_of_first_attack = -1;
+	debug_mode = false;
 }
 
 void BasicSc2Bot::setLoadingProgress(int loaded_) {
@@ -173,6 +174,11 @@ void BasicSc2Bot::setInitialized()
 	initialized = true;
 }
 
+void BasicSc2Bot::setDebugMode(bool is_true)
+{
+	debug_mode = is_true;
+}
+
 Directive* BasicSc2Bot::getLastStoredDirective()
 {
 	return directive_storage.back().get();
@@ -293,6 +299,11 @@ bool BasicSc2Bot::isGeyser(const sc2::Unit* unit_) {
 		type_ == sc2::UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER);
 }
 
+bool BasicSc2Bot::getDebugMode()
+{
+	return debug_mode;
+}
+
 
 std::vector<sc2::Attribute> BasicSc2Bot::getAttributes(const sc2::Unit* unit) {
 	// get attributes for a unit
@@ -376,6 +387,7 @@ float BasicSc2Bot::getValue(const sc2::Unit* unit) {
 
 void BasicSc2Bot::OnGameStart() {
 	// no longer using this, since the ladder server doesn't jive with it
+	//setDebugMode(true);
 }
 
 void::BasicSc2Bot::LoadStep_01() { 
@@ -751,6 +763,9 @@ void BasicSc2Bot::OnStep() {
 	}
 
 	checkGasStructures();
+	if (debug_mode)
+		Debug()->SendDebug();
+	
 }
 
 void BasicSc2Bot::checkGasStructures() {

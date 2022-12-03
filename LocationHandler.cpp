@@ -77,6 +77,21 @@ void MapChunk::checkVision(const sc2::ObservationInterface* obs) {
                 threat = 0.0f;
         }
     }
+    if (agent->getDebugMode() && pathable) {
+        float z_loc = obs->TerrainHeight(location);
+        sc2::Point3D loc3D(location.x, location.y, z_loc);
+        sc2::Color color(255, 255, 255);
+        if (threat > 0) {
+            color = sc2::Color(255, 128, 0);
+        }
+        if (agent->locH->getHighestPathableThreatChunk() == this) {
+            color = sc2::Color(255, 0, 0);
+        }
+        for (float rad = 0.2f; rad > 0.0f; rad -= 0.05f) {
+            agent->Debug()->DebugSphereOut(loc3D, rad, color);
+        }
+        
+    }
 }
 
 bool MapChunk::inVision(const sc2::ObservationInterface* obs) {

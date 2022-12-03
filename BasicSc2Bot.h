@@ -57,6 +57,7 @@ public:
 	void resetTimer2();
 	void resetTimer3();
 	void setInitialized();
+	void setDebugMode(bool is_true);
 	std::string gameTime(int steps_);
 
 	// various bool functions
@@ -67,6 +68,7 @@ public:
 	void storeInt(std::string identifier_, int value_);
 	bool isMineralPatch(const sc2::Unit* unit_);
 	bool isGeyser(const sc2::Unit* unit_);
+	bool getDebugMode();
 
 	// various getters
 	std::vector<sc2::Attribute> getAttributes(const sc2::Unit* unit);
@@ -141,6 +143,7 @@ private:
 	int timer_3;
 	int loading_progress;
 	bool initialized;
+	bool debug_mode;
 	
 	int map_index; // 1 = CactusValleyLE,  2 = BelShirVestigeLE,  3 = ProximaStationLE
 };
