@@ -589,7 +589,7 @@ bool Directive::executeProtossNexusBatteryOvercharge(BasicSc2Bot* agent) {
 
 }
 
-bool Directive::executeProtossNexusBatteryOvercharge(BasicSc2Bot* agent) {
+bool Directive::executeProtossNexusChronoboost(BasicSc2Bot* agent) {
 	// this is more complex than it originally seemed
 	// must find the clostest nexus to the given location
 	// that has the chronoboost ability ready
