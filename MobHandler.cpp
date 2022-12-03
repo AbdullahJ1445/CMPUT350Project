@@ -47,7 +47,6 @@ bool MobHandler::addMob(Mob mob_) {
 		return false;
 
 	mobs_storage.emplace_back(std::make_unique<Mob>(mob_));
-	int size = mobs_storage.size();
 
 	mobs.insert(mobs_storage.back().get());
 	mob_by_tag[mob_.unit.tag] = mobs_storage.back().get();
@@ -93,6 +92,7 @@ bool MobHandler::nearbyMobsWithFlagsAttackTarget(std::unordered_set<FLAGS> flags
 }
 
 std::unordered_set<Mob*> MobHandler::getIdleWorkers() {
+	// get idle mobs, but specifically those that are workers
 	return filterByFlag(idle_mobs, FLAGS::IS_WORKER);
 }
 

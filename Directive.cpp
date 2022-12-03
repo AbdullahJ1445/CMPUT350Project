@@ -722,7 +722,7 @@ bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
 		if (action_type == ACTION_TYPE::NEAR_LOCATION) {
 			while (!query_interface->Placement(ability, location)) {
 				location = uniform_random_point_in_circle(target_location, proximity);
-				i++;
+				++i;
 				if (i > 20) {
 					// can't find a suitable spot to build
 					return false;
@@ -1064,9 +1064,9 @@ std::unordered_set<Mob*> Directive::filterNotAssignedToThis(std::unordered_set<M
 Mob* Directive::getRandomMobFromSet(std::unordered_set<Mob*> mob_set) {
 	int index = rand() % mob_set.size();
 	auto it = mob_set.begin();
-	for (int i = 0; i < index; i++)
+	for (int i = 0; i < index; ++i)
 	{
-		it++;
+		++it;
 	}
 	return *it;
 }

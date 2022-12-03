@@ -96,28 +96,28 @@ public:
 private:
 
 	// private functions
-	void LoadStep_01();
-	void LoadStep_02();
-	void LoadStep_03();
-	void LoadStep_04();
-	void LoadStep_05();
-	void OnStep_100(const sc2::ObservationInterface* obs);
-	void OnStep_1000(const sc2::ObservationInterface* obs);
+	void loadStep_01(); // breaking loading into sequential segments, so that nothing is referenced before it is initialized
+	void loadStep_02();
+	void loadStep_03();
+	void loadStep_04();
+	void loadStep_05();
+	void onStep_100(const sc2::ObservationInterface* obs);
+	void onStep_1000(const sc2::ObservationInterface* obs);
 	bool addEnemyUnit(const sc2::Unit* unit);
 	bool flushOrders();
 	void checkBuildingsStatus();
 	void checkGasStructures();
 
 	// virtual functions 
-	virtual void OnGameStart();
-	virtual void OnStep();
-	virtual void OnGameEnd();
-	virtual void OnBuildingConstructionComplete(const sc2::Unit* unit);
-	virtual void OnUnitCreated(const sc2::Unit* unit);
-	virtual void OnUnitIdle(const sc2::Unit* unit);
-	virtual void OnUnitDamaged(const sc2::Unit* unit, float health, float shields);
-	virtual void OnUnitDestroyed(const sc2::Unit* unit);
-	virtual void OnUnitEnterVision(const sc2::Unit* unit);
+	virtual void onGameStart();
+	virtual void onStep();
+	virtual void onGameEnd();
+	virtual void onBuildingConstructionComplete(const sc2::Unit* unit);
+	virtual void onUnitCreated(const sc2::Unit* unit);
+	virtual void onUnitIdle(const sc2::Unit* unit);
+	virtual void onUnitDamaged(const sc2::Unit* unit, float health, float shields);
+	virtual void onUnitDestroyed(const sc2::Unit* unit);
+	virtual void onUnitEnterVision(const sc2::Unit* unit);
 
 
 	// data containers

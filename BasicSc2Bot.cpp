@@ -450,12 +450,11 @@ float BasicSc2Bot::getValue(const sc2::Unit* unit) {
 	return value;
 }
 
-void BasicSc2Bot::OnGameStart() {
+void BasicSc2Bot::onGameStart() {
 	// no longer using this, since the ladder server doesn't jive with it
 }
 
-void::BasicSc2Bot::LoadStep_01() { 
-	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
+void::BasicSc2Bot::loadStep_01() { 
 
 	const sc2::ObservationInterface* observation = Observation();
 	map_name = observation->GetGameInfo().map_name;
@@ -472,15 +471,13 @@ void::BasicSc2Bot::LoadStep_01() {
 	setLoadingProgress(1);
 }
 
-void::BasicSc2Bot::LoadStep_02() {
+void::BasicSc2Bot::loadStep_02() {
 	mobH = new MobHandler(this); // initialize mob handler 
-	locH = new LocationHandler(this); // initialize locationg handler
+	locH = new LocationHandler(this); // initialize location handler
 	setLoadingProgress(2);
 }
 
-void::BasicSc2Bot::LoadStep_03() {
-	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
-
+void::BasicSc2Bot::loadStep_03() {
 
 	Strategy* strategy = new Strategy(this);
 	setCurrentStrategy(strategy);
@@ -525,8 +522,7 @@ void::BasicSc2Bot::LoadStep_03() {
 	setLoadingProgress(3);
 }
 
-void::BasicSc2Bot::LoadStep_04() { 
-	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
+void::BasicSc2Bot::loadStep_04() { 
 
 	const sc2::ObservationInterface* obs = Observation();
 	auto utd_fulldata = obs->GetUnitTypeData();
@@ -546,7 +542,7 @@ void::BasicSc2Bot::LoadStep_04() {
 			gas_cost[(int)utd.unit_type_id] = utd.vespene_cost;
 			food_cost[(int)utd.unit_type_id] = utd.food_required;
 		}
-		i++;
+		++i;
 	}
 	player_start_id = locH->getPlayerIDForMap(map_index, obs->GetStartLocation());
 	sc2::Point2D start_location = locH->getStartLocation();
@@ -555,8 +551,7 @@ void::BasicSc2Bot::LoadStep_04() {
 	locH->initLocations(map_index, player_start_id);
 }
 
-void::BasicSc2Bot::LoadStep_05() { 
-	// breaking loading into sequential segments, so that nothing is referenced before it is initialized
+void::BasicSc2Bot::loadStep_05() { 
 
 	current_strategy->loadStrategies();
 	setLoadingProgress(5);
@@ -565,7 +560,7 @@ void::BasicSc2Bot::LoadStep_05() {
 
 
 
-void::BasicSc2Bot::OnStep_100(const sc2::ObservationInterface* obs) {
+void::BasicSc2Bot::onStep_100(const sc2::ObservationInterface* obs) {
 	// occurs every 100 steps
 	if (locH->chunksInitialized()) {
 		locH->calculateHighestThreatForChunks();
@@ -574,7 +569,7 @@ void::BasicSc2Bot::OnStep_100(const sc2::ObservationInterface* obs) {
 	flushOrders();
 }
 
-void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
+void::BasicSc2Bot::onStep_1000(const sc2::ObservationInterface* obs) {
 	// occurs every 1000 steps
 	static MapChunk* prev_threat_chunk = nullptr;
 	static double prev_threat_amount = 0;
@@ -597,7 +592,7 @@ void::BasicSc2Bot::OnStep_1000(const sc2::ObservationInterface* obs) {
 	prev_threat_amount = threat_amount;
 }
 
-void BasicSc2Bot::OnGameEnd() {
+void BasicSc2Bot::onGameEnd() {
 	const sc2::ObservationInterface* obs = Observation();
 	auto results = obs->GetResults();
 
@@ -637,7 +632,8 @@ void BasicSc2Bot::OnGameEnd() {
 
 }
 
-void BasicSc2Bot::OnStep() {
+void BasicSc2Bot::onStep() {
+	// This function is executed on every frame
 	const sc2::ObservationInterface* observation = Observation();
 	int gameloop = observation->GetGameLoop();
 
@@ -673,12 +669,12 @@ void BasicSc2Bot::OnStep() {
 				if ((*it)->unit_type == sc2::UNIT_TYPEID::PROTOSS_PROBE) {
 					if (num_set == 1) {
 						proxy_probe = (*it);
-						num_set++;
+						++num_set;
 						break;
 					}
 					if (num_set == 0) {
 						decoy_probe = (*it);
-						num_set++;
+						++num_set;
 						continue;
 					}
 				}
@@ -735,19 +731,19 @@ void BasicSc2Bot::OnStep() {
 	}
 
 	if (gameloop >= 1 && loading_progress == 0) {
-		LoadStep_01();
+		loadStep_01();
 	}
 	if (gameloop >= 2 && loading_progress == 1) {
-		LoadStep_02();
+		loadStep_02();
 	}
 	if (gameloop >= 3 && loading_progress == 2) {
-		LoadStep_03();
+		loadStep_03();
 	}
 	if (gameloop >= 4 && loading_progress == 3) {
-		LoadStep_04();
+		loadStep_04();
 	}
 	if (gameloop >= 5 && loading_progress == 4) {
-		LoadStep_05();
+		loadStep_05();
 	}
 
 	if (!initialized)
@@ -820,7 +816,7 @@ void BasicSc2Bot::OnStep() {
 		}
 	}
 
-
+	// tell idle mobs to process directives in their queue, if any
 	std::unordered_set<Mob*> idle_mobs = mobH->getIdleMobs();
 	if (!idle_mobs.empty()) {
 		for (auto it = idle_mobs.begin(); it != idle_mobs.end(); ) {
@@ -836,6 +832,7 @@ void BasicSc2Bot::OnStep() {
 		}
 	}
 
+	// execute directives that have their conditions satisfied
 	for (Precept s : precepts_onstep) {
 		if (s.checkTriggerConditions()) {
 			s.execute();
@@ -843,10 +840,10 @@ void BasicSc2Bot::OnStep() {
 	}
 
 	if (gameloop % 100 == 0) {
-		OnStep_100(observation);
+		onStep_100(observation);
 	}
 	if (gameloop % 1000 == 0) {
-		OnStep_1000(observation);
+		onStep_1000(observation);
 	}
 
 	checkGasStructures();
@@ -891,7 +888,7 @@ std::string BasicSc2Bot::gameTime(int steps_)
 	int seconds = (steps_ * 0.0446);
 	int minutes;
 	for (minutes = 0; seconds >= 60; seconds -= 60) {
-		minutes++;
+		++minutes;
 	}
 
 	out_str += std::to_string(minutes);
@@ -904,7 +901,7 @@ std::string BasicSc2Bot::gameTime(int steps_)
 	return out_str;
 }
 
-void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
+void BasicSc2Bot::onUnitCreated(const sc2::Unit* unit) {
 	const sc2::ObservationInterface* observation = Observation();
 
 	// keep a record of the order and time in which units were created
@@ -1001,7 +998,7 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	Mob* mob = &mobH->getMob(*unit);
 }
 
-void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
+void BasicSc2Bot::onBuildingConstructionComplete(const sc2::Unit* unit) {
 
 	if (!initialized)
 		return;
@@ -1019,7 +1016,7 @@ void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 		
 		int num_grab = getStoredInt("_GRAB_WORKERS_ON_EXPAND");
 		if (num_grab > 0) {
-			for (int i = 0; i < num_grab; i++) {
+			for (int i = 0; i < num_grab; ++i) {
 				mob->grabNearbyMineralHarvester(this, false, true);
 			}
 		}
@@ -1040,7 +1037,7 @@ void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 	}
 }
 
-void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shields) {
+void BasicSc2Bot::onUnitDamaged(const sc2::Unit* unit, float health, float shields) {
 
 	if (!initialized)
 		return;
@@ -1105,7 +1102,7 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 
 }
 
-void BasicSc2Bot::OnUnitIdle(const sc2::Unit* unit) {
+void BasicSc2Bot::onUnitIdle(const sc2::Unit* unit) {
 
 	if (!initialized)
 		return;
@@ -1122,7 +1119,7 @@ void BasicSc2Bot::OnUnitIdle(const sc2::Unit* unit) {
 
 }
 
-void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
+void BasicSc2Bot::onUnitDestroyed(const sc2::Unit* unit) {
 	
 	if (!initialized)
 		return;
@@ -1149,7 +1146,7 @@ void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
 	}
 }
 
-void BasicSc2Bot::OnUnitEnterVision(const sc2::Unit* unit) {
+void BasicSc2Bot::onUnitEnterVision(const sc2::Unit* unit) {
 
 	if (!initialized)
 		return;

@@ -268,7 +268,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			for (auto m : filtered_mobs) {
 				if (!m->unit.orders.empty()) {
 					if (m->unit.orders.front().ability_id == ability_id) {
-						count++;
+						++count;
 					}
 				}
 			}
@@ -292,7 +292,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			for (auto m : filtered_mobs) {
 				if (!m->unit.orders.empty()) {
 					if (m->unit.orders.front().ability_id == ability_id) {
-						count++;
+						++count;
 					}
 				}
 			}
@@ -898,6 +898,9 @@ Precept::~Precept() {
 
 
 bool Precept::execute() {
+	// Execute all valid directives in the precept, will only ever be called if all trigger conditions are also met
+
+	assert(checkTriggerConditions());
 	bool any_executed = false;
 	for (auto d : directives) {
 		if (d->execute(agent))
