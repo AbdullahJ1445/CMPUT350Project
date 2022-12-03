@@ -750,43 +750,13 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             exp_1.setRallyPoint(73, 158);
             bases.push_back(exp_1); // radius 6.0F
 
-            /*
-            Base exp_2(54.5, 132.5);
+            Base exp_2(93.5, 156.5);
+            exp_2.addDefendPoint(97, 153);
             bases.push_back(exp_2);
-
-            Base exp_3(45.5, 20.5);
+ 
+            Base exp_3(54.5, 132.5);
+            exp_3.addDefendPoint(58, 130);
             bases.push_back(exp_3);
-
-            Base exp_4(93.5, 156.5);
-            bases.push_back(exp_4);
-
-            Base exp_5(35.5, 93.5);
-            bases.push_back(exp_5);
-
-            Base exp_6(30.5, 66.5);
-            bases.push_back(exp_6);
-
-            Base exp_7(132.5, 137.5);
-            bases.push_back(exp_7);
-
-            Base exp_8(59.5, 54.5);
-            bases.push_back(exp_8);
-
-            Base exp_9(161.5, 125.5);
-            bases.push_back(exp_9);
-
-            Base exp_10(156.5, 98.5);
-            bases.push_back(exp_10);
-
-            Base exp_11(98.5, 35.5);
-            bases.push_back(exp_11);
-
-            Base exp_12(125.5, 30.5);
-            bases.push_back(exp_12);
-
-            Base exp_13(137.5, 59.5);
-            bases.push_back(exp_13);
-            */
         }
         else if (p_id == 2) {
             
@@ -805,6 +775,14 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             exp_1.addDefendPoint(152, 128); // radius 6.0F
             exp_1.setRallyPoint(158, 119);
             bases.push_back(exp_1);
+
+            Base exp_2(156.5, 98.5);
+            exp_2.addDefendPoint(153, 95);
+            bases.push_back(exp_2);
+
+            Base exp_3(132.5, 137.5);
+            exp_3.addDefendPoint(130, 134);
+            bases.push_back(exp_3);
         }
         else if (p_id == 3) {
             
@@ -822,6 +800,14 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             exp_1.addDefendPoint(128, 40); // radius 6.0F
             exp_1.setRallyPoint(119, 34);
             bases.push_back(exp_1);
+
+            Base exp_2(95.5, 35.5);
+            exp_2.addDefendPoint(95, 39);
+            bases.push_back(exp_2);
+
+            Base exp_3(137.5, 59.5);
+            exp_3.addDefendPoint(134, 62);
+            bases.push_back(exp_3);
         }
         else if (p_id == 4) {
             initAddEnemyStartLocation(enemy_start_location = sc2::Point2D(33.5, 158.5));
@@ -840,6 +826,14 @@ void LocationHandler::initLocations(int map_index, int p_id) {
             exp_1.addDefendPoint(40, 64);  // radius 6.0F
             exp_1.setRallyPoint(34, 73);
             bases.push_back(exp_1);
+
+            Base exp_2(35.5, 93.5);
+            exp_2.addDefendPoint(39, 97);
+            bases.push_back(exp_2);
+
+            Base exp_3(59.5, 54.5);
+            exp_3.addDefendPoint(62, 58);
+            bases.push_back(exp_3);
         }
     }
 
@@ -1597,7 +1591,7 @@ MapChunk* LocationHandler::getHighestPathableThreatChunkNearLocation(sc2::Point2
 }
 
 sc2::Point2D LocationHandler::getThreatNearStart() {
-    MapChunk* chunk = getHighestPathableThreatChunkNearLocation(start_location, 50.0F);
+    MapChunk* chunk = getHighestPathableThreatChunkNearLocation(start_location, 70.0F);
     if (chunk == nullptr) {
         return NO_POINT_FOUND;
     }

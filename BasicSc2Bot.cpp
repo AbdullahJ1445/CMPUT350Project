@@ -37,6 +37,12 @@ BasicSc2Bot::BasicSc2Bot()
 	initialized = false;
 	time_of_first_attack = -1;
 	time_first_attacked = -1;
+	gateways_busy = 0;
+	gateways_idle = 0;
+	robotics_busy = 0;
+	robotics_idle = 0;
+	max_minerals = 0;
+	max_gas = 0;
 }
 
 void BasicSc2Bot::setLoadingProgress(int loaded_) {
@@ -385,6 +391,37 @@ bool BasicSc2Bot::flushOrders()
 	return any_flushed;
 }
 
+void BasicSc2Bot::checkBuildingsStatus() {
+	// record how building gateways and robotics facilities are
+	std::unordered_set<Mob*> structures = mobH->filterByFlag(mobH->getMobs(), FLAGS::IS_STRUCTURE);
+	std::unordered_set<Mob*> gateways;
+	std::unordered_set<Mob*> robotics;
+
+	std::copy_if(structures.begin(), structures.end(), std::inserter(gateways, gateways.begin()),
+		[](Mob* m) { return (m->unit.unit_type == sc2::UNIT_TYPEID::PROTOSS_GATEWAY && m->unit.build_progress == 1.0); });
+
+	std::copy_if(structures.begin(), structures.end(), std::inserter(robotics, robotics.begin()),
+		[](Mob* m) { return (m->unit.unit_type == sc2::UNIT_TYPEID::PROTOSS_GATEWAY && m->unit.build_progress == 1.0); });
+	
+	for (auto m : gateways) {
+		if (m->unit.orders.empty()) {
+			gateways_idle++;
+		}
+		else {
+			gateways_busy++;
+		}
+	}
+
+	for (auto m : robotics) {
+		if (m->unit.orders.empty()) {
+			robotics_idle++;
+		}
+		else {
+			robotics_busy++;
+		}
+	}
+}
+
 int BasicSc2Bot::getMineralCost(const sc2::Unit* unit) {
 	return mineral_cost[(int)unit->unit_type];
 }
@@ -528,6 +565,7 @@ void::BasicSc2Bot::onStep_100(const sc2::ObservationInterface* obs) {
 	if (locH->chunksInitialized()) {
 		locH->calculateHighestThreatForChunks();
 	}
+	checkBuildingsStatus();
 	flushOrders();
 }
 
@@ -558,6 +596,17 @@ void BasicSc2Bot::onGameEnd() {
 	const sc2::ObservationInterface* obs = Observation();
 	auto results = obs->GetResults();
 
+	std::string result = "L";
+	if (results[0].result == sc2::GameResult::Win) {
+		result = "W";
+	}
+
+	std::cout << "Policies: build-" << getStoredInt("POL_BUILD_ORDER") << result << std::endl;
+
+	std::cout << "Gateway uptime: " << (int)((float) (gateways_busy * 100) / ((float)gateways_busy + (float)gateways_idle)) << "% "
+			  "\tRobotics uptime: " << (int)((float) (robotics_busy * 100) / ((float)robotics_busy + (float)robotics_idle)) << "% " << std::endl;
+	std::cout << "Max minerals: " << max_minerals << "\tMax gas: " << max_gas << std::endl;
+
 	if (results[0].result == sc2::GameResult::Win) {
 		std::cout << "[" << obs->GetGameLoop() << "] The Player has won the match at " << gameTime(obs->GetGameLoop()) << "." << std::endl;
 		std::cout << "WIN AGAINST ";
@@ -566,6 +615,10 @@ void BasicSc2Bot::onGameEnd() {
 		std::cout << "[" << obs->GetGameLoop() << "] The Player has lost the match at " << gameTime(obs->GetGameLoop()) << "." << std::endl;
 		std::cout << "LOSS AGAINST ";
 	}
+
+
+
+
 	
 	if (enemy_race == sc2::Race::Protoss)
 		std::cout << "PROTOSS";
@@ -586,6 +639,16 @@ void BasicSc2Bot::onStep() {
 
 	// this block of code allows the proxy worker to be sent immediately, without waiting for loading to complete on Bel'Shir VestigeLE and ProximStationLE
 	static bool proxy_sent = false;
+
+	int count_minerals = observation->GetMinerals();
+	int count_gas = observation->GetVespene();
+
+	if (count_minerals > max_minerals) {
+		max_minerals = count_minerals;
+	}
+	if (count_gas > max_gas) {
+		max_gas = count_gas;
+	}
 
 	if (!proxy_sent && map_index > 0) {
 		const sc2::Units allied_units = observation->GetUnits(sc2::Unit::Alliance::Self);
