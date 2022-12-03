@@ -123,8 +123,8 @@ private:
 
 	bool executeSimpleActionForUnitType(BasicSc2Bot* agent);
 	bool executeBuildGasStructure(BasicSc2Bot* agent);
-	bool execute_protoss_nexus_batteryovercharge(BasicSc2Bot* agent);
-	bool execute_protoss_nexus_chronoboost(BasicSc2Bot* agent);
+	bool executeProtossNexusBatteryOvercharge(BasicSc2Bot* agent);
+	bool executeProtossNexusChronoboost(BasicSc2Bot* agent);
 	bool executeMatchFlags(BasicSc2Bot* agent);
 	bool executeOrderForUnitType(BasicSc2Bot* agent);
 	bool executeModifyTimer(BasicSc2Bot* agent);
