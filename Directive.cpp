@@ -193,6 +193,10 @@ bool Directive::execute(BasicSc2Bot* agent) {
 			return execute_protoss_nexus_chronoboost(agent);
 		}
 
+		if (ability == (sc2::ABILITY_ID)4107) {
+			return execute_protoss_nexus_batteryovercharge(agent);
+		}
+
 		return executeOrderForUnitType(agent);
 	}
 
@@ -469,6 +473,122 @@ bool Directive::executeBuildGasStructure(BasicSc2Bot* agent) {
 
 }
 
+bool Directive::execute_protoss_nexus_batteryovercharge(BasicSc2Bot* agent) {
+	// use battery overcharge on the nearest shield_battery within range of a nexus
+
+
+	if (agent->Observation()->GetGameLoop() < agent->reset_shield_overcharge) {
+		return false;
+	}
+
+	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
+	Mob* mob; // used to store temporary mob
+	Mob* overcharge_target;
+
+	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
+		mobs = filterNearLocation(mobs, assignee_location, assignee_proximity);
+	}
+
+	// first get list of Mobs matching type
+	mobs = filterByUnitType(mobs, unit_type);
+
+	// then filter by those with ability available
+	std::unordered_set<Mob*> mobs_filter;
+	std::copy_if(mobs.begin(), mobs.end(), std::inserter(mobs_filter, mobs_filter.begin()),
+		[agent, this](Mob* m) { return agent->canUnitUseAbility(m->unit, ability); });
+
+	mobs = mobs_filter;
+
+	if (mobs.empty()) {
+		return false;
+	}
+
+	// then pick the one closest to location
+	mob = getClosestToLocation(mobs, target_location);
+
+	// return false if mob has not been assigned above
+	if (!mob) {
+		return false;
+	}
+
+	// get all structures
+	std::unordered_set<Mob*> structures = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_STRUCTURE);
+
+	std::unordered_set<Mob*> valid_shields;
+	std::copy_if(structures.begin(), structures.end(), std::inserter(valid_shields, valid_shields.begin()),
+		[this](Mob* m) { return (m->unit.unit_type == sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY); });
+
+	if (valid_shields.empty()) {
+		return false;
+	}
+
+	std::unordered_set<Mob*> near_a_nexus;
+
+	std::unordered_set<Mob*> townhalls = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_TOWNHALL);
+
+	for (auto m : valid_shields) {
+		for (auto t : townhalls) {
+			bool found_close_nexus = false;
+			if (t->unit.unit_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS && !found_close_nexus) {
+				if (sc2::DistanceSquared2D(t->unit.pos, m->unit.pos) <= 81.0F) {
+					near_a_nexus.insert(m);
+					found_close_nexus = true;
+				}
+			}
+		}
+	}
+	valid_shields = near_a_nexus;
+
+	std::unordered_set<Mob*> not_already_overcharged;
+	// make sure the target already isn't overcharged
+
+	if (valid_shields.empty()) {
+		return false;
+	}
+
+	// BUFF_ID 299 = AMPLIFIED SHIELDING
+
+	std::copy_if(valid_shields.begin(), valid_shields.end(), std::inserter(not_already_overcharged, not_already_overcharged.begin()),
+		[this](Mob* m) { return (std::find(m->unit.buffs.begin(), m->unit.buffs.end(), (sc2::BUFF_ID)299) == m->unit.buffs.end()); });
+
+	valid_shields = not_already_overcharged;
+
+	if (valid_shields.empty()) {
+		std::cout << "`";
+		return false;
+	}
+
+	// then pick one of THESE closest to location
+	overcharge_target = getClosestToLocation(not_already_overcharged, target_location);
+
+	// return false if there is nothing worth casting chronoboost on
+	if (!overcharge_target) {
+		return false;
+	}
+
+
+	// ensure a nearby friendly unit is actually missing shields before overcharging
+	std::unordered_set<Mob*> nearby = Directive::filterNearLocation(agent->mobH->getMobs(), mob->unit.pos, 6.0F);
+	bool any_missing_shields = false;
+
+	for (auto n : nearby) {
+		if (n->unit.shield < n->unit.shield_max) {
+			any_missing_shields = true;
+		}
+	}
+
+	if (!any_missing_shields) {
+		return false;
+	}
+
+	agent->reset_shield_overcharge = agent->Observation()->GetGameLoop() + 100;
+	/* ORDER IS EXECUTED */
+	return issueOrder(agent, mob, &overcharge_target->unit);
+	/* * * * * * * * * * */
+
+
+}
+
 bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 	// this is more complex than it originally seemed
 	// must find the clostest nexus to the given location
@@ -499,6 +619,15 @@ bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 	std::copy_if(mobs.begin(), mobs.end(), std::inserter(mobs_filter, mobs_filter.begin()),
 		[agent, this](Mob* m) { return agent->canUnitUseAbility(m->unit, ability); });
 	mobs = mobs_filter;
+
+	if (agent->getStoredInt("_SAVE_CHRONOBOOST_FOR_BATTERY_OVERCHARGE") == 1 && !mobs.empty()) {
+		std::unordered_set<Mob*> mobs_100_energy;
+		std::copy_if(mobs.begin(), mobs.end(), std::inserter(mobs_100_energy, mobs_100_energy.begin()),
+			[this](Mob* m) { 
+				return m->unit.energy >= 100; 
+			});
+		mobs = mobs_100_energy;
+	}
 	
 	// return false if no structures exist with chronoboost ready to cast
 	int num_units = mobs.size();

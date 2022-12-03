@@ -92,6 +92,7 @@ public:
 	Strategy* current_strategy;
 	int time_of_first_attack; // recorded for data gathering purposes
 	int time_first_attacked;   // recorded for data gathering purposes
+	int reset_shield_overcharge;  // used to prevent every nexus from using the ability at the same time
 
 private:
 
@@ -151,7 +152,6 @@ private:
 	int robotics_busy;
 	int robotics_idle;
 	int max_minerals;
-	int max_gas;
-	
+	int max_gas;	
 	int map_index; // 1 = CactusValleyLE,  2 = BelShirVestigeLE,  3 = ProximaStationLE
 };
