@@ -57,132 +57,60 @@ void Strategy::loadStrategies() {
 		// initialize cactus valley first structure locations
 
 
-		Policy INITIAL_STALKERS = getRandomPolicy();
-		Policy INITIAL_ZEALOTS = getRandomPolicy();
-		Policy STALKERS_PIVOT = getRandomPolicy();
-		Policy ATTACK_RESET_POINT = getRandomPolicy();
-		Policy ZEALOTS_CAP = getRandomPolicy();
-		Policy INITIAL_IMMORTALS = getRandomPolicy();
 
-		int POL_INIT_STALKERS = 0;
+		Policy INITIAL_ZEALOTS = getRandomPolicy();
+		Policy ATTACK_RESET_POINT = getRandomPolicy();
+
+
 		int POL_INIT_ZEALOTS = 0;
-		int POL_STALKERS_PIV = 0;
 		int POL_ATK_RESET_PT = 0;
-		int POL_ZEALOTS_CAP = 0;
-		int POL_INIT_IMMORTALS = 0;
 
 		std::cout << "Policies: ";
 
-		switch (INITIAL_STALKERS) {
-		case A:
-			POL_INIT_STALKERS = 1;
-			bot->storeInt("POL_INIT_STALKERS", 1);
-			std::cout << "stalk-1 ";
-			break;
-		case B:
-			POL_INIT_STALKERS = 2;
-			bot->storeInt("POL_INIT_STALKERS", 2);
-			std::cout << "stalk-2 ";
-			break;
-		case C:
-			POL_INIT_STALKERS = 3;
-			bot->storeInt("POL_INIT_STALKERS", 3);
-			std::cout << "stalk-3 ";
-			break;
-		}
-
 		switch (INITIAL_ZEALOTS) {
 		case A:
-			POL_INIT_ZEALOTS = 6;
+			POL_INIT_ZEALOTS = 1;
 			bot->storeInt("POL_INIT_ZEALOTS", 1);
 			std::cout << "zeal-1 ";
 			break;
 		case B:
-			POL_INIT_ZEALOTS = 8;
+			POL_INIT_ZEALOTS = 2;
 			bot->storeInt("POL_INIT_ZEALOTS", 2);
 			std::cout << "zeal-2 ";
 			break;
 		case C:
-			POL_INIT_ZEALOTS = 10;
+			POL_INIT_ZEALOTS = 3;
 			bot->storeInt("POL_INIT_ZEALOTS", 3);
 			std::cout << "zeal-3 ";
 			break;
 		}
 
-		switch (STALKERS_PIVOT) {
-		case A:
-			POL_STALKERS_PIV = 12000;
-			bot->storeInt("POL_STALKERS_PIV", 1);
-			std::cout << "st-piv-1 ";
-			break;
-		case B:
-			POL_STALKERS_PIV = 13000;
-			bot->storeInt("POL_STALKERS_PIV", 2);
-			std::cout << "st-piv-2 ";
-			break;
-		case C:
-			POL_STALKERS_PIV = 14000;
-			bot->storeInt("POL_STALKERS_PIV", 3);
-			std::cout << "st-piv-3 ";
-			break;
-		}
 
 		switch (ATTACK_RESET_POINT) {
 		case A:
-			POL_ATK_RESET_PT = 70;
+			POL_ATK_RESET_PT = 85;
 			bot->storeInt("POL_ATK_RESET_PT", 1);
 			std::cout << "atk-res-1 ";
 			break;
 		case B:
-			POL_ATK_RESET_PT = 80;
+			POL_ATK_RESET_PT = 90;
 			bot->storeInt("POL_ATK_RESET_PT", 2);
 			std::cout << "atk-res-2 ";
 			break;
 		case C:
-			POL_ATK_RESET_PT = 90;
+			POL_ATK_RESET_PT = 95;
 			bot->storeInt("POL_ATK_RESET_PT", 3);
 			std::cout << "atk-res-3 ";
 			break;
 		}
 
-		switch (ZEALOTS_CAP) {
-		case A:
-			POL_ZEALOTS_CAP = 12;
-			bot->storeInt("POL_ZEALOTS_CAP", 1);
-			std::cout << "zeal-cap-1 ";
-			break;
-		case B:
-			POL_ZEALOTS_CAP = 14;
-			bot->storeInt("POL_ZEALOTS_CAP", 2);
-			std::cout << "zeal-cap-2 ";
-			break;
-		case C:
-			POL_ZEALOTS_CAP = 16;
-			bot->storeInt("POL_ZEALOTS_CAP", 3);
-			std::cout << "zeal-cap-3 ";
-			break;
-		}
-
-		switch (INITIAL_IMMORTALS) {
-		case A:
-			POL_INIT_IMMORTALS = 2;
-			bot->storeInt("POL_INIT_IMMORTALS", 1);
-			std::cout << "immort-1 ";
-			break;
-		case B:
-			POL_INIT_IMMORTALS = 4;
-			bot->storeInt("POL_INIT_IMMORTALS", 2);
-			std::cout << "immort-2 ";
-			break;
-		case C:
-			POL_INIT_IMMORTALS = 6;
-			bot->storeInt("POL_INIT_IMMORTALS", 3);
-			std::cout << "immort-3 ";
-			break;
-		}
 		std::cout << std::endl;
 
 
+		// POL_ZEALOTS_CAP = 15
+		// POL_STALKERS_PIV = 13500
+		// POL_INIT_STALKERS = 3
+		
 
 		if (p_id == 1) {
 			bot->storeLocation("FORGE_1", sc2::Point2D(68.5, 148.5));
@@ -766,7 +694,7 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MAX_FOOD_USED, 135);
 			t2.addCondition(COND::MAX_TIME, 21999);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS, bot->locH->bases[1].getRallyPoint(), 30.0F);
-			t2.addCondition(COND::MAX_UNIT_OF_TYPE, POL_INIT_IMMORTALS - 1, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			train_immortal.addTrigger(t2);
@@ -778,7 +706,7 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MAX_FOOD_USED, 135);
 			t3.addCondition(COND::MAX_TIME, 21999);
 			t3.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS, bot->locH->bases[1].getRallyPoint(), 30.0F);
-			t3.addCondition(COND::MAX_UNIT_OF_TYPE, POL_INIT_IMMORTALS + 3, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
+			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 8, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			train_immortal.addTrigger(t3);
@@ -1015,7 +943,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::ENEMY_RACE_TERRAN);
 			t.addCondition(COND::MAX_TIME, 21999);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE, POL_INIT_STALKERS - 1, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			train_stalker.addDirective(d);
 			train_stalker.addTrigger(t);
@@ -1042,7 +970,7 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MAX_FOOD_USED, 120);
 			t3.addCondition(COND::MAX_TIME, 21999);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
-			t3.addCondition(COND::MIN_UNIT_OF_TYPE, POL_INIT_IMMORTALS, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 6, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, POL_INIT_ZEALOTS, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 12, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
@@ -1056,7 +984,7 @@ void Strategy::loadStrategies() {
 			t4.addCondition(COND::MAX_FOOD_USED, 150);
 			t4.addCondition(COND::MAX_TIME, 21999);
 			t4.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
-			t4.addCondition(COND::MIN_UNIT_OF_TYPE, POL_INIT_IMMORTALS + 4, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
+			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 10, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			train_stalker.addTrigger(t4);
 			Trigger t5(bot); // spam stalkers past 13000 if vs terran
@@ -1066,7 +994,7 @@ void Strategy::loadStrategies() {
 			t5.addCondition(COND::MIN_FOOD_CAP, 101);
 			t5.addCondition(COND::ENEMY_RACE_TERRAN);
 			t5.addCondition(COND::MAX_FOOD_USED, 180);
-			t5.addCondition(COND::MIN_TIME, POL_STALKERS_PIV);
+			t5.addCondition(COND::MIN_TIME, 13500);
 			t5.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t5.addCondition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			//t5.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
@@ -1086,7 +1014,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_FOOD, 2);
 			t.addCondition(COND::MAX_FOOD_USED, 109);
 			t.addCondition(COND::MAX_TIME, 21999);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE, POL_INIT_STALKERS - 1, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			t.addCondition(COND::MAX_UNITS_USING_ABILITY, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_SENTRY);
@@ -1098,7 +1026,7 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_FOOD, 2);
 			t2.addCondition(COND::MAX_FOOD_USED, 109);
 			t2.addCondition(COND::MAX_TIME, 21999);
-			t2.addCondition(COND::MIN_UNIT_OF_TYPE, POL_INIT_STALKERS + 1, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			t2.addCondition(COND::MAX_UNITS_USING_ABILITY, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_SENTRY);
 			train_sentry.addTrigger(t2);
@@ -1109,7 +1037,7 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MAX_FOOD_USED, 109);
 			t3.addCondition(COND::MAX_TIME, 21999);
 			t3.addCondition(COND::ENEMY_RACE_TERRAN);
-			t3.addCondition(COND::MIN_UNIT_OF_TYPE, POL_INIT_STALKERS - 1, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			t3.addCondition(COND::MAX_UNITS_USING_ABILITY, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_SENTRY);
 			train_sentry.addTrigger(t3);
@@ -1223,7 +1151,7 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MIN_FOOD, 2);
 			t3.addCondition(COND::ENEMY_RACE_TERRAN);
 			t3.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
-			t3.addCondition(COND::MIN_UNIT_OF_TYPE, POL_INIT_STALKERS, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			train_zealot.addTrigger(t3);
 			Trigger t4(bot);
 			t4.addCondition(COND::MIN_MINERALS, 200);
@@ -1231,8 +1159,8 @@ void Strategy::loadStrategies() {
 			t4.addCondition(COND::MIN_FOOD, 2);
 			t4.addCondition(COND::ENEMY_RACE_TERRAN);
 			t4.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
-			t4.addCondition(COND::MIN_UNIT_OF_TYPE, POL_INIT_STALKERS, sc2::UNIT_TYPEID::PROTOSS_STALKER);
-			t4.addCondition(COND::MAX_UNIT_OF_TYPE, POL_ZEALOTS_CAP, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
+			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t4.addCondition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			train_zealot.addTrigger(t4);
 			Trigger t5(bot);
 			t5.addCondition(COND::MIN_MINERALS, 320); // give colossus a chance to build
@@ -1241,14 +1169,14 @@ void Strategy::loadStrategies() {
 			t5.setDebug(true);
 			t5.addCondition(COND::ENEMY_RACE_TERRAN);
 			t5.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
-			t5.addCondition(COND::MAX_UNIT_OF_TYPE, POL_ZEALOTS_CAP, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
+			t5.addCondition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			t5.addCondition(COND::MIN_FOOD_CAP, 91);
 			train_zealot.addTrigger(t5);
 			Trigger t7(bot);
 			t7.addCondition(COND::MIN_MINERALS, 100);
 			t7.addCondition(COND::MIN_FOOD, 2);
 			t7.addCondition(COND::ENEMY_RACE_TERRAN);
-			t7.addCondition(COND::MAX_UNIT_OF_TYPE, POL_ZEALOTS_CAP, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
+			t7.addCondition(COND::MAX_UNIT_OF_TYPE, 15, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			t7.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			train_zealot.addTrigger(t7);
 			bot->addStrat(train_zealot);

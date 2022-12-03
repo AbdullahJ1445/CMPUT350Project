@@ -606,9 +606,7 @@ void BasicSc2Bot::OnGameEnd() {
 		result = "W";
 	}
 
-	std::cout << "Policies: stalk-" << getStoredInt("POL_INIT_STALKERS") << result << " zeal-" << getStoredInt("POL_INIT_ZEALOTS") << result <<
-		" st-piv-" << getStoredInt("POL_STALKERS_PIV") << result << " atk-res-" << getStoredInt("POL_ATK_RESET_PT") << result << " zeal-cap-" << getStoredInt("POL_ZEALOTS_CAP") <<
-		result << " immort-" << getStoredInt("POL_INIT_IMMORTALS") << result << std::endl;
+	std::cout << "Policies: zeal-" << getStoredInt("POL_INIT_ZEALOTS") << result << " atk-res-" << getStoredInt("POL_ATK_RESET_PT") << result << std::endl;
 
 	std::cout << "Gateway uptime: " << (int)((float) (gateways_busy * 100) / ((float)gateways_busy + (float)gateways_idle)) << "% "
 			  "\tRobotics uptime: " << (int)((float) (robotics_busy * 100) / ((float)robotics_busy + (float)robotics_idle)) << "% " << std::endl;
