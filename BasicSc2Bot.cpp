@@ -25,6 +25,7 @@ BasicSc2Bot::BasicSc2Bot()
 	locH = nullptr;
 	proxy_worker = nullptr;
 	current_strategy = nullptr;
+	special = nullptr;
 	player_start_id = -1;
 	enemy_start_id = -1;
 	map_name = "";
@@ -306,7 +307,13 @@ sc2::Race BasicSc2Bot::getEnemyRace() {
 
 std::unordered_set<const sc2::Unit*> BasicSc2Bot::getEnemyUnits()
 {
-	return enemy_units;
+	std::unordered_set<const sc2::Unit*> enemies;
+
+	for (auto it = enemy_unit_by_tag.begin(); it != enemy_unit_by_tag.end(); ++it) {
+		enemies.insert(it->second);
+	}
+
+	return enemies;
 }
 
 sc2::Point2D BasicSc2Bot::getStoredLocation(std::string identifier_)
@@ -353,8 +360,9 @@ sc2::UnitTypeData BasicSc2Bot::getUnitTypeData(const sc2::Unit* unit) {
 }
 
 bool BasicSc2Bot::addEnemyUnit(const sc2::Unit* unit) {
-	if (enemy_unit_by_tag[unit->tag] != nullptr) {
-		return false;
+	
+	if (std::addressof(enemy_unit_by_tag[unit->tag]) != std::addressof(unit)) {
+		enemy_units.erase(enemy_unit_by_tag[unit->tag]);
 	}
 	enemy_units.insert(unit);
 	enemy_unit_by_tag[unit->tag] = unit;
@@ -591,6 +599,8 @@ void::BasicSc2Bot::onStep_1000(const sc2::ObservationInterface* obs) {
 	}
 	prev_threat_chunk = pathable_threat_chunk;
 	prev_threat_amount = threat_amount;
+
+	std::cout << "[" << obs->GetGameLoop() << "] food army = " << obs->GetFoodArmy() << std::endl;
 }
 
 void BasicSc2Bot::OnGameEnd() {
@@ -651,7 +661,7 @@ void BasicSc2Bot::OnStep() {
 
 	if (!proxy_sent && map_index > 0) {
 		const sc2::Units allied_units = observation->GetUnits(sc2::Unit::Alliance::Self);
-		
+
 		// make nexus train first probe
 		for (auto it = allied_units.begin(); it != allied_units.end(); ++it) {
 			if ((*it)->unit_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS) {
@@ -747,7 +757,7 @@ void BasicSc2Bot::OnStep() {
 
 	if (!initialized)
 		return;
- 
+
 	// update visibility data for chunks
 	locH->scanChunks(observation);
 	if (!enemy_units.empty()) {
@@ -845,8 +855,567 @@ void BasicSc2Bot::OnStep() {
 		onStep_1000(observation);
 	}
 
+	// Filter for using sc2::GetUnits
+	sc2::Filter unseen_sieged = [this](const sc2::Unit& unit) {
+		if (unit.unit_type == sc2::UNIT_TYPEID::TERRAN_SIEGETANKSIEGED) {
+			return true;
+			if (enemy_unit_by_tag[unit.tag] == nullptr) {
+				return true;
+			}
+		}
+		return false;
+	};
+
+	auto unseen_siege_set = observation->GetUnits(sc2::Unit::Alliance::Enemy, unseen_sieged);
+	if (!unseen_siege_set.empty()) {
+		for (auto u : unseen_siege_set) {
+			addEnemyUnit(u);
+		}
+	}
+
 	checkGasStructures();
 	checkBuildingQueues();
+	checkSiegeTanks();	
+}
+
+void BasicSc2Bot::checkSiegeTanks() {
+
+	// handle dealing with obnoxious siege tanks (and thors while we're at it)
+	// this function has evolved to making our stalkers, sentries and immortals
+	// move towards siege-tanks and thors in between shots, so they move out of
+	// the way of other friendly units
+	// also handles phoenixes using graviton beam
+
+	auto obs = Observation();
+	auto gameloop = obs->GetGameLoop();
+	//auto enemies = getEnemyUnits();
+	auto immortals = mobH->filterByUnitType(mobH->getMobs(), sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
+	auto stalkers = mobH->filterByUnitType(mobH->getMobs(), sc2::UNIT_TYPEID::PROTOSS_STALKER);
+	auto phoenixes = mobH->filterByUnitType(mobH->getMobs(), sc2::UNIT_TYPEID::PROTOSS_PHOENIX);
+	auto sentries = mobH->filterByUnitType(mobH->getMobs(), sc2::UNIT_TYPEID::PROTOSS_SENTRY);
+	immortals = mobH->filterNotOnCooldown(immortals);
+	stalkers = mobH->filterNotOnCooldown(stalkers);
+	phoenixes = mobH->filterNotOnCooldown(phoenixes);
+	sentries = mobH->filterNotOnCooldown(sentries);
+
+	auto enemies = obs->GetUnits(sc2::Unit::Alliance::Enemy);
+	
+	std::unordered_set<const sc2::Unit*> tanks_s;  // sieged
+	std::unordered_set<const sc2::Unit*> tanks_u;  // unsieged
+	std::unordered_set<const sc2::Unit*> thors; 
+	std::unordered_set<const sc2::Unit*> marauders;
+	for (auto e : enemies) {
+		auto disp_type = e->display_type;
+
+		if (disp_type == sc2::Unit::DisplayType::Visible) {
+			if (e->is_alive) {
+				if (e->unit_type == sc2::UNIT_TYPEID::TERRAN_SIEGETANKSIEGED) {
+					tanks_s.insert(e);
+				} else if (e->unit_type == sc2::UNIT_TYPEID::TERRAN_SIEGETANK) {
+					tanks_u.insert(e);
+				}
+				else if (e->unit_type == sc2::UNIT_TYPEID::TERRAN_THOR) {
+					thors.insert(e);
+				} 
+				else if (e->unit_type == sc2::UNIT_TYPEID::TERRAN_MARAUDER) {
+					marauders.insert(e);
+				}
+			}
+		}
+		if (disp_type == sc2::Unit::DisplayType::Snapshot) {
+			if (e->unit_type.ToType() == sc2::UNIT_TYPEID::TERRAN_SIEGETANKSIEGED) {
+				std::cout << "(" << (int)e->unit_type.ToType() << ")";
+			}
+		}
+	}
+
+	bool have_blink = haveUpgrade(sc2::UPGRADE_ID::BLINKTECH);
+	
+	// if siege tanks in siege mode are visible
+	if (!tanks_s.empty()) {
+
+		if (!phoenixes.empty()) {
+			// popualte set of those not already affected by graviton beam
+			std::unordered_set<const sc2::Unit*> tanks_valid;
+			for (auto t : tanks_s) {
+				auto buffs = t->buffs;
+				if (buffs.empty()) {
+					tanks_valid.insert(t);
+					continue;
+				}
+				for (auto b : buffs) {
+					if (b.ToType() == sc2::BUFF_ID::GRAVITONBEAM) {
+						continue;
+					}
+				}
+				tanks_valid.insert(t);
+			}
+
+			if (!tanks_valid.empty()) {
+				std::unordered_set<Mob*> nearby_ph;
+				for (auto p : phoenixes) {
+					for (auto t : tanks_valid) {
+						if (sc2::DistanceSquared2D(t->pos, p->unit.pos) <= 144.0F) {
+							nearby_ph.insert(p);
+							break;
+						}
+					}
+				}
+				if (!nearby_ph.empty()) {
+					for (auto ph : nearby_ph) {
+						float dist_to_siege = std::numeric_limits<float>::max();
+						const sc2::Unit* closest = nullptr;
+						for (auto t : tanks_valid) {
+							float dist = (sc2::DistanceSquared2D(t->pos, ph->unit.pos));
+							if (dist < dist_to_siege) {
+								dist_to_siege = dist;
+								closest = t;
+							}
+						}
+						if (dist_to_siege > 16.0F && ph->unit.weapon_cooldown > 1 && canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
+							Actions()->UnitCommand(&ph->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+							ph->giveCooldown(this, 5); // 22 steps is approx one second
+						}
+						if (dist_to_siege <= 16.0F) {
+							if (canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
+								Actions()->UnitCommand(&ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM, closest);
+								ph->giveCooldown(this, 160); // stop this mob from getting commands for the duration of beam
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// player immortals exist
+		if (!immortals.empty()) {
+			std::unordered_set<Mob*> nearby_im;
+			for (auto i : immortals) {
+				for (auto t : tanks_s) {
+					if (sc2::DistanceSquared2D(t->pos, i->unit.pos) <= 144.0F) {
+						nearby_im.insert(i);
+						break;
+					}
+				}
+			}
+			if (!nearby_im.empty()) {
+				for (auto im : nearby_im) {
+					float dist_to_siege = std::numeric_limits<float>::max();
+					const sc2::Unit* closest = nullptr;
+					for (auto t : tanks_s) {
+						float dist = (sc2::DistanceSquared2D(t->pos, im->unit.pos));
+						if (dist < dist_to_siege) {
+							dist_to_siege = dist;
+							closest = t;
+						}
+					}
+					if (dist_to_siege > 36.0F && im->unit.weapon_cooldown > 1) {
+						Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+						im->giveCooldown(this, im->unit.weapon_cooldown * 0.8);
+						if (dist_to_siege <= 36.0F) {
+							if (im->unit.weapon_cooldown > 1) {
+								Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+								im->giveCooldown(this, im->unit.weapon_cooldown * 0.8);
+							}
+						}
+					}
+				}
+			}
+
+			// player stalkers exist
+			if (!stalkers.empty()) {
+				std::unordered_set<Mob*> nearby_st;
+				for (auto s : stalkers) {
+					for (auto t : tanks_s) {
+						if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 324.0F) {
+							nearby_st.insert(s);
+							break;
+						}
+					}
+				}
+				if (!nearby_st.empty()) {
+					for (auto st : nearby_st) {
+						float dist_to_siege = std::numeric_limits<float>::max();
+						const sc2::Unit* closest = nullptr;
+						for (auto t : tanks_s) {
+							float dist = (sc2::DistanceSquared2D(t->pos, st->unit.pos));
+							if (dist < dist_to_siege) {
+								dist_to_siege = dist;
+								closest = t;
+							}
+						}
+
+						if (st->unit.weapon_cooldown > 1) {
+							if (dist_to_siege > 4.0F) {
+								if (have_blink && canUnitUseAbility(st->unit, sc2::ABILITY_ID::EFFECT_BLINK) && dist_to_siege > 9.0F && dist_to_siege <= 100.0F) {
+									Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::EFFECT_BLINK, closest->pos);
+								}
+								else {
+									Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+									st->giveCooldown(this, st->unit.weapon_cooldown * 0.8);
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// player sentries exist
+			if (!sentries.empty()) {
+				std::unordered_set<Mob*> nearby_se;
+				for (auto s : sentries) {
+					for (auto t : tanks_s) {
+						if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 144.0F) {
+							nearby_se.insert(s);
+							break;
+						}
+					}
+				}
+				if (!nearby_se.empty()) {
+					for (auto se : nearby_se) {
+						float dist_to_siege = std::numeric_limits<float>::max();
+						const sc2::Unit* closest = nullptr;
+						for (auto t : tanks_s) {
+							float dist = (sc2::DistanceSquared2D(t->pos, se->unit.pos));
+							if (dist < dist_to_siege) {
+								dist_to_siege = dist;
+								closest = t;
+							}
+						}
+						if (dist_to_siege > 36.0F && se->unit.weapon_cooldown > 1) {
+							Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+							se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
+							if (dist_to_siege <= 36.0F) {
+								if (se->unit.weapon_cooldown > 1) {
+									Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+									se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// remove those that have already been issued an order
+	immortals = mobH->filterNotOnCooldown(immortals);
+	stalkers = mobH->filterNotOnCooldown(stalkers);
+	phoenixes = mobH->filterNotOnCooldown(phoenixes);
+	sentries = mobH->filterNotOnCooldown(sentries);
+
+	// if unsieged siege tanks are visible
+	if (!tanks_u.empty()) {
+
+		// player immortals exist
+		if (!immortals.empty()) {
+			std::unordered_set<Mob*> nearby_im;
+			for (auto i : immortals) {
+				for (auto t : tanks_u) {
+					if (sc2::DistanceSquared2D(t->pos, i->unit.pos) <= 324.0F) {
+						nearby_im.insert(i);
+						break;
+					}
+				}
+			}
+			if (!nearby_im.empty()) {
+				for (auto im : nearby_im) {
+					float dist_to_siege = std::numeric_limits<float>::max();
+					const sc2::Unit* closest = nullptr;
+					for (auto t : tanks_u) {
+						float dist = (sc2::DistanceSquared2D(t->pos, im->unit.pos));
+						if (dist < dist_to_siege) {
+							dist_to_siege = dist;
+							closest = t;
+						}
+					}
+					if (dist_to_siege > 36.0F && im->unit.weapon_cooldown > 1) {
+						Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+						im->giveCooldown(this, im->unit.weapon_cooldown * 0.8); // 22 steps is approx one second
+					}
+					if (dist_to_siege <= 36.0F) {
+						if (im->unit.weapon_cooldown > 1) {
+							Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+							im->giveCooldown(this, im->unit.weapon_cooldown * 0.8); // 22 steps is approx one second
+						}
+					}
+				}
+			}
+		}
+
+		// player stalkers exist
+		if (!stalkers.empty()) {
+			std::unordered_set<Mob*> nearby_st;
+			for (auto s : stalkers) {
+				for (auto t : tanks_s) {
+					if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 324.0F) {
+						nearby_st.insert(s);
+						break;
+					}
+				}
+			}
+			if (!nearby_st.empty()) {
+				for (auto st : nearby_st) {
+					float dist_to_siege = std::numeric_limits<float>::max();
+					const sc2::Unit* closest = nullptr;
+					for (auto t : tanks_s) {
+						float dist = (sc2::DistanceSquared2D(t->pos, st->unit.pos));
+						if (dist < dist_to_siege) {
+							dist_to_siege = dist;
+							closest = t;
+						}
+					}
+
+					if (st->unit.weapon_cooldown > 1) {
+						if (dist_to_siege > 4.0F) {
+							/*
+							if (have_blink && canUnitUseAbility(st->unit, sc2::ABILITY_ID::EFFECT_BLINK) && dist_to_siege > 9.0F && dist_to_siege <= 100.0F) {
+								Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::EFFECT_BLINK, closest->pos);
+							}
+							else {
+								Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+								st->giveCooldown(this, st->unit.weapon_cooldown * 0.8); // 22 steps is approx one second
+							} */
+							Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+							st->giveCooldown(this, st->unit.weapon_cooldown * 0.8); // 22 steps is approx one second
+						}
+					}
+				}
+			}
+		}
+
+		// player sentries exist
+		if (!sentries.empty()) {
+			std::unordered_set<Mob*> nearby_se;
+			for (auto s : sentries) {
+				for (auto t : tanks_u) {
+					if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 144.0F) {
+						nearby_se.insert(s);
+						break;
+					}
+				}
+			}
+			if (!nearby_se.empty()) {
+				for (auto se : nearby_se) {
+					float dist_to_siege = std::numeric_limits<float>::max();
+					const sc2::Unit* closest = nullptr;
+					for (auto t : tanks_u) {
+						float dist = (sc2::DistanceSquared2D(t->pos, se->unit.pos));
+						if (dist < dist_to_siege) {
+							dist_to_siege = dist;
+							closest = t;
+						}
+					}
+					if (dist_to_siege > 36.0F && se->unit.weapon_cooldown > 1) {
+						Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+						se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
+						if (dist_to_siege <= 36.0F) {
+							if (se->unit.weapon_cooldown > 1) {
+								Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+								se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (!phoenixes.empty()) {
+
+			// popualte set of those not already affected by graviton beam
+			std::unordered_set<const sc2::Unit*> tanks_valid;
+			for (auto t : tanks_u) {
+				auto buffs = t->buffs;
+				if (buffs.empty()) {
+					tanks_valid.insert(t);
+					continue;
+				}
+				for (auto b : buffs) {
+					if (b.ToType() == sc2::BUFF_ID::GRAVITONBEAM) {
+						continue;
+					}
+				}
+				tanks_valid.insert(t);
+			}
+
+			if (!tanks_valid.empty()) {
+				std::unordered_set<Mob*> nearby_ph;
+				for (auto p : phoenixes) {
+					for (auto t : tanks_valid) {
+						if (sc2::DistanceSquared2D(t->pos, p->unit.pos) <= 144.0F) {
+							nearby_ph.insert(p);
+							break;
+						}
+					}
+				}
+				if (!nearby_ph.empty()) {
+					for (auto ph : nearby_ph) {
+						float dist_to_siege = std::numeric_limits<float>::max();
+						const sc2::Unit* closest = nullptr;
+						for (auto t : tanks_valid) {
+							float dist = (sc2::DistanceSquared2D(t->pos, ph->unit.pos));
+							if (dist < dist_to_siege) {
+								dist_to_siege = dist;
+								closest = t;
+							}
+						}
+						if (dist_to_siege > 16.0F && ph->unit.weapon_cooldown > 1 && canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
+							Actions()->UnitCommand(&ph->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+							ph->giveCooldown(this, 5); // 22 steps is approx one second
+						}
+						if (dist_to_siege <= 16.0F) {
+							if (canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
+								Actions()->UnitCommand(&ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM, closest);
+								ph->giveCooldown(this, 160); // stop this mob from getting commands for the duration of beam
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// remove those that have already been issued an order
+	immortals = mobH->filterNotOnCooldown(immortals);
+	stalkers = mobH->filterNotOnCooldown(stalkers);
+	phoenixes = mobH->filterNotOnCooldown(phoenixes);
+	sentries = mobH->filterNotOnCooldown(sentries);
+
+	if (!thors.empty()) {
+
+		// player immortals exist
+		if (!immortals.empty()) {
+			std::unordered_set<Mob*> nearby_im;
+			for (auto i : immortals) {
+				for (auto t : thors) {
+					if (sc2::DistanceSquared2D(t->pos, i->unit.pos) <= 144.0F) {
+						nearby_im.insert(i);
+						break;
+					}
+				}
+			}
+			if (!nearby_im.empty()) {
+				for (auto im : nearby_im) {
+					float dist_to_thor = std::numeric_limits<float>::max();
+					const sc2::Unit* closest = nullptr;
+					for (auto t : thors) {
+						float dist = (sc2::DistanceSquared2D(t->pos, im->unit.pos));
+						if (dist < dist_to_thor) {
+							dist_to_thor = dist;
+							closest = t;
+						}
+					}
+					if (dist_to_thor > 36.0F && im->unit.weapon_cooldown > 1) {
+						Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+						im->giveCooldown(this, im->unit.weapon_cooldown * 0.8); // 22 steps is approx one second
+					}
+					if (dist_to_thor <= 36.0F) {
+						if (im->unit.weapon_cooldown > 1) {
+							Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+							im->giveCooldown(this, im->unit.weapon_cooldown * 0.5); // 22 steps is approx one second
+						}
+					}
+				}
+			}
+		}
+		// player sentries exist
+		if (!sentries.empty()) {
+			std::unordered_set<Mob*> nearby_se;
+			for (auto s : sentries) {
+				for (auto t : thors) {
+					if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 144.0F) {
+						nearby_se.insert(s);
+						break;
+					}
+				}
+			}
+			if (!nearby_se.empty()) {
+				for (auto se : nearby_se) {
+					float dist_to_thor = std::numeric_limits<float>::max();
+					const sc2::Unit* closest = nullptr;
+					for (auto t : thors) {
+						float dist = (sc2::DistanceSquared2D(t->pos, se->unit.pos));
+						if (dist < dist_to_thor) {
+							dist_to_thor = dist;
+							closest = t;
+						}
+					}
+					if (dist_to_thor > 36.0F && se->unit.weapon_cooldown > 1) {
+						Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+						se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
+						if (dist_to_thor <= 36.0F) {
+							if (se->unit.weapon_cooldown > 1) {
+								Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+								se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// remove those that have already been issued an order
+	immortals = mobH->filterNotOnCooldown(immortals);
+	stalkers = mobH->filterNotOnCooldown(stalkers);
+	phoenixes = mobH->filterNotOnCooldown(phoenixes);
+	sentries = mobH->filterNotOnCooldown(sentries);
+
+	if (!marauders.empty()) {
+		if (!phoenixes.empty()) {
+			// popualte set of those not already affected by graviton beam
+			std::unordered_set<const sc2::Unit*> mar_valid;
+			for (auto m : marauders) {
+				auto buffs = m->buffs;
+				if (buffs.empty()) {
+					mar_valid.insert(m);
+					continue;
+				}
+				for (auto b : buffs) {
+					if (b.ToType() == sc2::BUFF_ID::GRAVITONBEAM) {
+						continue;
+					}
+				}
+				mar_valid.insert(m);
+			}
+
+			if (!mar_valid.empty()) {
+
+				std::unordered_set<Mob*> nearby_ph;
+				for (auto p : phoenixes) {
+					for (auto m : mar_valid) {
+						if (sc2::DistanceSquared2D(m->pos, p->unit.pos) <= 144.0F) {
+							nearby_ph.insert(p);
+							break;
+						}
+					}
+				}
+				if (!nearby_ph.empty()) {
+					for (auto ph : nearby_ph) {
+						float dist_to_mar = std::numeric_limits<float>::max();
+						const sc2::Unit* closest = nullptr;
+						for (auto m : mar_valid) {
+							float dist = (sc2::DistanceSquared2D(m->pos, ph->unit.pos));
+							if (dist < dist_to_mar) {
+								dist_to_mar = dist;
+								closest = m;
+							}
+						}
+						if (dist_to_mar > 16.0F && ph->unit.weapon_cooldown > 1 && canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
+							Actions()->UnitCommand(&ph->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+							ph->giveCooldown(this, 5); // 22 steps is approx one second
+						}
+						if (dist_to_mar <= 16.0F) {
+							if (canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
+								Actions()->UnitCommand(&ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM, closest);
+								ph->giveCooldown(this, 160); // stop this mob from getting commands for the duration of beam
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 void BasicSc2Bot::checkGasStructures() {
@@ -934,6 +1503,7 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	// determine if unit is a structure
 	bool structure = isStructure(unit);
 	bool is_worker = false;
+	bool make_special = false;	// debug purposes
 	int base_index = locH->getIndexOfClosestBase(unit->pos);
 
 	if (!structure) {
@@ -986,6 +1556,9 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 		// todo: implement assigning flags for other races and units
 		if (unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER ||
 			unit_type == sc2::UNIT_TYPEID::PROTOSS_IMMORTAL) {
+			if (special == nullptr) {
+				make_special = true;
+			}
 			new_mob.setFlag(FLAGS::SHORT_RANGE);
 		}
 	}
@@ -1010,6 +1583,9 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	}
 	mobH->addMob(new_mob);	
 	Mob* mob = &mobH->getMob(*unit);
+	if (make_special) {
+		special = mob;
+	}
 }
 
 void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
@@ -1157,6 +1733,9 @@ void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
 				std::cout << "[" << gameloop << "] First attack by opponent at " << gameTime(gameloop) << "." << std::endl;
 			}
 		}
+	}
+	if (unit->alliance == sc2::Unit::Alliance::Enemy) {
+		enemy_unit_by_tag.erase(unit->tag);
 	}
 }
 

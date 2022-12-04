@@ -108,12 +108,45 @@ std::unordered_set<Mob*> MobHandler::filterByFlag(std::unordered_set<Mob*> mobs_
 }
 
 std::unordered_set<Mob*> MobHandler::filterByFlags(std::unordered_set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list, bool is_true) {
-	// filter a vector of Mob* by several flags
+	// filter a set of Mob* by several flags
 
 	std::unordered_set<Mob*> filtered_mobs = mobs_set;
 	for (FLAGS f : flag_list) {
 		filtered_mobs = filterByFlag(filtered_mobs, f, is_true);
 	}
+	return filtered_mobs;
+}
+
+std::unordered_set<Mob*> MobHandler::filterNotOnCooldown(std::unordered_set<Mob*> mobs_set)
+{
+	// filter mobs by those that are not on cooldown
+	std::unordered_set<Mob*> filtered_mobs;
+
+	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
+		[this](Mob* m) { return !m->isOnCooldown(agent); });
+
+	return filtered_mobs;
+}
+
+std::unordered_set<Mob*> MobHandler::filterByUnitType(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type)
+{
+	// filter mobs by those that are not on cooldown
+	std::unordered_set<Mob*> filtered_mobs;
+
+	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
+		[unit_type](Mob* m) { return m->unit.unit_type.ToType() == unit_type; });
+
+	return filtered_mobs;
+}
+
+std::unordered_set<Mob*> MobHandler::filterOnCooldown(std::unordered_set<Mob*> mobs_set)
+{
+	// filter mobs by those that are on cooldown
+	std::unordered_set<Mob*> filtered_mobs;
+
+	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
+		[this](Mob* m) { return m->isOnCooldown(agent); });
+
 	return filtered_mobs;
 }
 

@@ -112,6 +112,7 @@ private:
 	// virtual functions 
 	virtual void OnGameStart();
 	virtual void OnStep();
+	void checkSiegeTanks();
 	virtual void OnGameEnd();
 	virtual void OnBuildingConstructionComplete(const sc2::Unit* unit);
 	virtual void OnUnitCreated(const sc2::Unit* unit);
@@ -142,6 +143,7 @@ private:
 	int enemy_start_id;
 	std::string map_name;
 	sc2::Race enemy_race;
+	Mob* special; // for testing purposes
 	int timer_1;
 	int timer_2;
 	int timer_3;

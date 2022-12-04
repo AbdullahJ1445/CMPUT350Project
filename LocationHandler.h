@@ -78,6 +78,7 @@ public:
     MapChunk* getNearestChunk(sc2::Point2D loc_);
     MapChunk* getNearestPathableChunk(sc2::Point2D loc_);
     MapChunk* getChunkByCoords(std::pair<float, float> coords);
+    sc2::Point2D getAttackingForceLocation();
     sc2::Point2D getCenterOfArmy();
     sc2::Point2D getEnemyLocation();
     sc2::Point2D getProxyLocation();

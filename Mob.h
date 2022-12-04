@@ -58,8 +58,10 @@ public:
 	Directive popBundledDirective();
 	bool isCarryingMinerals();
 	bool isCarryingGas();
+	bool isOnCooldown(BasicSc2Bot* agent);
 	void setFlag(FLAGS flag);
 	void removeFlag(FLAGS flag);
+	void giveCooldown(BasicSc2Bot* agent, int amt);
 	sc2::Point2D getBirthLocation();
 	sc2::Point2D getHomeLocation();
 	sc2::Point2D getAssignedLocation();
@@ -78,7 +80,6 @@ public:
 	bool isHarvestingGas();
 	bool isHarvestingMinerals();
 	void addHarvester(Mob* mob_);
-	void removeMineralHarvester(Mob* mob_);
 	void removeHarvester(Mob* mob_);
 	std::unordered_set<Mob*> getHarvesters();
 	void stopHarvestingGas();
@@ -101,6 +102,7 @@ private:
 	bool has_current_directive;
 	bool is_harvesting_gas;
 	bool is_harvesting_minerals;
+	int cooldown;
 	std::unordered_set<Mob*> harvesters;
 	Mob* gas_structure_harvested;
 	Mob* townhall_for_minerals;

@@ -249,6 +249,10 @@ bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
 		return false;
 	}
 
+	if (mob->isOnCooldown(agent)) {
+		return false;
+	}
+
 	sc2::Point2D location = target_location;
 
 	if (location == ASSIGNED_LOCATION) {
@@ -344,6 +348,7 @@ bool Directive::executeSimpleActionForUnitType(BasicSc2Bot* agent) {
 	// filter idle units which match unit_type
 	mobs = filterByUnitType(mobs, unit_type);
 	mobs = filterIdle(mobs);
+	mobs = agent->mobH->filterNotOnCooldown(mobs);
 
 	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
 		assert(assignee_location != INVALID_POINT);
@@ -437,6 +442,7 @@ bool Directive::executeBuildGasStructure(BasicSc2Bot* agent) {
 	// perform the necessary actions to have a gas structure built closest to the specified target_location
 
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
+	mobs = agent->mobH->filterNotOnCooldown(mobs);
 	Mob* mob; // used to store temporary mob
 	bool found_valid_unit = false;
 
@@ -482,6 +488,7 @@ bool Directive::execute_protoss_nexus_batteryovercharge(BasicSc2Bot* agent) {
 	}
 
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
+	mobs = agent->mobH->filterNotOnCooldown(mobs);
 	Mob* mob; // used to store temporary mob
 	Mob* overcharge_target;
 
@@ -596,6 +603,8 @@ bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 	// then find a structure that would benefit from it
 
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
+	mobs = agent->mobH->filterNotOnCooldown(mobs);
+
 	Mob* mob; // used to store temporary mob
 	Mob* chrono_target;
 	std::unordered_set<Mob*> mobs_filter1;
@@ -690,6 +699,7 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 	
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
 	std::unordered_set<Mob*> matching_mobs = agent->mobH->filterByFlags(mobs, flags);
+	matching_mobs = agent->mobH->filterNotOnCooldown(matching_mobs);
 
 	if (!exclude_flags.empty()) {
 		matching_mobs = agent->mobH->filterByFlags(matching_mobs, exclude_flags, false);
@@ -807,6 +817,9 @@ bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
 	sc2::Point2D location = target_location;
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
+
+	mobs = agent->mobH->filterNotOnCooldown(mobs);
+
 	Mob* mob = nullptr;
 
 	if (!exclude_flags.empty()) {

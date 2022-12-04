@@ -481,6 +481,28 @@ MapChunk* LocationHandler::getChunkByCoords(std::pair<float, float> coords) {
     return map_chunk_by_coords[coords];
 }
 
+sc2::Point2D LocationHandler::getAttackingForceLocation() {
+    // returns the location of the unit nearest to the center of mass
+
+    auto coa = getCenterOfArmy();
+    auto mobs = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_FLYING, false);
+    if (mobs.empty())
+        return NO_POINT_FOUND;
+
+    float dist = std::numeric_limits<float>::max();
+    Mob* closest = nullptr;
+    for (auto m : mobs) {
+        auto d = sc2::DistanceSquared2D(m->unit.pos, coa);
+        if (d < dist) {
+            closest = m;
+            dist = d;
+        }
+    }
+    if (closest == nullptr)
+        return NO_POINT_FOUND;
+    return closest->unit.pos;
+}
+
 sc2::Point2D LocationHandler::getCenterOfArmy() {
     // returns the "center of mass" of army units
 
@@ -1432,13 +1454,13 @@ sc2::Point2D LocationHandler::getCenterPathableLocation() {
 }
 
 sc2::Point2D LocationHandler::getRallyPointTowardsThreat()
-// calculate a pathable point 2/3 of the way towards the location to send the attack
+// calculate a pathable point 3/7 of the way towards the location to send the attack
 {
     sc2::Point2D p1 = start_location;
     sc2::Point2D p2 = smartPriorityAttack();
     sc2::Point2D p3 = NO_POINT_FOUND;
 
-    p3 = ((p2 - p1) * 2 / 3) + p1;
+    p3 = ((p2 - p1) * 3 / 7) + p1;
     MapChunk* best_chunk = getNearestPathableChunk(p3);
     if (best_chunk == nullptr) {
         return NO_POINT_FOUND;
