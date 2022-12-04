@@ -69,7 +69,7 @@ void Strategy::loadStrategies() {
 		std::vector<int> stalkers_to_zealots_w_robo{ 0, 10, 8 };
 		std::vector<int> max_zealots_w_robo{ 8, 8, 8};
 		std::vector<int> max_time_for_zealots{ 13500, 13500, 12500 };
-		std::vector<int> earliest_expansion{ 15000, 15000, 15000 };  // against zerg/terran, do not expand unless early pushes all are failing
+		std::vector<int> earliest_expansion{ 15000, 15000, 16000 };  // against zerg/terran, do not expand unless early pushes all are failing
 		
 
 		if (p_id == 1) {
@@ -1803,7 +1803,7 @@ void Strategy::loadStrategies() {
 			init_group_timer.addTrigger(t3);
 			Trigger t4(bot);  // handle timers VS Terran
 			t4.addCondition(COND::TIMER_1_SET, 0, false);
-			t4.addCondition(COND::MIN_FOOD_ARMY, 50);
+			t4.addCondition(COND::MIN_FOOD_ARMY, 70);
 			t4.addCondition(COND::MAX_TIME, 12999);
 			t4.addCondition(COND::ENEMY_RACE_TERRAN);
 			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
@@ -1811,7 +1811,7 @@ void Strategy::loadStrategies() {
 			init_group_timer.addTrigger(t4);
 			Trigger t5(bot); // require a larger army for second push
 			t5.addCondition(COND::TIMER_1_SET, 0, false);
-			t5.addCondition(COND::MIN_FOOD_ARMY, 70);
+			t5.addCondition(COND::MIN_FOOD_ARMY, 80);
 			t5.addCondition(COND::ENEMY_RACE_TERRAN);
 			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 6, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 8, sc2::UNIT_TYPEID::PROTOSS_STALKER);
