@@ -301,8 +301,61 @@ void Mob::removeHarvester(Mob* mob_) {
 	}
 }
 
+std::unordered_set<Mob*> Mob::getHarvesters() {
+	// get a set of all mobs harvesting this gas structure
+
+	return harvesters;
+}
+
 int Mob::getHarvesterCount() {
 	return harvesters.size();
+}
+
+bool Mob::harvestNearbyTownhall(BasicSc2Bot* agent)
+{
+	// assigns this worker to harvest minerals near a townhall
+
+	if (isHarvestingGas()) {
+		stopHarvestingGas();
+	}
+
+	if (isHarvestingMinerals()) {
+		stopHarvestingMinerals();
+	}
+
+	auto townhalls = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_TOWNHALL);
+	if (townhalls.empty()) {
+		return false;
+	}
+
+	setFlag(FLAGS::IS_MINERAL_GATHERER);
+
+	const sc2::Unit* mineral_target = agent->locH->getNearestMineralPatch(unit.pos);
+
+	Mob* townhall = Directive::getClosestToLocation(townhalls, mineral_target->pos);
+
+	setHarvestingMinerals(townhall);
+	setAssignedLocation(townhall->unit.pos);
+	Directive directive_get_minerals(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, unit.pos);
+	agent->storeDirective(directive_get_minerals);
+	Directive* dir = agent->getLastStoredDirective();
+	if (hasDefaultDirective()) {
+		if (default_directive != nullptr) {
+			default_directive->unassignMob(this);
+		}
+	}
+	assignDefaultDirective(*dir);
+	
+	if (isCarryingMinerals()) {
+		agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::HARVEST_RETURN, &townhall->unit);
+		agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::GENERAL_MOVE, mineral_target->pos, true);
+	}
+	else {
+		agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::GENERAL_MOVE, mineral_target->pos);
+	}
+	return true;
+
+
 }
 
 bool Mob::grabNearbyMineralHarvester(BasicSc2Bot* agent, bool grab_from_gas, bool grab_from_other_townhall) {
