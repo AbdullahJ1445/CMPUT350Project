@@ -412,7 +412,7 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 50);
 			t.addCondition(COND::MIN_FOOD, 1);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 19, sc2::UNIT_TYPEID::PROTOSS_PROBE, bot->locH->bases[3].getTownhall(), 20.0f);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 15, sc2::UNIT_TYPEID::PROTOSS_PROBE, bot->locH->bases[3].getTownhall(), 20.0f);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[3].getTownhall(), 4.0f);
 			exp_probe.addDirective(d);
 			exp_probe.addTrigger(t);
@@ -1406,6 +1406,7 @@ void Strategy::loadStrategies() {
 			t2b.addCondition(COND::MIN_FOOD, 6);
 			t2b.addCondition(COND::ENEMY_RACE_TERRAN);
 			t2b.addCondition(COND::TIMER_1_SET, 0, false);
+			t2b.addCondition(COND::MIN_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t2b.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t2b.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			t2b.addCondition(COND::MAX_UNIT_OF_TYPE, 2, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
@@ -1491,6 +1492,13 @@ void Strategy::loadStrategies() {
 			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
 			t3.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
 			stargate_1.addTrigger(t3);
+			Trigger t4(bot); // build another if we have tons of resources
+			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
+			t4.addCondition(COND::MIN_MINERALS, 700);
+			t4.addCondition(COND::MIN_GAS, 900);
+			t4.addCondition(COND::MAX_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
+			t4.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
+			stargate_1.addTrigger(t4);
 			bot->addStrat(stargate_1);
 		}
 
@@ -1672,6 +1680,54 @@ void Strategy::loadStrategies() {
 			assim_2.addTrigger(t2);
 			bot->addStrat(assim_2);
 		}
+
+		{	// build assimilators at 2nd expansion
+			Precept assim_3(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_ASSIMILATOR, bot->locH->bases[2].getTownhall());
+			d.allowMultiple();
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 75);
+			t.addCondition(COND::MAX_GAS, 700);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[2].getTownhall(), 1.5F);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->locH->bases[2].getTownhall());
+			assim_3.addDirective(d);
+			assim_3.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_MINERALS, 75);
+			t2.addCondition(COND::MAX_GAS, 700);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[2].getTownhall(), 1.5F);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->locH->bases[2].getTownhall());
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->locH->bases[2].getTownhall());
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR);
+			assim_3.addTrigger(t2);
+			bot->addStrat(assim_3);
+		}
+
+		{	// build assimilators at 3rd expansion
+			Precept assim_4(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_ASSIMILATOR, bot->locH->bases[3].getTownhall());
+			d.allowMultiple();
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 75);
+			t.addCondition(COND::MAX_GAS, 700);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[3].getTownhall(), 1.5F);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->locH->bases[3].getTownhall());
+			assim_4.addDirective(d);
+			assim_4.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_MINERALS, 75);
+			t2.addCondition(COND::MAX_GAS, 700);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[3].getTownhall(), 1.5F);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 2, sc2::UNIT_TYPEID::PROTOSS_GATEWAY);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->locH->bases[3].getTownhall());
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR, bot->locH->bases[3].getTownhall());
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_ASSIMILATOR);
+			assim_4.addTrigger(t2);
+			bot->addStrat(assim_4);
+		}
+
+
 		{	// continuously upgrade attack at forge when possible
 			Precept upgrade_attack(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_FORGE, sc2::ABILITY_ID::RESEARCH_PROTOSSGROUNDWEAPONS);
@@ -1750,6 +1806,33 @@ void Strategy::loadStrategies() {
 			upgrade_armor.addDirective(d);
 			bot->addStrat(upgrade_armor);
 		}
+		{	// upgrade air armor
+			Precept upgrade_air_armor(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::SIMPLE_ACTION, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE, sc2::ABILITY_ID::RESEARCH_PROTOSSAIRARMOR);
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 400);
+			t.addCondition(COND::MIN_GAS, 400);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_STARGATE);
+			t.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSAIRARMORSLEVEL1, false);
+			upgrade_air_armor.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_MINERALS, 400);
+			t2.addCondition(COND::MIN_GAS, 400);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FLEETBEACON);
+			t2.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSAIRARMORSLEVEL1);
+			t2.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSAIRARMORSLEVEL2, false);
+			upgrade_air_armor.addTrigger(t2);
+			Trigger t3(bot);
+			t3.addCondition(COND::MIN_MINERALS, 400);
+			t3.addCondition(COND::MIN_GAS, 400);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FLEETBEACON);
+			t3.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSAIRARMORSLEVEL2);
+			t3.addCondition(COND::HAVE_UPGRADE, sc2::UPGRADE_ID::PROTOSSAIRARMORSLEVEL3, false);
+			upgrade_air_armor.addTrigger(t3);
+			upgrade_air_armor.addDirective(d);
+			bot->addStrat(upgrade_air_armor);
+		}
+
 		{	// handle our nexus using chronoboost
 			Precept use_chrono(bot);
 			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_NEXUS, sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST, bot->locH->bases[0].getTownhall());
@@ -1899,7 +1982,7 @@ void Strategy::loadStrategies() {
 			init_group_timer.addTrigger(t7);
 			Trigger t8(bot);  // handle timer VS Zerg
 			t8.addCondition(COND::TIMER_1_SET, 0, false);
-			t8.addCondition(COND::MIN_FOOD_ARMY, 68);
+			t8.addCondition(COND::MIN_FOOD_ARMY, 75);
 			t8.addCondition(COND::ENEMY_RACE_ZERG);
 			t8.addCondition(COND::MIN_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t8.addCondition(COND::MIN_UNIT_OF_TYPE, 12, sc2::UNIT_TYPEID::PROTOSS_STALKER);
@@ -1934,7 +2017,7 @@ void Strategy::loadStrategies() {
 			d.setTargetLocationFunction(this, bot, func);
 			attack_and_explore.addDirective(d);
 			t.addCondition(COND::TIMER_1_MIN_STEPS_PAST, 750);
-			t.addCondition(COND::MAX_TIME, 28999);
+			t.addCondition(COND::MAX_TIME, 33999);
 			attack_and_explore.addTrigger(t);
 			bot->addStrat(attack_and_explore);
 		}
@@ -1948,7 +2031,7 @@ void Strategy::loadStrategies() {
 			d.setTargetLocationFunction(this, bot, func);
 			attack_and_explore_flying.addDirective(d);
 			t.addCondition(COND::TIMER_1_MIN_STEPS_PAST, 750);
-			t.addCondition(COND::MAX_TIME, 28999);
+			t.addCondition(COND::MAX_TIME, 33999);
 			attack_and_explore_flying.addTrigger(t);
 			bot->addStrat(attack_and_explore_flying);
 		}
@@ -1960,12 +2043,12 @@ void Strategy::loadStrategies() {
 			d.setContinuous();
 			auto func = [this]() { return bot->locH->smartPriorityAttack(); };
 			d.setTargetLocationFunction(this, bot, func);
-			t.addCondition(COND::MIN_TIME, 28999);
+			t.addCondition(COND::MIN_TIME, 34000);
 			attack_and_explore_late.addDirective(d);
 			attack_and_explore_late.addTrigger(t);
 			bot->addStrat(attack_and_explore_late);
 		}
-		{	// if food usage drops below 90, stop sending units to join the attack, and build up another force first
+		{	// if army food usage drops below 40, stop sending units to join the attack, and build up another force first
 			Precept reset_group_timer(bot);
 			Directive d(Directive::GAME_VARIABLES, Directive::ACTION_TYPE::RESET_TIMER_1);
 			reset_group_timer.addDirective(d);
@@ -2050,7 +2133,7 @@ void Strategy::loadStrategies() {
 			d.setTargetLocationFunction(this, bot, func);
 			Trigger t(bot); // after 27,000 timesteps, send flyers to search non-pathable areas
 			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 1, std::unordered_set<FLAGS>{FLAGS::IS_FLYING});
-			t.addCondition(COND::MIN_TIME, 27000);
+			t.addCondition(COND::MIN_TIME, 32000);
 			flyers_search.addDirective(d);
 			flyers_search.addTrigger(t);
 			bot->addStrat(flyers_search);

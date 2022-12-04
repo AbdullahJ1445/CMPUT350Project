@@ -80,9 +80,11 @@ public:
 	void addHarvester(Mob* mob_);
 	void removeMineralHarvester(Mob* mob_);
 	void removeHarvester(Mob* mob_);
+	std::unordered_set<Mob*> getHarvesters();
 	void stopHarvestingGas();
 	void stopHarvestingMinerals();
 	int getHarvesterCount();
+	bool harvestNearbyTownhall(BasicSc2Bot* agent);
 	bool grabNearbyMineralHarvester(BasicSc2Bot* agent, bool grab_from_gas=true, bool grab_from_other_townhall=false);
 	bool grabNearbyGasHarvester(BasicSc2Bot* agent);
 	bool operator<(const Mob& mob) const { return tag < mob.tag; }
