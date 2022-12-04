@@ -64,11 +64,11 @@ void Strategy::loadStrategies() {
 		
 		// order of vectors = { PROTOSS/UNKNOWN, ZERG, TERRAN }
 		
-		std::vector<int> stalkers_to_zealots{ 3, 3, 1 };
-		std::vector<int> zealots_to_stalkers{ 3, 3, 3 };
-		std::vector<int> stalkers_to_zealots_w_robo{ 0, 8, 8 };
+		std::vector<int> stalkers_to_zealots{ 3, 4, 1 };
+		std::vector<int> zealots_to_stalkers{ 3, 6, 4 };
+		std::vector<int> stalkers_to_zealots_w_robo{ 0, 10, 8 };
 		std::vector<int> max_zealots_w_robo{ 8, 8, 8};
-		std::vector<int> max_time_for_zealots{ 13500, 13500, 13500 };
+		std::vector<int> max_time_for_zealots{ 13500, 13500, 12500 };
 		std::vector<int> earliest_expansion{ 15000, 15000, 15000 };  // against zerg/terran, do not expand unless early pushes all are failing
 		
 
@@ -519,9 +519,11 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_STALKER);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_2"), 0.5F);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_2"), 0.5F);
-			t.addCondition(COND::MAX_TIME, 4000);
+			t.addCondition(COND::MAX_TIME, 9000);
 			cannon_2.addDirective(d);
 			cannon_2.addTrigger(t);
 			bot->addStrat(cannon_2);
@@ -1184,7 +1186,6 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MAX_TIME, 28999);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			t.addCondition(COND::MAX_UNITS_USING_ABILITY, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_SENTRY);
-
 			train_sentry.addTrigger(t);
 			Trigger t2(bot); // VS ANY
 			t2.addCondition(COND::MIN_MINERALS, 200);
@@ -1196,6 +1197,17 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
 			t2.addCondition(COND::MAX_UNITS_USING_ABILITY, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_SENTRY);
 			train_sentry.addTrigger(t2);
+			Trigger t3(bot); // build a couple more vs zerg for hydras
+			t3.addCondition(COND::MIN_MINERALS, 400);
+			t3.addCondition(COND::MIN_GAS, 200);
+			t3.addCondition(COND::MIN_FOOD, 4);
+			t3.addCondition(COND::MAX_FOOD_ARMY, 100);
+			t3.addCondition(COND::MAX_TIME, 28999);
+			t3.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 3, sc2::UNIT_TYPEID::PROTOSS_SENTRY);
+			t3.addCondition(COND::ENEMY_RACE_ZERG);
+			t3.addCondition(COND::MAX_UNITS_USING_ABILITY, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, sc2::ABILITY_ID::TRAIN_SENTRY);
+			train_sentry.addTrigger(t3);
 			bot->addStrat(train_sentry);
 		}
 
@@ -1274,10 +1286,10 @@ void Strategy::loadStrategies() {
 			t6.addCondition(COND::MIN_GAS, 150);
 			t6.addCondition(COND::MIN_FOOD, 4);
 			t6.addCondition(COND::ENEMY_RACE_ZERG);
-			t6.addCondition(COND::MAX_FOOD_ARMY, 70);
+			t6.addCondition(COND::MAX_FOOD_ARMY, 90);
 			t6.addCondition(COND::TIMER_1_SET, 0, false);
 			t6.addCondition(COND::MAX_TIME, 28999);
-			t6.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS, bot->locH->bases[1].getRallyPoint(), 30.0F);
+			//t6.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS, bot->locH->bases[1].getRallyPoint(), 30.0F);
 			t6.addCondition(COND::MAX_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t6.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t6.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
@@ -1376,6 +1388,7 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::TIMER_1_SET, 0, false);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
 			train_colossus.addTrigger(t2);
 			Trigger t3(bot); // VS ANY
 			t3.addCondition(COND::MIN_MINERALS, 300);
@@ -1398,6 +1411,16 @@ void Strategy::loadStrategies() {
 			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
 			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			train_colossus.addTrigger(t4);
+			Trigger t5(bot); // VS ZERG		after having 2 colossus get some immortals
+			t5.addCondition(COND::MIN_MINERALS, 500);
+			t5.addCondition(COND::MIN_GAS, 200);
+			t5.addCondition(COND::MIN_FOOD, 6);
+			t5.addCondition(COND::MAX_TIME, 24999);
+			t5.addCondition(COND::TIMER_1_SET, 0, false);
+			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
+			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSBAY);
+			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
+			train_colossus.addTrigger(t5);
 			bot->addStrat(train_colossus);
 		}
 
@@ -1506,7 +1529,7 @@ void Strategy::loadStrategies() {
 				t.addCondition(tc);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[1].getDefendPoint(0), 14.0F);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 6, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].getDefendPoint(0), 8.0F);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].getDefendPoint(0), 8.0F);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].getDefendPoint(0), 6.0F);
 			more_cannons.addDirective(d);
 			more_cannons.addTrigger(t);
@@ -1780,15 +1803,15 @@ void Strategy::loadStrategies() {
 			init_group_timer.addTrigger(t3);
 			Trigger t4(bot);  // handle timers VS Terran
 			t4.addCondition(COND::TIMER_1_SET, 0, false);
-			t4.addCondition(COND::MIN_FOOD_ARMY, 55);
+			t4.addCondition(COND::MIN_FOOD_ARMY, 50);
 			t4.addCondition(COND::MAX_TIME, 12999);
 			t4.addCondition(COND::ENEMY_RACE_TERRAN);
-			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 4, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
+			t4.addCondition(COND::MIN_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t4.addCondition(COND::THREAT_EXISTS_NEAR_LOCATION, bot->locH->bases[0].getTownhall(), 70.0F, false);
 			init_group_timer.addTrigger(t4);
 			Trigger t5(bot); // require a larger army for second push
 			t5.addCondition(COND::TIMER_1_SET, 0, false);
-			t5.addCondition(COND::MIN_FOOD_ARMY, 75);
+			t5.addCondition(COND::MIN_FOOD_ARMY, 70);
 			t5.addCondition(COND::ENEMY_RACE_TERRAN);
 			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 6, sc2::UNIT_TYPEID::PROTOSS_IMMORTAL);
 			t5.addCondition(COND::MIN_UNIT_OF_TYPE, 8, sc2::UNIT_TYPEID::PROTOSS_STALKER);
