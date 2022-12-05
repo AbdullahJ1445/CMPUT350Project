@@ -45,6 +45,7 @@ BasicSc2Bot::BasicSc2Bot()
 	robotics_idle = 0;
 	max_minerals = 0;
 	max_gas = 0;
+	townhalls_built = 0;
 	reset_shield_overcharge = 0;
 }
 
@@ -72,6 +73,8 @@ void BasicSc2Bot::addStrat(Precept precept_) {
 
 void BasicSc2Bot::storeDirective(Directive directive_)
 {
+	// intended for directives, such as default directives to gather resources,
+	// which are not stored precepts vector.
 	if (directive_by_id[directive_.getID()])
 		return;
 
@@ -89,6 +92,8 @@ void BasicSc2Bot::storeStrategy(Strategy strategy_)
 		current_strategy = strategy_storage.back().get();
 	}
 }
+
+// Timers can be used in strategies to organize and time actions
 
 void BasicSc2Bot::setTimer1(int steps_) {
 	// sets timer1 only if its value is not already set
@@ -183,17 +188,22 @@ void BasicSc2Bot::resetTimer3() {
 
 void BasicSc2Bot::setInitialized()
 {
+	// set the flag that all loading is initialized
+	// all functions can be used without worrying about references not existing
 	initialized = true;
 }
 
 Directive* BasicSc2Bot::getLastStoredDirective()
 {
+	// used after storing a directive to get its exact pointer
 	return directive_storage.back().get();
 }
 
 void BasicSc2Bot::checkBuildingQueues() {
 	// cancel any queued units
-	// we only want a structure to train one unit at a time
+	// Sometimes the bot will mistakenly queue more than one unit.
+	// Calling this on step makes sure to fix that
+
 	const sc2::ObservationInterface* obs = Observation();
 	auto ad = obs->GetAbilityData();
 	sc2::QueryInterface* query = Query();
@@ -212,6 +222,8 @@ void BasicSc2Bot::checkBuildingQueues() {
 }
 
 void BasicSc2Bot::listUnitSummary() {
+	// Currently unused, can help differentiate and diagnose strategy setups.
+	// Intended to be called OnGameEnd()
 	const sc2::ObservationInterface* obs = Observation();
 	auto utd = obs->GetUnitTypeData();
 	std::map<std::string, int> first_7000_steps;
@@ -265,13 +277,19 @@ bool BasicSc2Bot::isStructure(sc2::UNIT_TYPEID unit_type) {
 }
 
 void BasicSc2Bot::storeInt(std::string identifier_, int value_) {
+	// stores an int with a given string identifier.
+	// In strategy.cpp, the following flag can be set:
+	// "_SAVE_CHRONOBOOST_FOR_BATTERY_OVERCHARGE" = 1: will cause nexuses not to spend energy on
+	// chronoboost unless they have over 100. Essentially always ensuring there is enough energy
+	// to use for battery overcharge
 	special_ints[identifier_] = value_;
 }
 
 void BasicSc2Bot::storeUnitType(std::string identifier_, sc2::UNIT_TYPEID unit_type_)
 {
-	// store a special unit, used for certain functions
-	// e.g. "_CHRONOBOOST_TARGET" : the unit type of a building that chronoboost will exclusively target
+	// store a special unit, used for certain functions.
+	// In strategy.cpp, the following flag can be set:
+	// "_CHRONOBOOST_TARGET" : the unit type of a building that chronoboost will exclusively target
 	special_units[identifier_] = unit_type_;
 }
 
@@ -301,16 +319,19 @@ bool BasicSc2Bot::isMineralPatch(const sc2::Unit* unit_) {
 
 sc2::UNIT_TYPEID BasicSc2Bot::getUnitType(std::string identifier_)
 {
+	// get a previously stored unit type from a string identifier
 	return special_units[identifier_];
 	
 }
 
 sc2::Race BasicSc2Bot::getEnemyRace() {
+	// get the enemy race (Race::Random if not yet discovered)
 	return enemy_race;
 }
 
 std::unordered_set<const sc2::Unit*> BasicSc2Bot::getEnemyUnits()
 {
+	// gets an unordered set of pointers to enemy units
 	std::unordered_set<const sc2::Unit*> enemies;
 
 	for (auto it = enemy_unit_by_tag.begin(); it != enemy_unit_by_tag.end(); ++it) {
@@ -322,11 +343,13 @@ std::unordered_set<const sc2::Unit*> BasicSc2Bot::getEnemyUnits()
 
 sc2::Point2D BasicSc2Bot::getStoredLocation(std::string identifier_)
 {
+	// gets a previously stored location using a string identifier
 	return special_locations[identifier_];
 }
 
 int BasicSc2Bot::getStoredInt(std::string identifier_)
 {
+	// gets a previously stored int using a string identifier
 	return special_ints[identifier_];
 }
 
@@ -364,7 +387,7 @@ sc2::UnitTypeData BasicSc2Bot::getUnitTypeData(const sc2::Unit* unit) {
 }
 
 bool BasicSc2Bot::addEnemyUnit(const sc2::Unit* unit) {
-	
+	// adds an enemy unit to our unordered_map and unordered_set containers
 	if (std::addressof(enemy_unit_by_tag[unit->tag]) != std::addressof(unit)) {
 		enemy_units.erase(enemy_unit_by_tag[unit->tag]);
 	}
@@ -375,6 +398,8 @@ bool BasicSc2Bot::addEnemyUnit(const sc2::Unit* unit) {
 
 bool BasicSc2Bot::flushOrders()
 {
+	// flushes any erroneous directives that might reference mobs that are no
+	// longer performing them, and vice versa
 	bool any_flushed = false;
 	std::unordered_set<Mob*> busy_mobs = mobH->getBusyMobs();
 	for (auto m : busy_mobs) {
@@ -436,18 +461,22 @@ void BasicSc2Bot::checkBuildingsStatus() {
 }
 
 int BasicSc2Bot::getMineralCost(const sc2::Unit* unit) {
+	// gets the mineral cost of a unit
 	return mineral_cost[(int)unit->unit_type];
 }
 
 int BasicSc2Bot::getGasCost(const sc2::Unit* unit) {
+	// gets the vespene cost of a unit
 	return gas_cost[(int)unit->unit_type];
 }
 
 int BasicSc2Bot::getFoodCost(const sc2::Unit* unit) {
+	// gets the food cost of a unit
 	return food_cost[(int)unit->unit_type];
 }
 
 float BasicSc2Bot::getValue(const sc2::Unit* unit) {
+	// gets an estimated value of the unit
 	int mineral_cost = getMineralCost(unit);
 	int gas_cost = getGasCost(unit);
 	int food_cost = getFoodCost(unit);
@@ -537,7 +566,8 @@ void::BasicSc2Bot::loadStep_03() {
 }
 
 void::BasicSc2Bot::loadStep_04() { 
-
+	// handle building and location data
+	// setLoadingProgress(4) is set inside LocationHandler after chunks are loaded
 	const sc2::ObservationInterface* obs = Observation();
 	auto utd_fulldata = obs->GetUnitTypeData();
 	auto atd_fulldata = obs->GetAbilityData();
@@ -566,7 +596,7 @@ void::BasicSc2Bot::loadStep_04() {
 }
 
 void::BasicSc2Bot::loadStep_05() { 
-
+	// handle loading strategies
 	current_strategy->loadStrategies();
 	setLoadingProgress(5);
 	setInitialized();
@@ -615,6 +645,10 @@ void BasicSc2Bot::OnGameEnd() {
 	std::string result = "L";
 	if (results[0].result == sc2::GameResult::Win) {
 		result = "W";
+	}
+
+	if (townhalls_built == 0) {
+		std::cout << std::endl << " * * *   WARNING  TOWNHALL WAS NOT BUILT   * * *" << std::endl << std::endl;
 	}
 
 	std::cout << "Gateway uptime: " << (int)((float) (gateways_busy * 100) / ((float)gateways_busy + (float)gateways_idle)) << "% "
@@ -934,8 +968,11 @@ void BasicSc2Bot::checkSiegeTanks() {
 			}
 		}
 		if (disp_type == sc2::Unit::DisplayType::Snapshot) {
-			if (e->unit_type.ToType() == sc2::UNIT_TYPEID::TERRAN_SIEGETANKSIEGED) {
-				std::cout << "(" << (int)e->unit_type.ToType() << ")";
+			// slightly increase threat of snapshot structures each step so they will be searched
+
+			MapChunk* chunk = locH->getNearestPathableChunk(e->pos);
+			if (chunk != nullptr) {
+				chunk->increaseThreat(this, 0.01);
 			}
 		}
 	}
@@ -1081,7 +1118,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 			std::unordered_set<Mob*> nearby_se;
 			for (auto s : sentries) {
 				for (auto t : tanks_s) {
-					if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 144.0F) {
+					if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 324.0F) {
 						nearby_se.insert(s);
 						break;
 					}
@@ -1160,13 +1197,16 @@ void BasicSc2Bot::checkSiegeTanks() {
 			}
 		}
 		*/
+		
 
 		// player stalkers exist
+		// get stalkers to move towards the siege tanks but not too close
+		// get in range to blink in if they go siege mode
 		if (!stalkers.empty()) {
 			std::unordered_set<Mob*> nearby_st;
 			for (auto s : stalkers) {
 				for (auto t : tanks_s) {
-					if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 324.0F) {
+					if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 324.0F && sc2::DistanceSquared2D(t->pos, s->unit.pos) > 52.0F) {
 						nearby_st.insert(s);
 						break;
 					}
@@ -1636,6 +1676,7 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 			unit_type == sc2::UNIT_TYPEID::TERRAN_COMMANDCENTER ||
 			unit_type == sc2::UNIT_TYPEID::ZERG_HATCHERY) {
 			mob_type = MOB::MOB_TOWNHALL;
+			townhalls_built++;
 		}
 		else {
 			mob_type = MOB::MOB_STRUCTURE;
@@ -1689,7 +1730,12 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	}
 	else {
 		if (!structure) {
-			new_mob.setAssignedLocation(locH->bases[locH->getIndexOfClosestBase(unit->pos)].getRallyPoint());
+			if (unit_type == sc2::UNIT_TYPEID::PROTOSS_ZEALOT) {
+				new_mob.setAssignedLocation(locH->bases[locH->getIndexOfClosestBase(unit->pos)].getMeleeRallyPoint());
+			}
+			else {
+				new_mob.setAssignedLocation(locH->bases[locH->getIndexOfClosestBase(unit->pos)].getRallyPoint());
+			}
 			//new_mob.setAssignedLocation(Directive::uniform_random_point_in_circle(new_mob.getHomeLocation(), 2.5F));
 		}
 		else {

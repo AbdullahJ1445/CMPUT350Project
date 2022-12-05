@@ -113,16 +113,16 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_NEXUS, bot->locH->bases[1].getTownhall());
 			Trigger t(bot);
 			t.addCondition(COND::MIN_MINERALS, 400);
-			t.addCondition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall());
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall(), 0.5F);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall(), 4.0F);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
 			first_expansion.addDirective(d);
 			first_expansion.addTrigger(t);
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_MINERALS, 400);
-			t2.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
-			t2.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall());
-			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall(), 0.5F);
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall(), 4.0F);
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
+			t2.addCondition(COND::MIN_TIME, 3000);
 			first_expansion.addTrigger(t2);
 			bot->addStrat(first_expansion);
 		}
@@ -215,6 +215,22 @@ void Strategy::loadStrategies() {
 			cannon_1.addDirective(d);
 			cannon_1.addTrigger(t);
 			bot->addStrat(cannon_1);
+		}
+		{	// build cannon #2 at our pre-defined wall location
+			Precept cannon_2(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::EXACT_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_PHOTONCANNON, bot->getStoredLocation("CANNON_2"));
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 150);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_STALKER);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_2"), 0.5F);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_2"), 0.5F);
+			t.addCondition(COND::MAX_TIME, 9000);
+			cannon_2.addDirective(d);
+			cannon_2.addTrigger(t);
+			bot->addStrat(cannon_2);
 		}
 		{	// build our cybernetics core at our pre-defined wall location
 			Precept cyber_1(bot);
@@ -484,6 +500,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_FOOD_USED, 100);
 			t.addCondition(COND::ENEMY_RACE_PROTOSS); // only really want for dark templars
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_OBSERVER);
+			t.addCondition(COND::MAX_UNITS_USING_ABILITY, 0, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY, sc2::ABILITY_ID::TRAIN_OBSERVER);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY);
 			train_observer.addTrigger(t);
 			bot->addStrat(train_observer);
@@ -580,7 +597,7 @@ void Strategy::loadStrategies() {
 				t.addCondition(tc);
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[1].getDefendPoint(0), 12.0F);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 4, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].getDefendPoint(0), 8.0F);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].getDefendPoint(0), 8.0F);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 2, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].getDefendPoint(0), 6.0F);
 			more_cannons.addDirective(d);
 			more_cannons.addTrigger(t);
@@ -957,7 +974,7 @@ void Strategy::loadStrategies() {
 		}
 		{	// send workers to defend expansion when defense timer is initialized
 			Precept workers_defend_expansion(bot);
-			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_WORKER}, sc2::ABILITY_ID::ATTACK, bot->locH->bases[1].getRallyPoint(), 3.0F);
+			Directive d(Directive::MATCH_FLAGS_NEAR_LOCATION, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_WORKER}, sc2::ABILITY_ID::ATTACK, bot->locH->bases[1].getRallyPoint(), bot->locH->bases[1].getRallyPoint(), 12.0F, 3.0F);
 			Trigger t(bot);
 			auto func = [this]() { return bot->locH->smartStayHomeAndDefend(); };
 			d.setTargetLocationFunction(this, bot, func);
@@ -967,6 +984,21 @@ void Strategy::loadStrategies() {
 			workers_defend_expansion.addDirective(d);
 			bot->addStrat(workers_defend_expansion);
 		}
+
+		// previously sent all workers - but often let to wrecking our economy when unnecessary
+		/*
+		{	// send workers to defend expansion when defense timer is initialized
+			Precept workers_defend_expansion(bot);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_WORKER}, sc2::ABILITY_ID::ATTACK, bot->locH->bases[1].getRallyPoint(), 3.0F);
+			Trigger t(bot);
+			auto func = [this]() { return bot->locH->smartStayHomeAndDefend(); };
+			d.setTargetLocationFunction(this, bot, func);
+			t.addCondition(COND::TIMER_2_SET, 0, true);
+			//t.addCondition(COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION, 3, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].getTownhall(), 16.0F);
+			workers_defend_expansion.addTrigger(t);
+			workers_defend_expansion.addDirective(d);
+			bot->addStrat(workers_defend_expansion);
+		} */
 		{	// initialize the timer for grouping up at a rally point en route to attacking
 			Precept init_group_timer(bot);
 			Directive d(Directive::GAME_VARIABLES, Directive::ACTION_TYPE::SET_TIMER_1, 0);
@@ -992,7 +1024,59 @@ void Strategy::loadStrategies() {
 			init_group_timer.addTrigger(t3);
 			bot->addStrat(init_group_timer);
 		}
+
+
+		{	// send all army units to the pre-group area outside of the base before sending the attack
+			Precept group_at_pre_pre_prep_area(bot);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->locH->bases[3].getDefendPoint(1), 4.0F);
+			Trigger t(bot);
+			d.setIgnoreDistance(7.0F);
+			d.setOverrideOther(); // grab mobs who were on their way to attack the enemy
+			//t.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
+			t.addCondition(COND::TIMER_1_MIN_STEPS_PAST, 0);
+			t.addCondition(COND::TIMER_1_MAX_STEPS_PAST, 169);
+			//t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 12, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			group_at_pre_pre_prep_area.addDirective(d);
+			group_at_pre_pre_prep_area.addTrigger(t);
+			bot->addStrat(group_at_pre_pre_prep_area);
+		}
+
+		// removing this extra grouping spot as it often caused the army to split up
+		/* 
+		{	// send all army units to the pre-group area outside of the base before sending the attack
+			Precept group_at_pre_prep_area(bot);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->locH->bases[3].getDefendPoint(1), 4.0F);
+			Trigger t(bot);
+			auto func = [this]() { return bot->locH->getRallyPointBeforeRallyPoint(); };
+			d.setTargetLocationFunction(this, bot, func);
+			d.setIgnoreDistance(7.0F);
+			d.setOverrideOther(); // grab mobs who were on their way to attack the enemy
+			//t.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
+			t.addCondition(COND::TIMER_1_MIN_STEPS_PAST, 100);
+			t.addCondition(COND::TIMER_1_MAX_STEPS_PAST, 379);
+			//t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 12, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			group_at_pre_prep_area.addDirective(d);
+			group_at_pre_prep_area.addTrigger(t);
+			bot->addStrat(group_at_pre_prep_area);
+		} */
 		{	// send all army units to group at a rally point en route to the attack location and wait for 850 gameloop steps
+			Precept group_at_prep_area(bot);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->locH->getCenterPathableLocation(), 4.0F);
+			Trigger t(bot);
+			auto func = [this]() { return bot->locH->getRallyPointTowardsThreat(); };
+			d.setTargetLocationFunction(this, bot, func);
+			d.setIgnoreDistance(7.0F);
+			d.setOverrideOther(); // grab mobs who were on their way to attack the enemy
+			t.addCondition(COND::TIMER_1_MIN_STEPS_PAST, 170);
+			t.addCondition(COND::TIMER_1_MAX_STEPS_PAST, 849);
+			group_at_prep_area.addDirective(d);
+			group_at_prep_area.addTrigger(t);
+			bot->addStrat(group_at_prep_area);
+		}
+
+
+		/*			This was the original but testing new grouping for now - also changed to 650 instead of 750
+		{	// send all army units to group at a rally point en route to the attack location and wait for 750 gameloop steps
 			Precept group_at_prep_area(bot);
 			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->locH->getCenterPathableLocation(), 4.0F);
 			Trigger t(bot);
@@ -1002,27 +1086,40 @@ void Strategy::loadStrategies() {
 			d.setOverrideOther(); // grab mobs who were on their way to attack the enemy
 			//t.addCondition(COND::MAX_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
 			t.addCondition(COND::TIMER_1_MIN_STEPS_PAST, 0);
-			t.addCondition(COND::TIMER_1_MAX_STEPS_PAST, 749);
+			t.addCondition(COND::TIMER_1_MAX_STEPS_PAST, 719);
 			//t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 12, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
 			group_at_prep_area.addDirective(d);
 			group_at_prep_area.addTrigger(t);
 			bot->addStrat(group_at_prep_area);
-		}
+		} */
 		{	// after timer passes 750 gameloop steps, send in the attack 
-			Precept attack_and_explore(bot); // if less than 22,000 steps include flyers
+			Precept attack_and_explore(bot);
 			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, sc2::Point2D(1, 1), 4.0F);
 			Trigger t(bot);
 			bot->storeInt("ATTACK_DIR_ID", d.getID()); // identifier use to determine when first attack was launched
+			d.excludeFlag(FLAGS::IS_FLYING);
 			d.setContinuous();
 			auto func = [this]() { return bot->locH->smartPriorityAttack(); };
 			d.setTargetLocationFunction(this, bot, func);
 			attack_and_explore.addDirective(d);
-			t.addCondition(COND::TIMER_1_MIN_STEPS_PAST, 750);
-			t.addCondition(COND::MAX_TIME, 21999);
+			t.addCondition(COND::TIMER_1_MIN_STEPS_PAST, 850);
 			attack_and_explore.addTrigger(t);
 			bot->addStrat(attack_and_explore);
 		}
-		{	// after 850 gameloop steps, send in the attack 
+		{	// handle flyers during attack
+			Precept attack_and_explore_flying(bot); 
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_FLYING}, sc2::ABILITY_ID::ATTACK, sc2::Point2D(1, 1), 4.0F);
+			Trigger t(bot);
+			d.setContinuous();
+			auto func = [this]() { return bot->locH->getAttackingForceLocation(); }; //flyers stay with the army instead of taking shortcuts
+			d.setTargetLocationFunction(this, bot, func);
+			attack_and_explore_flying.addDirective(d);
+			t.addCondition(COND::TIMER_1_MIN_STEPS_PAST, 850);
+			t.addCondition(COND::MAX_TIME, 21999);
+			attack_and_explore_flying.addTrigger(t);
+			bot->addStrat(attack_and_explore_flying);
+		}
+		{	// after 750 gameloop steps, send in the attack 
 			Precept attack_and_explore_late(bot); // if greater than 22,000 steps, flyers go their own way
 			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, sc2::Point2D(1, 1), 4.0F);
 			Trigger t(bot);

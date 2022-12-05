@@ -1279,7 +1279,16 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 			}
 			if (isAssignedLocationValue(target_loc_, proximity)) {
 				sc2::Point2D offset = getOffsetAssignedLocation(target_loc_);
-				target_loc_ = (*mobs_.begin())->getAssignedLocation() + offset;
+				bool any_success = false;
+				for (auto m : mobs_) {
+					target_loc_ = m->getAssignedLocation() + offset;
+					if (_genericIssueOrder(agent, std::unordered_set<Mob*>{m}, target_loc_, target_unit_, queued_, ability_)) {
+						any_success = true;
+					}
+				}
+					return any_success;
+				
+				
 			}
 			if (ignore_distance >= 0) {
 				// when ignore_distance is specified, we must filter out mobs that are within the
