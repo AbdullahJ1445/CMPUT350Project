@@ -866,6 +866,21 @@ void BasicSc2Bot::checkGasStructures() {
 		[](Mob* m) { return (m->unit.build_progress == 1.0); });
 	gas_structures = built;
 
+	// handle depleted geysers
+	std::unordered_set<Mob*> active;
+	for (auto g : gas_structures) {
+		if (g->unit.vespene_contents > 0) {
+			active.insert(g);
+		}
+		else {
+			auto harvesters = g->getHarvesters();
+			for (auto h : harvesters) {
+				h->harvestNearbyTownhall(this);				
+			}
+		}
+	}
+	gas_structures = active;
+
 	if (gas_structures.empty()) {
 		return;
 	}
