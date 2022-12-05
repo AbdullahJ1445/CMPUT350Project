@@ -27,6 +27,7 @@ public:
     float distSquaredFromStart();
     bool isNearStart();
     bool inVision(const sc2::ObservationInterface* obs);
+    void increaseThreat(BasicSc2Bot* agent_, float amount);
     void checkVision(const sc2::ObservationInterface* obs);
     void increaseThreat(BasicSc2Bot* agent_, const sc2::Unit* unit, float modifier_);
     void setThreat(double amt_);
@@ -51,6 +52,7 @@ public:
     LocationHandler(BasicSc2Bot* agent_);
     MapChunk* getNextUnseenChunk(bool pathable_=true);
     void setNextUnseenChunk(bool pathable_=true);
+    sc2::Point2D getNearestValidRallyLocation(sc2::Point2D spot);
     sc2::Point2D getNearestStartLocation(sc2::Point2D spot);
     int getIndexOfClosestBase(sc2::Point2D location_);
     void scanChunks(const sc2::ObservationInterface* obs);
@@ -78,11 +80,13 @@ public:
     MapChunk* getNearestChunk(sc2::Point2D loc_);
     MapChunk* getNearestPathableChunk(sc2::Point2D loc_);
     MapChunk* getChunkByCoords(std::pair<float, float> coords);
+    sc2::Point2D getAttackingForceLocation();
     sc2::Point2D getCenterOfArmy();
     sc2::Point2D getEnemyLocation();
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();
     sc2::Point2D getCenterPathableLocation();
+    sc2::Point2D getRallyPointBeforeRallyPoint();
     bool locationsEqual(sc2::Point2D loc_1, sc2::Point2D loc_2);
 
     sc2::Point2D getRallyPointTowardsThreat();
@@ -150,6 +154,7 @@ private:
     double highest_pathable_threat;
     double highest_threat_away_from_start;
     double highest_pathable_threat_away_from_start;
+    std::vector<sc2::Point2D> rally_locations;
     MapChunk* high_threat_chunk;
     MapChunk* high_threat_pathable_chunk;
     MapChunk* high_threat_chunk_away_from_start;

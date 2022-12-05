@@ -20,6 +20,8 @@ class Base;
 class Strategy;
 class MobHandler; 
 
+#define STEP_SIZE 7 // should be 1 when submitted
+
 
 class Human : public sc2::Agent {
 public:
@@ -113,6 +115,7 @@ private:
 	// These functions must use PascalCase instead of camelCase since they must match the sc2 api's function names
 	virtual void OnGameStart();
 	virtual void OnStep();
+	void checkSiegeTanks();
 	virtual void OnGameEnd();
 	virtual void OnBuildingConstructionComplete(const sc2::Unit* unit);
 	virtual void OnUnitCreated(const sc2::Unit* unit);
@@ -143,9 +146,11 @@ private:
 	int enemy_start_id;
 	std::string map_name;
 	sc2::Race enemy_race;
+	Mob* special; // for testing purposes
 	int timer_1;
 	int timer_2;
 	int timer_3;
+	bool first_friendly_death;
 	int loading_progress;
 	bool initialized;
 	int gateways_busy;

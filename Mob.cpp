@@ -30,6 +30,7 @@ Mob::Mob(const sc2::Unit& unit_, MOB mobs_type) : unit(unit_) {
 void Mob::initVars() {
 	// initialize all flags to false
 	tag = unit.tag;
+	cooldown = 0;
 	has_default_directive = false;
 	has_bundled_directive = false;
 	has_current_directive = false;
@@ -128,6 +129,12 @@ void Mob::removeFlag(FLAGS flag) {
 	flags.erase(flag);
 }
 
+void Mob::giveCooldown(BasicSc2Bot* agent, int amt)
+{
+	// put this mob on cooldown
+	cooldown = agent->Observation()->GetGameLoop() + amt;
+}
+
 Directive Mob::popBundledDirective() {
 	// get the directive bundled on this mob and simultaneously remove it from this mob
 	Directive bundled = *bundled_directive;
@@ -159,6 +166,13 @@ bool Mob::isCarryingGas() {
 	};
 
 	return std::find_first_of(unit_buffs.begin(), unit_buffs.end(), gas_buffs.begin(), gas_buffs.end()) != unit_buffs.end();
+}
+
+bool Mob::isOnCooldown(BasicSc2Bot* agent)
+{
+	// returns whether this unit is on cooldown (i.e. should not take commands)
+
+	return (agent->Observation()->GetGameLoop() < cooldown);
 }
 
 void Mob::setHomeLocation(sc2::Point2D location) {
