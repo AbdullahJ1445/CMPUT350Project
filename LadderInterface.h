@@ -23,28 +23,28 @@ static sc2::Difficulty getDifficultyFromString(const std::string &InDifficulty)
 	{
 		return sc2::Difficulty::Hard;
 	}
-if (InDifficulty == "HardVeryHard")
-{
-	return sc2::Difficulty::HardVeryHard;
-}
-if (InDifficulty == "VeryHard")
-{
-	return sc2::Difficulty::VeryHard;
-}
-if (InDifficulty == "CheatVision")
-{
-	return sc2::Difficulty::CheatVision;
-}
-if (InDifficulty == "CheatMoney")
-{
-	return sc2::Difficulty::CheatMoney;
-}
-if (InDifficulty == "CheatInsane")
-{
-	return sc2::Difficulty::CheatInsane;
-}
+	if (InDifficulty == "HardVeryHard")
+	{
+		return sc2::Difficulty::HardVeryHard;
+	}
+	if (InDifficulty == "VeryHard")
+	{
+		return sc2::Difficulty::VeryHard;
+	}
+	if (InDifficulty == "CheatVision")
+	{
+		return sc2::Difficulty::CheatVision;
+	}
+	if (InDifficulty == "CheatMoney")
+	{
+		return sc2::Difficulty::CheatMoney;
+	}
+	if (InDifficulty == "CheatInsane")
+	{
+		return sc2::Difficulty::CheatInsane;
+	}
 
-return sc2::Difficulty::Easy;
+	return sc2::Difficulty::Easy;
 }
 
 static sc2::Race getRaceFromString(const std::string & RaceIn)

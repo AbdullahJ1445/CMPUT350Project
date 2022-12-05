@@ -190,11 +190,11 @@ bool Directive::execute(BasicSc2Bot* agent) {
 		}
 
 		if (ability == sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST) {
-			return execute_protoss_nexus_chronoboost(agent);
+			return executeProtossNexusChronoboost(agent);
 		}
 
 		if (ability == (sc2::ABILITY_ID)4107) {
-			return execute_protoss_nexus_batteryovercharge(agent);
+			return executeProtossNexusBatteryOvercharge(agent);
 		}
 
 		return executeOrderForUnitType(agent);
@@ -479,7 +479,7 @@ bool Directive::executeBuildGasStructure(BasicSc2Bot* agent) {
 
 }
 
-bool Directive::execute_protoss_nexus_batteryovercharge(BasicSc2Bot* agent) {
+bool Directive::executeProtossNexusBatteryOvercharge(BasicSc2Bot* agent) {
 	// use battery overcharge on the nearest shield_battery within range of a nexus
 
 
@@ -596,7 +596,7 @@ bool Directive::execute_protoss_nexus_batteryovercharge(BasicSc2Bot* agent) {
 
 }
 
-bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
+bool Directive::executeProtossNexusChronoboost(BasicSc2Bot* agent) {
 	// this is more complex than it originally seemed
 	// must find the clostest nexus to the given location
 	// that has the chronoboost ability ready

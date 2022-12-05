@@ -48,10 +48,12 @@ BasicSc2Bot::BasicSc2Bot()
 }
 
 void BasicSc2Bot::setLoadingProgress(int loaded_) {
+	// for sequential intialization 
 	loading_progress = loaded_;
 }
 
 int BasicSc2Bot::getLoadingProgress() {
+	// return which step we are in the loading process
 	return loading_progress;
 }
 
@@ -61,6 +63,7 @@ void BasicSc2Bot::setCurrentStrategy(Strategy* strategy_) {
 }
 
 void BasicSc2Bot::addStrat(Precept precept_) {
+	// queue in a precept
 	assert(precept_.hasDirective());
 	assert(precept_.hasTrigger());
 	precepts_onstep.push_back(precept_);
@@ -481,13 +484,14 @@ void::BasicSc2Bot::loadStep_01() {
 }
 
 void::BasicSc2Bot::loadStep_02() {
+	// delegate mob and location responsibilities to helper classes
 	mobH = new MobHandler(this); // initialize mob handler 
 	locH = new LocationHandler(this); // initialize location handler
 	setLoadingProgress(2);
 }
 
 void::BasicSc2Bot::loadStep_03() {
-
+	// intialize strategy
 	Strategy* strategy = new Strategy(this);
 	setCurrentStrategy(strategy);
 	// add all starting units to their respective mobs
@@ -652,6 +656,7 @@ void BasicSc2Bot::OnStep() {
 	int count_minerals = observation->GetMinerals();
 	int count_gas = observation->GetVespene();
 
+	// Update the amount of minerals and vespene gas that the player has.
 	if (count_minerals > max_minerals) {
 		max_minerals = count_minerals;
 	}
@@ -835,6 +840,7 @@ void BasicSc2Bot::OnStep() {
 				bundled.execute(this);
 			}
 			else {
+				// Default behaviour
 				(*it)->executeDefaultDirective(this);
 			}
 			it = next;
