@@ -36,6 +36,7 @@ BasicSc2Bot::BasicSc2Bot()
 	timer_3 = -1;
 	loading_progress = 0;
 	initialized = false;
+	first_friendly_death = false;
 	time_of_first_attack = -1;
 	time_first_attacked = -1;
 	gateways_busy = 0;
@@ -1827,6 +1828,15 @@ void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
 	
 	if (!initialized)
 		return;
+
+	if (!first_friendly_death) {
+		// assign massive threat to location of our scout's death
+
+		MapChunk* chunk = locH->getNearestPathableChunk(unit->pos);
+		if (chunk != nullptr) {
+			chunk->increaseThreat(this, 12000);
+		}
+	}
 
 	if (unit->alliance == sc2::Unit::Alliance::Self) {
 		

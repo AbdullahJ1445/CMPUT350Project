@@ -260,7 +260,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		return agent->locH->PathableThreatExistsNearLocation(location, radius) == is_true;
 	case COND::MIN_UNITS_USING_ABILITY:
 	{
-		std::unordered_set<Mob*> mobs;
+		std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
 		std::unordered_set<Mob*> filtered_mobs;
 		if (!mobs.empty()) { 
 			std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
@@ -271,8 +271,11 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		if (!filtered_mobs.empty()) {
 			for (auto m : filtered_mobs) {
 				if (!m->unit.orders.empty()) {
-					if (m->unit.orders.front().ability_id == ability_id) {
+					if (m->unit.orders.front().ability_id.ToType() == ability_id) {
 						++count;
+					}
+					else {
+						//std::cout << "(" << (int)m->unit.orders.front().ability_id.ToType() << ")";
 					}
 				}
 			}
@@ -284,7 +287,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	}
 	case COND::MAX_UNITS_USING_ABILITY:
 	{
-		std::unordered_set<Mob*> mobs;
+		std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
 		std::unordered_set<Mob*> filtered_mobs;
 		if (!mobs.empty()) {
 			std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
@@ -295,7 +298,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		if (!filtered_mobs.empty()) {
 			for (auto m : filtered_mobs) {
 				if (!m->unit.orders.empty()) {
-					if (m->unit.orders.front().ability_id == ability_id) {
+					if (m->unit.orders.front().ability_id.ToType() == ability_id) {
 						++count;
 					}
 				}

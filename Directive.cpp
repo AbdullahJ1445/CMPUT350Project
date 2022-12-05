@@ -561,7 +561,6 @@ bool Directive::executeProtossNexusBatteryOvercharge(BasicSc2Bot* agent) {
 	valid_shields = not_already_overcharged;
 
 	if (valid_shields.empty()) {
-		std::cout << "`";
 		return false;
 	}
 

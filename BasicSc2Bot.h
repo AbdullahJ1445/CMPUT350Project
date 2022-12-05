@@ -150,6 +150,7 @@ private:
 	int timer_1;
 	int timer_2;
 	int timer_3;
+	bool first_friendly_death;
 	int loading_progress;
 	bool initialized;
 	int gateways_busy;
