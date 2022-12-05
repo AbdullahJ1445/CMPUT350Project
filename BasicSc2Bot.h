@@ -152,6 +152,7 @@ private:
 	int timer_3;
 	bool first_friendly_death;
 	int loading_progress;
+	int townhalls_built;
 	bool initialized;
 	int gateways_busy;
 	int gateways_idle;

@@ -20,7 +20,10 @@ public:
 	sc2::Point2D getDefendPoint(int index);
 	sc2::Point2D getTownhall();
 	void setRallyPoint(float x, float y);
+	void setMeleeRallyPoint(float x, float y);
 	sc2::Point2D getRallyPoint();
+
+	sc2::Point2D getMeleeRallyPoint();
 
 private:
 	sc2::Point2D location_townhall;
@@ -28,4 +31,5 @@ private:
 	std::vector<sc2::Point2D> build_areas;
 	bool active;
 	sc2::Point2D rally_point;
+	sc2::Point2D melee_rally_point;
 };

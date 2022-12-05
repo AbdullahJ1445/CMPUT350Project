@@ -5,6 +5,7 @@ Base::Base(sc2::Point2D location_) {
 	location_townhall = location_;
 	active = false;
 	rally_point = location_;
+	melee_rally_point = location_;
 }
 
 Base::Base(float x, float y) : Base(sc2::Point2D(x,y)) {}
@@ -12,10 +13,22 @@ Base::Base(float x, float y) : Base(sc2::Point2D(x,y)) {}
 void Base::setRallyPoint(float x, float y) {
 	sc2::Point2D location_(x, y);
 	rally_point = location_;
+	if (melee_rally_point == location_townhall) {
+		melee_rally_point = location_;
+	}
+}
+
+void Base::setMeleeRallyPoint(float x, float y) {
+	sc2::Point2D location_(x, y);
+	melee_rally_point = location_;
 }
 
 sc2::Point2D Base::getRallyPoint() {
 	return rally_point;
+}
+
+sc2::Point2D Base::getMeleeRallyPoint() {
+	return melee_rally_point;
 }
 
 void Base::addBuildArea(sc2::Point2D location_) {

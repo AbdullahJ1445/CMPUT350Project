@@ -8,7 +8,7 @@
 #include "Base.h"
 
 # define NO_POINT_FOUND sc2::Point2D(-2.5252, -2.5252) // value indicating no point found
-# define CHUNK_SIZE 6.0f // the distance between adjacent chunks
+# define CHUNK_SIZE 5.0f // the distance between adjacent chunks
 # define THREAT_DECAY 0.50 // the amount threat decays for a chunk when in vision
 # define NEARBY_THREAT_MODIFIER 0.05 // how much threat should increase for nearby chunks when enemies near
 
