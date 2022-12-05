@@ -84,6 +84,7 @@ public:
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();
     sc2::Point2D getCenterPathableLocation();
+    sc2::Point2D getRallyPointBeforeRallyPoint();
     bool locationsEqual(sc2::Point2D loc_1, sc2::Point2D loc_2);
 
     sc2::Point2D getRallyPointTowardsThreat();

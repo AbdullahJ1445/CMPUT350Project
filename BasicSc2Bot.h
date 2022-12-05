@@ -20,6 +20,8 @@ class Base;
 class Strategy;
 class MobHandler; 
 
+#define STEP_SIZE 7 // should be 1 when submitted
+
 
 class Human : public sc2::Agent {
 public:

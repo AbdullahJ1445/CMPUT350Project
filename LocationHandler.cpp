@@ -816,10 +816,13 @@ void LocationHandler::initLocations(int map_index, int p_id) {
 
             Base exp_2(93.5, 156.5);
             exp_2.addDefendPoint(97, 153);
+            exp_2.setRallyPoint(73, 158);
             bases.push_back(exp_2);
  
             Base exp_3(54.5, 132.5);
             exp_3.addDefendPoint(58, 130);
+            exp_3.addDefendPoint(73, 142);
+            exp_3.setRallyPoint(73, 158);
             bases.push_back(exp_3);
         }
         else if (p_id == 2) {
@@ -842,10 +845,13 @@ void LocationHandler::initLocations(int map_index, int p_id) {
 
             Base exp_2(156.5, 98.5);
             exp_2.addDefendPoint(153, 95);
+            exp_2.setRallyPoint(158, 119);
             bases.push_back(exp_2);
 
             Base exp_3(132.5, 137.5);
             exp_3.addDefendPoint(130, 134);
+            exp_3.addDefendPoint(142, 119);
+            exp_3.setRallyPoint(158, 119);
             bases.push_back(exp_3);
         }
         else if (p_id == 3) {
@@ -867,10 +873,13 @@ void LocationHandler::initLocations(int map_index, int p_id) {
 
             Base exp_2(95.5, 35.5);
             exp_2.addDefendPoint(95, 39);
+            exp_2.setRallyPoint(119, 34);
             bases.push_back(exp_2);
 
             Base exp_3(137.5, 59.5);
             exp_3.addDefendPoint(134, 62);
+            exp_3.addDefendPoint(119, 50);
+            exp_3.setRallyPoint(119, 34);
             bases.push_back(exp_3);
         }
         else if (p_id == 4) {
@@ -893,10 +902,13 @@ void LocationHandler::initLocations(int map_index, int p_id) {
 
             Base exp_2(35.5, 93.5);
             exp_2.addDefendPoint(39, 97);
+            exp_2.setRallyPoint(34, 73);
             bases.push_back(exp_2);
 
             Base exp_3(59.5, 54.5);
             exp_3.addDefendPoint(62, 58);
+            exp_3.addDefendPoint(50, 73);
+            exp_3.setRallyPoint(34, 73);
             bases.push_back(exp_3);
         }
     }
@@ -1453,6 +1465,28 @@ sc2::Point2D LocationHandler::getCenterPathableLocation() {
     return center_chunk->getLocation();
 }
 
+sc2::Point2D LocationHandler::getRallyPointBeforeRallyPoint()
+// calculate a pathable point 3/7 of the way towards the location to send the attack
+{
+    sc2::Point2D p1 = start_location;
+    sc2::Point2D p2 = smartPriorityAttack();
+    sc2::Point2D p3 = NO_POINT_FOUND;
+
+
+
+    p3 = ((p2 - p1) * 3 / 7) + p1;  // 3/7 towards threat
+
+
+    MapChunk* best_chunk = nullptr;
+
+    best_chunk = getNearestPathableChunk(p3);
+
+    if (best_chunk == nullptr) {
+        return NO_POINT_FOUND;
+    }
+    return best_chunk->getLocation();
+}
+
 sc2::Point2D LocationHandler::getRallyPointTowardsThreat()
 // calculate a pathable point 3/7 of the way towards the location to send the attack
 {
@@ -1460,8 +1494,15 @@ sc2::Point2D LocationHandler::getRallyPointTowardsThreat()
     sc2::Point2D p2 = smartPriorityAttack();
     sc2::Point2D p3 = NO_POINT_FOUND;
 
-    p3 = ((p2 - p1) * 3 / 7) + p1;
-    MapChunk* best_chunk = getNearestPathableChunk(p3);
+
+
+    p3 = ((p2 - p1) * 2 / 3) + p1;  // 2/3 towards threat
+
+
+    MapChunk* best_chunk = nullptr;
+
+    best_chunk = getNearestPathableChunk(p3);
+
     if (best_chunk == nullptr) {
         return NO_POINT_FOUND;
     }

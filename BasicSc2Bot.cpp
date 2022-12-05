@@ -886,6 +886,10 @@ void BasicSc2Bot::checkSiegeTanks() {
 	// the way of other friendly units
 	// also handles phoenixes using graviton beam
 
+	// NOTE:  much of this functionality is commented out as it seems to make us lose more
+	// Leaving in the functionality for phoenixes to lift siege tanks and marauders
+	// And for stalkers to blink onto sieged tanks to get inside their minimum range
+
 	auto obs = Observation();
 	auto gameloop = obs->GetGameLoop();
 	//auto enemies = getEnemyUnits();
@@ -972,7 +976,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 								closest = t;
 							}
 						}
-						if (dist_to_siege > 16.0F && ph->unit.weapon_cooldown > 1 && canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
+						if (dist_to_siege > 16.0F && ph->unit.weapon_cooldown > STEP_SIZE && canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
 							Actions()->UnitCommand(&ph->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 							ph->giveCooldown(this, 5); // 22 steps is approx one second
 						}
@@ -987,6 +991,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 			}
 		}
 
+		/* */
 		// player immortals exist
 		if (!immortals.empty()) {
 			std::unordered_set<Mob*> nearby_im;
@@ -1009,11 +1014,11 @@ void BasicSc2Bot::checkSiegeTanks() {
 							closest = t;
 						}
 					}
-					if (dist_to_siege > 36.0F && im->unit.weapon_cooldown > 1) {
+					if (dist_to_siege > 36.0F && im->unit.weapon_cooldown > STEP_SIZE) {
 						Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 						im->giveCooldown(this, im->unit.weapon_cooldown * 0.8);
 						if (dist_to_siege <= 36.0F) {
-							if (im->unit.weapon_cooldown > 1) {
+							if (im->unit.weapon_cooldown > STEP_SIZE) {
 								Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 								im->giveCooldown(this, im->unit.weapon_cooldown * 0.8);
 							}
@@ -1021,81 +1026,84 @@ void BasicSc2Bot::checkSiegeTanks() {
 					}
 				}
 			}
+		}
 
+			
 			// player stalkers exist
-			if (!stalkers.empty()) {
-				std::unordered_set<Mob*> nearby_st;
-				for (auto s : stalkers) {
-					for (auto t : tanks_s) {
-						if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 324.0F) {
-							nearby_st.insert(s);
-							break;
-						}
-					}
-				}
-				if (!nearby_st.empty()) {
-					for (auto st : nearby_st) {
-						float dist_to_siege = std::numeric_limits<float>::max();
-						const sc2::Unit* closest = nullptr;
-						for (auto t : tanks_s) {
-							float dist = (sc2::DistanceSquared2D(t->pos, st->unit.pos));
-							if (dist < dist_to_siege) {
-								dist_to_siege = dist;
-								closest = t;
-							}
-						}
-
-						if (st->unit.weapon_cooldown > 1) {
-							if (dist_to_siege > 4.0F) {
-								if (have_blink && canUnitUseAbility(st->unit, sc2::ABILITY_ID::EFFECT_BLINK) && dist_to_siege > 9.0F && dist_to_siege <= 100.0F) {
-									Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::EFFECT_BLINK, closest->pos);
-								}
-								else {
-									Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
-									st->giveCooldown(this, st->unit.weapon_cooldown * 0.8);
-								}
-							}
-						}
+		if (!stalkers.empty()) {
+			std::unordered_set<Mob*> nearby_st;
+			for (auto s : stalkers) {
+				for (auto t : tanks_s) {
+					if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 324.0F) {
+						nearby_st.insert(s);
+						break;
 					}
 				}
 			}
-
-			// player sentries exist
-			if (!sentries.empty()) {
-				std::unordered_set<Mob*> nearby_se;
-				for (auto s : sentries) {
+			if (!nearby_st.empty()) {
+				for (auto st : nearby_st) {
+					float dist_to_siege = std::numeric_limits<float>::max();
+					const sc2::Unit* closest = nullptr;
 					for (auto t : tanks_s) {
-						if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 144.0F) {
-							nearby_se.insert(s);
-							break;
+						float dist = (sc2::DistanceSquared2D(t->pos, st->unit.pos));
+						if (dist < dist_to_siege) {
+							dist_to_siege = dist;
+							closest = t;
 						}
 					}
-				}
-				if (!nearby_se.empty()) {
-					for (auto se : nearby_se) {
-						float dist_to_siege = std::numeric_limits<float>::max();
-						const sc2::Unit* closest = nullptr;
-						for (auto t : tanks_s) {
-							float dist = (sc2::DistanceSquared2D(t->pos, se->unit.pos));
-							if (dist < dist_to_siege) {
-								dist_to_siege = dist;
-								closest = t;
+
+					if (st->unit.weapon_cooldown > STEP_SIZE) {
+						if (dist_to_siege > 4.0F) {
+							if (have_blink && canUnitUseAbility(st->unit, sc2::ABILITY_ID::EFFECT_BLINK) && dist_to_siege > 9.0F && dist_to_siege <= 100.0F) {
+								Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::EFFECT_BLINK, closest->pos);
 							}
-						}
-						if (dist_to_siege > 36.0F && se->unit.weapon_cooldown > 1) {
-							Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
-							se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
-							if (dist_to_siege <= 36.0F) {
-								if (se->unit.weapon_cooldown > 1) {
-									Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
-									se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
-								}
+							else {
+								Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+								st->giveCooldown(this, st->unit.weapon_cooldown * 0.8);
 							}
 						}
 					}
 				}
 			}
 		}
+			
+
+			
+			// player sentries exist
+		if (!sentries.empty()) {
+			std::unordered_set<Mob*> nearby_se;
+			for (auto s : sentries) {
+				for (auto t : tanks_s) {
+					if (sc2::DistanceSquared2D(t->pos, s->unit.pos) <= 144.0F) {
+						nearby_se.insert(s);
+						break;
+					}
+				}
+			}
+			if (!nearby_se.empty()) {
+				for (auto se : nearby_se) {
+					float dist_to_siege = std::numeric_limits<float>::max();
+					const sc2::Unit* closest = nullptr;
+					for (auto t : tanks_s) {
+						float dist = (sc2::DistanceSquared2D(t->pos, se->unit.pos));
+						if (dist < dist_to_siege) {
+							dist_to_siege = dist;
+							closest = t;
+						}
+					}
+					if (dist_to_siege > 36.0F && se->unit.weapon_cooldown > STEP_SIZE) {
+						Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+						se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
+						if (dist_to_siege <= 36.0F) {
+							if (se->unit.weapon_cooldown > STEP_SIZE) {
+								Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
+								se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
+							}
+						}
+					}
+				}
+			}
+		} 	
 	}
 
 	// remove those that have already been issued an order
@@ -1107,6 +1115,8 @@ void BasicSc2Bot::checkSiegeTanks() {
 	// if unsieged siege tanks are visible
 	if (!tanks_u.empty()) {
 
+		
+		/*
 		// player immortals exist
 		if (!immortals.empty()) {
 			std::unordered_set<Mob*> nearby_im;
@@ -1129,12 +1139,12 @@ void BasicSc2Bot::checkSiegeTanks() {
 							closest = t;
 						}
 					}
-					if (dist_to_siege > 36.0F && im->unit.weapon_cooldown > 1) {
+					if (dist_to_siege > 36.0F && im->unit.weapon_cooldown > STEP_SIZE) {
 						Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 						im->giveCooldown(this, im->unit.weapon_cooldown * 0.8); // 22 steps is approx one second
 					}
 					if (dist_to_siege <= 36.0F) {
-						if (im->unit.weapon_cooldown > 1) {
+						if (im->unit.weapon_cooldown > STEP_SIZE) {
 							Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 							im->giveCooldown(this, im->unit.weapon_cooldown * 0.8); // 22 steps is approx one second
 						}
@@ -1142,6 +1152,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 				}
 			}
 		}
+		*/
 
 		// player stalkers exist
 		if (!stalkers.empty()) {
@@ -1166,8 +1177,11 @@ void BasicSc2Bot::checkSiegeTanks() {
 						}
 					}
 
-					if (st->unit.weapon_cooldown > 1) {
+					if (st->unit.weapon_cooldown > STEP_SIZE) {
 						if (dist_to_siege > 4.0F) {
+
+							// commented this out, so that stalkers only blink onto siege tanks if they are sieged
+
 							/*
 							if (have_blink && canUnitUseAbility(st->unit, sc2::ABILITY_ID::EFFECT_BLINK) && dist_to_siege > 9.0F && dist_to_siege <= 100.0F) {
 								Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::EFFECT_BLINK, closest->pos);
@@ -1184,6 +1198,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 			}
 		}
 
+		/*
 		// player sentries exist
 		if (!sentries.empty()) {
 			std::unordered_set<Mob*> nearby_se;
@@ -1206,11 +1221,11 @@ void BasicSc2Bot::checkSiegeTanks() {
 							closest = t;
 						}
 					}
-					if (dist_to_siege > 36.0F && se->unit.weapon_cooldown > 1) {
+					if (dist_to_siege > 36.0F && se->unit.weapon_cooldown > STEP_SIZE) {
 						Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 						se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
 						if (dist_to_siege <= 36.0F) {
-							if (se->unit.weapon_cooldown > 1) {
+							if (se->unit.weapon_cooldown > STEP_SIZE) {
 								Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 								se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
 							}
@@ -1219,6 +1234,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 				}
 			}
 		}
+		*/
 
 		if (!phoenixes.empty()) {
 
@@ -1259,7 +1275,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 								closest = t;
 							}
 						}
-						if (dist_to_siege > 16.0F && ph->unit.weapon_cooldown > 1 && canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
+						if (dist_to_siege > 16.0F && ph->unit.weapon_cooldown > STEP_SIZE && canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
 							Actions()->UnitCommand(&ph->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 							ph->giveCooldown(this, 5); // 22 steps is approx one second
 						}
@@ -1280,7 +1296,12 @@ void BasicSc2Bot::checkSiegeTanks() {
 	stalkers = mobH->filterNotOnCooldown(stalkers);
 	phoenixes = mobH->filterNotOnCooldown(phoenixes);
 	sentries = mobH->filterNotOnCooldown(sentries);
-
+	
+	
+	// leaving this next block commented in case we want to use it
+	// for now it seems like we are losing more often with it
+	
+	/*   
 	if (!thors.empty()) {
 
 		// player immortals exist
@@ -1305,12 +1326,12 @@ void BasicSc2Bot::checkSiegeTanks() {
 							closest = t;
 						}
 					}
-					if (dist_to_thor > 36.0F && im->unit.weapon_cooldown > 1) {
+					if (dist_to_thor > 36.0F && im->unit.weapon_cooldown > STEP_SIZE) {
 						Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 						im->giveCooldown(this, im->unit.weapon_cooldown * 0.8); // 22 steps is approx one second
 					}
 					if (dist_to_thor <= 36.0F) {
-						if (im->unit.weapon_cooldown > 1) {
+						if (im->unit.weapon_cooldown > STEP_SIZE) {
 							Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 							im->giveCooldown(this, im->unit.weapon_cooldown * 0.5); // 22 steps is approx one second
 						}
@@ -1340,11 +1361,11 @@ void BasicSc2Bot::checkSiegeTanks() {
 							closest = t;
 						}
 					}
-					if (dist_to_thor > 36.0F && se->unit.weapon_cooldown > 1) {
+					if (dist_to_thor > 36.0F && se->unit.weapon_cooldown > STEP_SIZE) {
 						Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 						se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
 						if (dist_to_thor <= 36.0F) {
-							if (se->unit.weapon_cooldown > 1) {
+							if (se->unit.weapon_cooldown > STEP_SIZE) {
 								Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 								se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
 							}
@@ -1354,6 +1375,8 @@ void BasicSc2Bot::checkSiegeTanks() {
 			}
 		}
 	}
+
+	*/
 
 	// remove those that have already been issued an order
 	immortals = mobH->filterNotOnCooldown(immortals);
@@ -1401,7 +1424,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 								closest = m;
 							}
 						}
-						if (dist_to_mar > 16.0F && ph->unit.weapon_cooldown > 1 && canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
+						if (dist_to_mar > 16.0F && ph->unit.weapon_cooldown > STEP_SIZE && canUnitUseAbility(ph->unit, sc2::ABILITY_ID::EFFECT_GRAVITONBEAM)) {
 							Actions()->UnitCommand(&ph->unit, sc2::ABILITY_ID::GENERAL_MOVE, closest->pos);
 							ph->giveCooldown(this, 5); // 22 steps is approx one second
 						}
@@ -1416,6 +1439,91 @@ void BasicSc2Bot::checkSiegeTanks() {
 			}
 		}
 	}
+	immortals = mobH->filterNotOnCooldown(immortals);
+	stalkers = mobH->filterNotOnCooldown(stalkers);
+	phoenixes = mobH->filterNotOnCooldown(phoenixes);
+	sentries = mobH->filterNotOnCooldown(sentries);
+
+	// make these units move towards their targets in between auto attacks
+	/*
+	if (!sentries.empty()) {
+		for (auto se : sentries) {
+			sc2::Tag engaged_tag = se->unit.engaged_target_tag;
+			if (engaged_tag != 0) {
+				auto target = obs->GetUnit(engaged_tag);
+				if (target != nullptr) {
+					if (se->unit.weapon_cooldown > STEP_SIZE) {
+						Actions()->UnitCommand(&se->unit, sc2::ABILITY_ID::GENERAL_MOVE, target->pos);
+						se->giveCooldown(this, se->unit.weapon_cooldown * 0.8);
+					}
+				}
+			}
+		}
+	}
+	if (!stalkers.empty()) {
+		for (auto st : stalkers) {
+			sc2::Tag engaged_tag = st->unit.engaged_target_tag;
+			if (engaged_tag != 0) {
+				auto target = obs->GetUnit(engaged_tag);
+				if (target != nullptr) {
+					if (st->unit.weapon_cooldown > STEP_SIZE) {
+						Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::GENERAL_MOVE, target->pos);
+						st->giveCooldown(this, st->unit.weapon_cooldown * 0.8);
+					}
+				}
+			}
+		}
+	}
+	if (!immortals.empty()) {
+		for (auto im : immortals) {
+			sc2::Tag engaged_tag = im->unit.engaged_target_tag;
+			if (engaged_tag != 0) {
+				auto target = obs->GetUnit(engaged_tag);
+				if (target != nullptr) {
+					if (im->unit.weapon_cooldown > STEP_SIZE) {
+						Actions()->UnitCommand(&im->unit, sc2::ABILITY_ID::GENERAL_MOVE, target->pos);
+						im->giveCooldown(this, im->unit.weapon_cooldown * 0.8);
+					}
+				}
+			}
+		}
+	}
+
+	// make collosus move back to max range if possible
+
+	auto collossi = mobH->filterByUnitType(mobH->getMobs(), sc2::UNIT_TYPEID::PROTOSS_COLOSSUS);
+	collossi = mobH->filterNotOnCooldown(collossi);
+
+	float co_range = 7.0;
+	if (haveUpgrade(sc2::UPGRADE_ID::EXTENDEDTHERMALLANCE)) {
+		co_range = 9.0;
+	}
+
+	if (!collossi.empty()) {
+		for (auto co : collossi) {
+			sc2::Tag engaged_tag = co->unit.engaged_target_tag;
+			if (engaged_tag != 0) {
+				auto target = obs->GetUnit(engaged_tag);
+				if (target != nullptr) {
+					if (co->unit.weapon_cooldown > STEP_SIZE) {
+
+						// if engaged target is not at max range, move backward if pathable
+						if (sc2::DistanceSquared2D(co->unit.pos, target->pos) < pow(co_range, 2)) {
+							sc2::Point2D pos = co->unit.pos;
+							float facing = co->unit.facing;
+							sc2::Point2D offset(0.5 * cos(facing), 0.5 * sin(facing)); // calculate point 0.5 behind the unit
+							sc2::Point2D behind = pos + offset;
+							if (obs->IsPathable(behind)) {
+								Actions()->UnitCommand(&co->unit, sc2::ABILITY_ID::GENERAL_MOVE, behind);
+								co->giveCooldown(this, co->unit.weapon_cooldown * 0.8);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	*/
 }
 
 void BasicSc2Bot::checkGasStructures() {
