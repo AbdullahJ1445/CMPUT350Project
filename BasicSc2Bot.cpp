@@ -715,7 +715,7 @@ void BasicSc2Bot::OnStep() {
 	if (!proxy_sent && map_index > 0) {
 		const sc2::Units allied_units = observation->GetUnits(sc2::Unit::Alliance::Self);
 
-		// make nexus train first probe
+		// make nexus train first probe while loading is still in progress
 		for (auto it = allied_units.begin(); it != allied_units.end(); ++it) {
 			if ((*it)->unit_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS) {
 				if ((*it)->orders.empty()) {
@@ -725,6 +725,8 @@ void BasicSc2Bot::OnStep() {
 			}
 		}
 
+		// on belshir and proxima station, send out the proxy and decoy probes immediately
+		// while loading is still in progress
 		if (map_index == 2 || map_index == 3) {
 			const sc2::Unit* proxy_probe = nullptr;
 			const sc2::Unit* decoy_probe = nullptr;
@@ -851,6 +853,7 @@ void BasicSc2Bot::OnStep() {
 		}
 	}
 
+	// clean up busy mobs on step
 	std::unordered_set<Mob*> busy_mobset = mobH->getBusyMobs();
 	if (!busy_mobset.empty()) {
 		for (auto it = busy_mobset.begin(); it != busy_mobset.end(); ) {
@@ -922,6 +925,7 @@ void BasicSc2Bot::OnStep() {
 		return false;
 	};
 
+	// sometimes siege tanks will attack from outside vision without triggering "OnUnitEnterVision"
 	auto unseen_siege_set = observation->GetUnits(sc2::Unit::Alliance::Enemy, unseen_sieged);
 	if (!unseen_siege_set.empty()) {
 		for (auto u : unseen_siege_set) {
@@ -966,6 +970,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 	phoenixes = mobH->filterNotOnCooldown(phoenixes);
 	sentries = mobH->filterNotOnCooldown(sentries);
 
+	// use the API's GetUnits instead because pointers to enemy units need to be current to function properly
 	auto enemies = obs->GetUnits(sc2::Unit::Alliance::Enemy);
 	
 	std::unordered_set<const sc2::Unit*> tanks_s;  // sieged
@@ -1014,6 +1019,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 	// if siege tanks in siege mode are visible
 	if (!tanks_s.empty()) {
 
+		// phoenixes prioritize using graviton beam on siege tanks in siege mode
 		if (!phoenixes.empty()) {
 			// popualte set of those not already affected by graviton beam
 			std::unordered_set<const sc2::Unit*> tanks_valid;
@@ -1067,8 +1073,9 @@ void BasicSc2Bot::checkSiegeTanks() {
 			}
 		}
 
-		/* */
 		// player immortals exist
+		// have immortals move towards siege tanks in siege mode in between auto attacks so
+		// they can move inside their minimum range, and should automatically focus fire them once close enough
 		if (!immortals.empty()) {
 			std::unordered_set<Mob*> nearby_im;
 			for (auto i : immortals) {
@@ -1105,7 +1112,9 @@ void BasicSc2Bot::checkSiegeTanks() {
 		}
 
 			
-			// player stalkers exist
+		// player stalkers exist
+		// make stalkers move towards siege tanks in siege mode in between auto attacks
+		// also blink on top of them when within 10.0 range
 		if (!stalkers.empty()) {
 			std::unordered_set<Mob*> nearby_st;
 			for (auto s : stalkers) {
@@ -1130,7 +1139,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 
 					if (st->unit.weapon_cooldown > std::max(STEP_SIZE, 3)) {
 						if (dist_to_siege > 4.0F) {
-							if (have_blink && canUnitUseAbility(st->unit, sc2::ABILITY_ID::EFFECT_BLINK) && dist_to_siege > 9.0F && dist_to_siege <= 100.0F) {
+							if (have_blink && canUnitUseAbility(st->unit, sc2::ABILITY_ID::EFFECT_BLINK) && dist_to_siege > 4.5F && dist_to_siege <= 97.0F) {
 								Actions()->UnitCommand(&st->unit, sc2::ABILITY_ID::EFFECT_BLINK, closest->pos);
 							}
 							else {
@@ -1317,7 +1326,7 @@ void BasicSc2Bot::checkSiegeTanks() {
 
 		if (!phoenixes.empty()) {
 
-			// popualte set of those not already affected by graviton beam
+			// populate set of those not already affected by graviton beam
 			std::unordered_set<const sc2::Unit*> tanks_valid;
 			for (auto t : tanks_u) {
 				auto buffs = t->buffs;
@@ -1464,6 +1473,9 @@ void BasicSc2Bot::checkSiegeTanks() {
 	sentries = mobH->filterNotOnCooldown(sentries);
 
 	if (!marauders.empty()) {
+
+		// have phoenixes target marauders with graivton if there are no siege tanks. There will usually be one or the other.
+
 		if (!phoenixes.empty()) {
 			// popualte set of those not already affected by graviton beam
 			std::unordered_set<const sc2::Unit*> mar_valid;
@@ -1635,6 +1647,7 @@ void BasicSc2Bot::checkGasStructures() {
 		return;
 	}
 
+	// if there are less than 6 mineral gatherers, don't assign them to gas. We don't want the economy to stall.
 	std::unordered_set<Mob*> mineral_gatherers = mobH->filterByFlag(mobH->getMobs(), FLAGS::IS_MINERAL_GATHERER);
 	if (mineral_gatherers.size() < 6)
 		return;
@@ -1674,7 +1687,7 @@ std::string BasicSc2Bot::gameTime(int steps_)
 void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	const sc2::ObservationInterface* observation = Observation();
 
-	// keep a record of the order and time in which units were created
+	// keep a record of the order and time in which units were created for evaluation purposes
 	units_created.push_back(std::make_pair<int, sc2::UNIT_TYPEID>(observation->GetGameLoop(), unit->unit_type)); 
 
 	if (!initialized)
@@ -1797,6 +1810,7 @@ void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {
 		std::cout << "[" << Observation()->GetGameLoop() << "] Expansion " << base_index << " has been activated." << std::endl;
 		locH->bases[base_index].setActive();
 		
+		// after an expansion is created, it will grab workers from a nearby townhall to instantly mine its minerals
 		int num_grab = getStoredInt("_GRAB_WORKERS_ON_EXPAND");
 		if (num_grab > 0) {
 			for (int i = 0; i < num_grab; ++i) {
@@ -1827,6 +1841,7 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 
 	const sc2::ObservationInterface* observation = Observation();
 	// make Stalkers Blink away if low health
+	// can turn the tide of a close battle as opponents will target healthier units instead
 	if (unit->unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER) {
 		if (haveUpgrade(sc2::UPGRADE_ID::BLINKTECH)) {
 			if (unit->health / unit->health_max < .3f) {
@@ -1845,7 +1860,6 @@ void BasicSc2Bot::OnUnitDamaged(const sc2::Unit* unit, float health, float shiel
 		guardian_shield = std::find(buffs.begin(), buffs.end(), sc2::BUFF_ID::GUARDIANSHIELD) != buffs.end();
 	}
 
-	// todo : check if player race = protoss
 	// engage sentry guardian shield when a nearby unit takes damage
 	if (!guardian_shield) {
 		std::unordered_set<Mob*> mobs = mobH->getMobs();
@@ -1890,6 +1904,9 @@ void BasicSc2Bot::OnUnitIdle(const sc2::Unit* unit) {
 	if (!initialized)
 		return;
 
+	// if a mob is idle and has an assigned directive
+	// that directive is now complete and can be unassigned
+
 	Mob* mob = &mobH->getMob(*unit);
 	mobH->setMobIdle(mob, true);
 	if (mob->hasCurrentDirective()) {
@@ -1909,6 +1926,9 @@ void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
 
 	if (!first_friendly_death) {
 		// assign massive threat to location of our scout's death
+		// but only on cactus valley
+		// on the other maps, we want them to prioritize finishing off the structures instead of 
+		// risking dying in a base race
 
 		if (map_index == 1) {
 			MapChunk* chunk = locH->getNearestPathableChunk(unit->pos);
@@ -1950,6 +1970,7 @@ void BasicSc2Bot::OnUnitEnterVision(const sc2::Unit* unit) {
 	if (!initialized)
 		return;
 
+	// figure out enemy race when we first see an enemy units
 	addEnemyUnit(unit);
 	if (enemy_race == sc2::Race::Random) {
 		const sc2::ObservationInterface* obs = Observation();
@@ -1967,9 +1988,4 @@ void BasicSc2Bot::OnUnitEnterVision(const sc2::Unit* unit) {
 			std::cout << "Enemy Race Detected: Zerg" << std::endl;
 		}
 	}
-	/* needs debugging 
-	sc2::UNIT_TYPEID unit_type = unit->unit_type;
-	if (unit_type == sc2::UNIT_TYPEID::TERRAN_SIEGETANK || unit_type == sc2::UNIT_TYPEID::TERRAN_SIEGETANKSIEGED) {
-		mobH->nearbyMobsWithFlagsAttackTarget(std::unordered_set<FLAGS>{FLAGS::SHORT_RANGE}, unit, 8.0F);
-	} */
 }
