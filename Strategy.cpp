@@ -1467,18 +1467,46 @@ void Strategy::loadStrategies() {
 		}
 
 		{	// start wrecking
+			Precept attack_enemy_base(bot);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->locH->getBestEnemyLocation(), 4.0F);
+			Trigger t(bot);
+			d.excludeFlag(FLAGS::IS_FLYING);
+			t.addCondition(COND::MAX_TIME, 4999);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_ZEALOT, bot->locH->getProxyLocation(), 20.0F);
+			attack_enemy_base.addDirective(d);
+			attack_enemy_base.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_UNIT_WITH_FLAGS, 5, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t2.addCondition(COND::MAX_TIME, 4999);
+			attack_enemy_base.addTrigger(t2);
+			Trigger t3(bot);
+			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
+			t3.addCondition(COND::MAX_TIME, 4999);
+			attack_enemy_base.addTrigger(t3);
+			bot->addStrat(attack_enemy_base);
+		}
+
+		{	// keep wrecking
 			Precept attack_and_explore(bot);
 			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->locH->getBestEnemyLocation(), 4.0F);
 			Trigger t(bot);
-			auto func = [this]() { return bot->locH->smartPriorityAttack(); };
+			auto func = [this]() { return bot->locH->smartAttackLocation(); };
 			d.setTargetLocationFunction(this, bot, func);
 			d.excludeFlag(FLAGS::IS_FLYING);
+			d.setContinuous();
+			d.setOverrideOther();
+			t.addCondition(COND::MIN_TIME, 5000);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_ZEALOT, bot->locH->getProxyLocation(), 20.0F);
 			attack_and_explore.addDirective(d);
 			attack_and_explore.addTrigger(t);
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_UNIT_WITH_FLAGS, 5, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t2.addCondition(COND::MIN_TIME, 5000);
 			attack_and_explore.addTrigger(t2);
+			Trigger t3(bot);
+			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
+			t3.addCondition(COND::MIN_TIME, 5000);
+			attack_and_explore.addTrigger(t3);
 			bot->addStrat(attack_and_explore);
 		}
 		{	// in case things don't end, start building up stuff to clean up

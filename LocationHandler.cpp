@@ -526,6 +526,7 @@ void LocationHandler::calculateHighestThreatForChunks() {
 
 }
 
+
 sc2::Point2D LocationHandler::getHighestThreatLocation(bool pathable_, bool away_) {
     
     sc2::Point2D return_loc = NO_POINT_FOUND;
@@ -639,7 +640,10 @@ sc2::Point2D LocationHandler::smartAttackLocation(bool pathable_) {
     // if none found, then returns the oldest location, meaning the location
     // which was visited the least recently
 
-    sc2::Point2D high_threat = getHighestThreatLocation(pathable_);
+    sc2::Point2D high_threat = getHighestThreatLocation(pathable_, false);
+    if (agent->Observation()->GetGameLoop() % 200 == 0) {
+        std::cout << "(" << high_threat.x << "," << high_threat.y << ")";
+    }
     if (high_threat != NO_POINT_FOUND)
         return high_threat;
     return getOldestLocation(pathable_);
@@ -1707,6 +1711,7 @@ void LocationHandler::setHighestPathableThreatChunk(MapChunk* chunk_)
 MapChunk* LocationHandler::getHighestPathableThreatChunk()
 {
     if (high_threat_pathable_chunk == nullptr) {
+        std::cout << "t";
         assert(!enemy_start_locations.empty());
         sc2::Point2D clockwise_enemy = getEnemyStartLocationByIndex(0);
         assert(chunks_initialized);
