@@ -222,8 +222,7 @@ void BasicSc2Bot::checkBuildingQueues() {
 				if (!any_different_orders) {
 					Actions()->UnitCommand(&m->unit, sc2::ABILITY_ID::CANCEL_LAST);
 					m->giveCooldown(this, 10);
-				}
-			}
+		
 		}
 	}
 	*/

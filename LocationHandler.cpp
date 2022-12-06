@@ -534,26 +534,52 @@ sc2::Point2D LocationHandler::getHighestThreatLocation(bool pathable_, bool away
     if (pathable_) {
         if (away_) {
             hi_chunk = getHighestPathableThreatChunkAwayFromStart();
-            hi_threat = hi_chunk->getThreat();
+            if (hi_chunk != nullptr) {
+                hi_threat = hi_chunk->getThreat();
+            }
+            else {
+                hi_threat = 0;
+            }
         }
         else {
             hi_chunk = getHighestPathableThreatChunk();
-            hi_threat = hi_chunk->getThreat();
+            if (hi_chunk != nullptr) {
+                hi_threat = hi_chunk->getThreat();
+            }
+            else {
+                hi_threat = 0;
+            }
+
         }
     }
     else {
         if (away_) {
             hi_chunk = getHighestThreatChunkAwayFromStart();
-            hi_threat = hi_chunk->getThreat();
+            if (hi_chunk != nullptr) {
+                hi_threat = hi_chunk->getThreat();
+            }
+            else {
+                hi_threat = 0;
+            }
         }
         else {
             hi_chunk = getHighestThreatChunk();
-            hi_threat = hi_chunk->getThreat();
+            if (hi_chunk != nullptr) {
+                hi_threat = hi_chunk->getThreat();
+            }
+            else {
+                hi_threat = 0;
+            }
         }
     }
 
     if (hi_threat > 0) {
-        return_loc = hi_chunk->getLocation();
+        if (hi_chunk != nullptr) {
+            return_loc = hi_chunk->getLocation();
+        }
+        else {
+            return_loc = NO_POINT_FOUND;
+        }
     }
 
     return return_loc;
