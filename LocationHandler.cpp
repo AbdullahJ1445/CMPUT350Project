@@ -725,7 +725,10 @@ sc2::Point2D LocationHandler::getOldestLocation(bool pathable_)
     else
         chunkset = map_chunks;
 
-    //std::cout << "<" << chunkset.size() << ">";
+    if (chunkset.empty()) {
+        return NO_POINT_FOUND;
+    }
+
     for (auto it = chunkset.begin(); it != chunkset.end(); ++it) {
         if (!(*it)->wasSeen()) {
             unseen = true;
@@ -1734,11 +1737,15 @@ void LocationHandler::setHighestPathableThreatChunkAwayFromStart(MapChunk* chunk
 MapChunk* LocationHandler::getHighestPathableThreatChunkAwayFromStart()
 {
     if (high_threat_pathable_chunk_away_from_start == nullptr) {
-        assert(!enemy_start_locations.empty());
+        if (enemy_start_locations.empty() || !chunks_initialized) {
+            return nullptr;
+        }
         sc2::Point2D clockwise_enemy = getEnemyStartLocationByIndex(0);
-        assert(chunks_initialized);
         MapChunk* chunk_ = getNearestPathableChunk(clockwise_enemy);
         high_threat_pathable_chunk_away_from_start = chunk_;
+        if (chunk_ == nullptr) {
+            return nullptr;
+        }
         if (high_threat_pathable_chunk_away_from_start->getThreat() == 0) {
             high_threat_pathable_chunk_away_from_start->setThreat(1);
         }
