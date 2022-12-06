@@ -363,12 +363,27 @@ bool Directive::executeSimpleActionForUnitType(BasicSc2Bot* agent) {
 	if (action_type != DISABLE_DEFAULT_DIRECTIVE && agent->isStructure(unit_type)) {
 		// prevent structures from queuing training
 
+		// allow Nexus to train probes when using chronoboost / overcharge
 		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
-			[this](Mob* m) { return (m->unit.orders).empty(); });
-		mobs = filtered_mobs;
+			[this](Mob* m) { 
+				auto orders = m->unit.orders;
+				if (orders.empty()) {
+					return true;
+				}
+				bool non_ignorable = false;
+				for (auto o : orders) {
+					auto abil = o.ability_id.ToType();
+					if (abil != sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST &&
+						abil != sc2::ABILITY_ID::EFFECT_CHRONOBOOST &&
+						abil != sc2::ABILITY_ID::NEXUSSHIELDOVERCHARGE) {
+						non_ignorable = true;
+					}
+				}
+				return !non_ignorable;
+			 });
 	}
 
-	if (mobs.size() == 0)
+	if (mobs.empty())
 		return false;
 
 	
@@ -736,7 +751,22 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 				location = uniform_random_point_in_circle(target_location, proximity);
 			}
 			// Unit has no orders
-			if ((m->unit.orders).size() == 0) {
+			bool has_orders = true;
+			if (!m->unit.orders.empty()) {
+				if (m->unit.orders.size() == 1) {
+					auto o = m->unit.orders.front();
+					auto abil = o.ability_id.ToType();
+					if (abil == sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST ||
+						abil == sc2::ABILITY_ID::EFFECT_CHRONOBOOST ||
+						abil == sc2::ABILITY_ID::NEXUSSHIELDOVERCHARGE) {
+						has_orders = false;
+					}
+				}
+			}
+			else {
+				has_orders = false;
+			}
+			if (!has_orders) {
 				found_valid_unit = true;
 				filtered_mobs.insert(m);
 			}
@@ -1373,6 +1403,7 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 		// no target is specified
 		if (target_loc_ == INVALID_POINT && target_unit_ == nullptr) {
 			agent->Actions()->UnitCommand(&mob_->unit, ability_, queued_);
+			mob_->giveCooldown(agent, 5);
 			action_success = true;
 		}
 

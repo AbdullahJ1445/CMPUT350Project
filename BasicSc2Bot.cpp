@@ -204,21 +204,29 @@ void BasicSc2Bot::checkBuildingQueues() {
 	// Sometimes the bot will mistakenly queue more than one unit.
 	// Calling this on step makes sure to fix that
 
-	const sc2::ObservationInterface* obs = Observation();
-	auto ad = obs->GetAbilityData();
-	sc2::QueryInterface* query = Query();
-	std::unordered_set<Mob*> buildings = mobH->filterByFlag(mobH->getMobs(), FLAGS::IS_STRUCTURE);
-	for (auto m : buildings) {
-		if (m->unit.orders.size() > 1) {
-			/*
-			auto ab = query->GetAbilitiesForUnit(&m->unit);
-			auto abs = ab.abilities;
-			for (auto a : abs) {
-				std::cout << "(" << ad[a.ability_id].friendly_name << " " << a.ability_id << ")";
-			}*/
-			Actions()->UnitCommand(&m->unit, sc2::ABILITY_ID::CANCEL_LAST);
+	// for some reason this is acting erratically on the ladder server and causing orders to keep canceling
+	// even if they are the only order... disabling this and just accepting sometimes double queues might happen
+	
+	/*
+	std::unordered_set <Mob*> buildings = mobH->filterByFlag(mobH->getMobs(), FLAGS::IS_STRUCTURE);
+	buildings = mobH->filterNotOnCooldown(buildings);
+	if (!buildings.empty()) {
+		for (auto m : buildings) {
+			if (m->unit.orders.size() > 1) {
+				bool any_different_orders = false;
+				for (auto order : m->unit.orders) {
+					if (order.ability_id.ToType() != m->unit.orders.front().ability_id.ToType()) {
+						any_different_orders = true;
+					}
+				}
+				if (!any_different_orders) {
+					Actions()->UnitCommand(&m->unit, sc2::ABILITY_ID::CANCEL_LAST);
+					m->giveCooldown(this, 10);
+				}
+			}
 		}
 	}
+	*/
 }
 
 void BasicSc2Bot::listUnitSummary() {
@@ -626,10 +634,10 @@ void::BasicSc2Bot::onStep_1000(const sc2::ObservationInterface* obs) {
 	}
 	if (pathable_threat_chunk != prev_threat_chunk || threat_amount != prev_threat_amount) {
 		if (pathable_threat_spot != NO_POINT_FOUND) {
-			//std::cout << "[" << obs->GetGameLoop() << "] highest threat at " << pathable_threat_spot.x << ", " << pathable_threat_spot.y << " = " << pathable_threat_chunk->getThreat() << std::endl;;
+			std::cout << "[" << obs->GetGameLoop() << "] highest threat at " << pathable_threat_spot.x << ", " << pathable_threat_spot.y << " = " << pathable_threat_chunk->getThreat() << std::endl;;
 		}
 		else {
-			//std::cout << "[" << obs->GetGameLoop() << "] no threats found." << std::endl;
+			std::cout << "[" << obs->GetGameLoop() << "] no threats found." << std::endl;
 		}
 	}
 	prev_threat_chunk = pathable_threat_chunk;
@@ -705,7 +713,9 @@ void BasicSc2Bot::OnStep() {
 		// make nexus train first probe
 		for (auto it = allied_units.begin(); it != allied_units.end(); ++it) {
 			if ((*it)->unit_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS) {
-				Actions()->UnitCommand((*it), sc2::ABILITY_ID::TRAIN_PROBE);
+				if ((*it)->orders.empty()) {
+					Actions()->UnitCommand((*it), sc2::ABILITY_ID::TRAIN_PROBE);
+				}
 				break;
 			}
 		}
@@ -968,11 +978,15 @@ void BasicSc2Bot::checkSiegeTanks() {
 			}
 		}
 		if (disp_type == sc2::Unit::DisplayType::Snapshot) {
-			// slightly increase threat of snapshot structures each step so they will be searched
+			// apply a small amount of threat to structures in snapshot so they will be searched
+			// before unseen locations
 
-			MapChunk* chunk = locH->getNearestPathableChunk(e->pos);
+			MapChunk* chunk = locH->getNearestPathableChunk(sc2::Point2D(e->pos.x, e->pos.y));
 			if (chunk != nullptr) {
-				chunk->increaseThreat(this, 0.01);
+				if (chunk->getThreat() < 100) {
+					chunk->setThreat(100);
+					
+				}
 			}
 		}
 	}
