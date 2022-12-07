@@ -2,14 +2,12 @@
 
 Strategy::Strategy(BasicSc2Bot* bot_) {
 	bot = bot_;
-	strategy_ptr = this;
 }
 
 //copy constructor
 Strategy::Strategy(const Strategy& rhs) {
 	bot = rhs.bot;
 	maps = rhs.maps;
-	strategy_ptr = rhs.strategy_ptr;
 	map_index = rhs.map_index;
 	p_id = rhs.p_id;
 }
@@ -20,7 +18,6 @@ Strategy& Strategy::operator=(const Strategy& rhs) {
 	if (this == &rhs) return *this;
 	bot = rhs.bot;
 	maps = rhs.maps;
-	strategy_ptr = rhs.strategy_ptr;
 	map_index = rhs.map_index;
 	p_id = rhs.p_id;
 	return *this;

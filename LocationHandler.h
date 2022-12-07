@@ -50,6 +50,9 @@ private:
 class LocationHandler {
 public:
     LocationHandler(BasicSc2Bot* agent_);
+    LocationHandler(const LocationHandler& rhs);
+    LocationHandler& operator=(const LocationHandler& rhs);
+    ~LocationHandler();
     MapChunk* getNextUnseenChunk(bool pathable_=true);
     void setNextUnseenChunk(bool pathable_=true);
     sc2::Point2D getNearestValidRallyLocation(sc2::Point2D spot);

@@ -275,6 +275,47 @@ LocationHandler::LocationHandler(BasicSc2Bot* agent_){
     next_unseen_pathable_chunk = nullptr;
 }
 
+LocationHandler::LocationHandler(const LocationHandler& rhs) {
+	agent = rhs.agent;
+    enemy_start_location_index = rhs.enemy_start_location_index;
+    chunks_initialized = rhs.chunks_initialized;
+    highest_threat = rhs.highest_threat;
+    highest_pathable_threat = rhs.highest_pathable_threat;
+    highest_threat_away_from_start = rhs.highest_pathable_threat_away_from_start;
+    highest_pathable_threat_away_from_start = rhs.highest_pathable_threat_away_from_start;
+    high_threat_chunk = rhs.high_threat_chunk;
+    high_threat_pathable_chunk = rhs.high_threat_pathable_chunk;
+    high_threat_chunk_away_from_start = rhs.high_threat_chunk_away_from_start;
+    high_threat_pathable_chunk_away_from_start = rhs.high_threat_pathable_chunk_away_from_start;
+    map_center = rhs.map_center;
+    center_chunk = rhs.center_chunk;
+    next_unseen_chunk = rhs.next_unseen_chunk;
+    next_unseen_pathable_chunk = rhs.next_unseen_pathable_chunk;
+}
+
+LocationHandler& LocationHandler::operator=(const LocationHandler& rhs) {
+	if (this == &rhs) return *this;
+    agent = rhs.agent;
+    enemy_start_location_index = rhs.enemy_start_location_index;
+    chunks_initialized = rhs.chunks_initialized;
+    highest_threat = rhs.highest_threat;
+    highest_pathable_threat = rhs.highest_pathable_threat;
+    highest_threat_away_from_start = rhs.highest_pathable_threat_away_from_start;
+    highest_pathable_threat_away_from_start = rhs.highest_pathable_threat_away_from_start;
+    high_threat_chunk = rhs.high_threat_chunk;
+    high_threat_pathable_chunk = rhs.high_threat_pathable_chunk;
+    high_threat_chunk_away_from_start = rhs.high_threat_chunk_away_from_start;
+    high_threat_pathable_chunk_away_from_start = rhs.high_threat_pathable_chunk_away_from_start;
+    map_center = rhs.map_center;
+    center_chunk = rhs.center_chunk;
+    next_unseen_chunk = rhs.next_unseen_chunk;
+    next_unseen_pathable_chunk = rhs.next_unseen_pathable_chunk;
+	return *this;
+}
+
+LocationHandler::~LocationHandler(){
+}
+
 sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
     // Gets the closest unseen location to the center of mass of our army.
     // Only changes values once the previous one has been searched.

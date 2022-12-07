@@ -161,7 +161,6 @@ private:
 
 	std::function<sc2::Point2D(void)> target_location_function;
 	std::function<sc2::Point2D(void)> assignee_location_function;
-	std::function<Strategy* ()> test_function;
 
 	bool debug;
 

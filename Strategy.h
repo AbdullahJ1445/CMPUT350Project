@@ -13,7 +13,6 @@ struct Strategy {
 	BasicSc2Bot* bot;
 private:
 	std::vector<const char*> maps;
-	Strategy* strategy_ptr;
 	int map_index;
 	int p_id;
 };
