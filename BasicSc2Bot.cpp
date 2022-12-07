@@ -758,12 +758,12 @@ void BasicSc2Bot::OnStep() {
 					if (near_bot) {
 						send_decoy_to = sc2::Point2D(122.0, 79.0);
 						send_proxy_to_1 = sc2::Point2D(52.0, 30.0);
-						send_proxy_to_2 = sc2::Point2D(108.0, 29.0);
+						send_proxy_to_2 = sc2::Point2D(155.0, 65.0);
 					}
 					else {
 						send_decoy_to = sc2::Point2D(78.0, 96.0);
 						send_proxy_to_1 = sc2::Point2D(148.0, 138.0);
-						send_proxy_to_2 = sc2::Point2D(92.0, 139.0); // avoid being detected en route
+						send_proxy_to_2 = sc2::Point2D(45.0, 103.0); // avoid being detected en route
 					}
 				}
 				if (map_index == 2) { // proxy locations for Bel'ShirVestigeLE
@@ -779,15 +779,29 @@ void BasicSc2Bot::OnStep() {
 				if (send_decoy_to != INVALID_POINT) {
 					Actions()->UnitCommand(decoy_probe, sc2::ABILITY_ID::ATTACK, send_decoy_to);
 				}
-				if (send_proxy_to_1 != INVALID_POINT && send_proxy_to_2 != INVALID_POINT) {
-					Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_1);
-					Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_2, true);
+				if (map_index == 2) {
+					if (send_proxy_to_1 != INVALID_POINT && send_proxy_to_2 != INVALID_POINT) {
+						Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_1);
+						Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_2, true);
+					}
+					if (send_proxy_to_1 != INVALID_POINT && send_proxy_to_2 == INVALID_POINT) {
+						Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_1);
+					}
+					if (send_proxy_to_1 == INVALID_POINT && send_proxy_to_2 != INVALID_POINT) {
+						Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_2);
+					}
 				}
-				if (send_proxy_to_1 != INVALID_POINT && send_proxy_to_2 == INVALID_POINT) {
-					Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_1);
-				}
-				if (send_proxy_to_1 == INVALID_POINT && send_proxy_to_2 != INVALID_POINT) {
-					Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::GENERAL_MOVE, send_proxy_to_2);
+				if (map_index == 3) {
+					if (send_proxy_to_1 != INVALID_POINT && send_proxy_to_2 != INVALID_POINT) {
+						Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::ATTACK, send_decoy_to);
+						Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::ATTACK, send_proxy_to_2, true);
+					}
+					if (send_proxy_to_1 != INVALID_POINT && send_proxy_to_2 == INVALID_POINT) {
+						Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::ATTACK, send_proxy_to_1);
+					}
+					if (send_proxy_to_1 == INVALID_POINT && send_proxy_to_2 != INVALID_POINT) {
+						Actions()->UnitCommand(proxy_probe, sc2::ABILITY_ID::ATTACK, send_proxy_to_2);
+					}
 				}
 			}
 		}
