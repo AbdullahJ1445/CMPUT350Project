@@ -12,7 +12,6 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	locked = false;
 	static size_t id_ = 0;
 	id = id_++;
-	steps = steps_;
 	assignee = assignee_;
 	action_type = action_type_;
 	unit_type = unit_type_;						// default: UNIT_TYPEID::INVALID
@@ -23,11 +22,12 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	proximity = target_proximity_;				// default: INVALID_RADIUS
 	flags = flags_;								// default: empty
 	target_unit = unit_;						// default: nullptr
+	group_name = group_name_;					// default: ""
+	set_flag = set_flag_;						// default: FLAGS::INVALID_FLAG
+	steps = steps_;								// default: 0
 	update_assignee_location = false;
 	update_target_location = false;
 	exclude_flags = std::unordered_set<FLAGS>();
-	group_name = group_name_;
-	set_flag = set_flag_;
 	continuous_update = false;
 	target_update_iter_id = 0;
 	assignee_update_iter_id = 0;
@@ -114,6 +114,8 @@ bool Directive::bundleDirective(Directive directive_) {
 }
 
 bool Directive::execute(BasicSc2Bot* agent) {
+	// handle execution of a directive
+
 	const sc2::ObservationInterface* obs = agent->Observation();
 	bool found_valid_unit = false; // ensure unit has been assigned before issuing order
 	const sc2::AbilityData ability_data = obs->GetAbilityData()[(int)ability]; // various info about the ability
@@ -130,6 +132,7 @@ bool Directive::execute(BasicSc2Bot* agent) {
 	}
 
 	if (debug) {
+		// if a directive has been marked as setDebug(true), output "(exe)" whenever it is executed
 		std::cout << "(exe)";
 	}
 
@@ -141,6 +144,8 @@ bool Directive::execute(BasicSc2Bot* agent) {
 		}
 	}
 
+	// use various asserts to ensure the proper constructor was used for the given directive
+	
 	// ensure proper variables are set for the specified ASSIGNEE and ACTION_TYPE
 
 	if (assignee == ASSIGNEE::UNIT_TYPE || assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION) {
@@ -215,6 +220,9 @@ bool Directive::execute(BasicSc2Bot* agent) {
 }
 
 bool Directive::executeModifyTimer(BasicSc2Bot* agent) {
+
+	// handle timer modification directives
+
 	if (action_type == SET_TIMER_1) {
 		agent->setTimer1(steps);
 		return true;
@@ -243,7 +251,8 @@ bool Directive::executeModifyTimer(BasicSc2Bot* agent) {
 }
 
 bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
-	// used to assign an order to a specific unit
+	// handle executing directives for speicific Mobs
+
 	Mob* mob = &agent->mobH->getMob(mob_->unit);
 	if (!mob) {
 		return false;
@@ -611,6 +620,8 @@ bool Directive::executeProtossNexusBatteryOvercharge(BasicSc2Bot* agent) {
 }
 
 bool Directive::executeProtossNexusChronoboost(BasicSc2Bot* agent) {
+	// handle Nexus using Chronoboost
+	// 
 	// this is more complex than it originally seemed
 	// must find the clostest nexus to the given location
 	// that has the chronoboost ability ready
@@ -839,6 +850,9 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 }
 
 bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
+	// handle executing an order for a unit type
+	// may also be UNIT_TYPE_NEAR_LOCATION
+
 	sc2::AbilityData ability_data;
 	if (ability != sc2::ABILITY_ID::INVALID) {
 		ability_data = agent->Observation()->GetAbilityData()[(int)ability]; // various info about the ability
@@ -1044,10 +1058,14 @@ bool Directive::haveBundle() {
 
 size_t Directive::getID()
 {
+	// get the unique ID of this directive
+
 	return id;
 }
 
 bool Directive::ifAnyOnRouteToBuild(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_) {
+	// check if any of our units is on its way to build something
+
 	const sc2::ObservationInterface* obs = agent->Observation();
 
 	for (auto it = mobs_.begin(); it != mobs_.end(); ++it) {
@@ -1061,6 +1079,8 @@ bool Directive::ifAnyOnRouteToBuild(BasicSc2Bot* agent, std::unordered_set<Mob*>
 }
 
 bool Directive::isBuildingStructure(BasicSc2Bot* agent, Mob* mob_) {
+	// check if a specific unit is building a structure
+
 	sc2::QueryInterface* query_interface = agent->Query();
 	const sc2::ObservationInterface* obs = agent->Observation();
 	std::vector<sc2::AbilityData> ability_data = obs->GetAbilityData();
@@ -1085,7 +1105,7 @@ bool Directive::isBuildingStructure(BasicSc2Bot* agent, Mob* mob_) {
 }
 
 bool Directive::isExecutingOrder(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
-	// check if any Mob in the vector is already executing the specified order
+	// check if any Mob in the set is already executing the specified order
 	for (Mob* m : mobs_set) {
 		for (const auto& order : m->unit.orders) {
 			if (order.ability_id == ability_)
@@ -1112,14 +1132,21 @@ Mob* Directive::getClosestToLocation(std::unordered_set<Mob*> mobs_set, sc2::Poi
 
 sc2::ABILITY_ID Directive::getAbilityID()
 {
+	// get the ABILITY_ID assigned to this Directive
 	return ability;
 }
 
 int Directive::getTargetUpdateIterationID() {
+	// update the target update iteration ID
+	// used to check if the target location has been altered
+
 	return target_update_iter_id;
 }
 
 int Directive::getAssigneeUpdateIterationID() {
+	// update the assignee update iteration ID
+	// used to check if the assignee location has been altered
+
 	return assignee_update_iter_id;
 }
 
@@ -1138,11 +1165,13 @@ bool Directive::isAssignedLocationValue(sc2::Point2D loc_, float range_)
 sc2::Point2D Directive::getOffsetAssignedLocation(sc2::Point2D loc_) {
 	// return the offset value of the difference between loc_ and the ASSIGNED_LOCATION defined value
 	// used so that we can use "Near location" but still interpret it as relative to assigned location
+
 	return loc_ - ASSIGNED_LOCATION;
 }
 
 bool Directive::allowMultiple(bool is_true) {
 	// allow this directive to be assigned to more than one Mob
+
 	if (!locked) {
 		allow_multiple = is_true;
 		return true;
@@ -1152,21 +1181,25 @@ bool Directive::allowMultiple(bool is_true) {
 
 void Directive::excludeFlag(FLAGS exclude_flag_) {
 	// set a flag to exclude when choosing mobs to give orders to
+
 	exclude_flags.insert(exclude_flag_);
 }
 
 void Directive::setContinuous(bool is_true) {
 	// when true, this directive will continuously re-issue orders when locations are updated to new values
+
 	continuous_update = is_true;
 }
 
 void Directive::setOverrideOther(bool is_true) {
 	// when true, will apply order even if mob is doing something else
+
 	override_directive = is_true;
 }
 
 std::unordered_set<Mob*> Directive::filterNearLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_) {
 	// filters a vector of Mob* by only those within the specified distance to location
+
 	float sq_dist = pow(radius_, 2);
 
 	std::unordered_set<Mob*> filtered_mobs;
@@ -1204,6 +1237,8 @@ std::unordered_set<Mob*> Directive::filterByHasAbility(BasicSc2Bot* agent, std::
 }
 
 std::unordered_set<Mob*> Directive::filterByUnitType(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_) {
+	// filter a set of mobs by unit_type
+
 	std::unordered_set<Mob*> filtered;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
 		[this](Mob* m) { return m->unit.unit_type == unit_type; });
@@ -1211,6 +1246,8 @@ std::unordered_set<Mob*> Directive::filterByUnitType(std::unordered_set<Mob*> mo
 }
 
 std::unordered_set<Mob*> Directive::filterIdle(std::unordered_set<Mob*> mobs_set) {
+	// filter a set of mobs by those with no orders
+
 	std::unordered_set<Mob*> filtered;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
 		[this](Mob* m) { return (m->unit.orders).size() == 0; });
@@ -1218,6 +1255,8 @@ std::unordered_set<Mob*> Directive::filterIdle(std::unordered_set<Mob*> mobs_set
 }
 
 std::unordered_set<Mob*> Directive::filterNotAssignedToThis(std::unordered_set<Mob*> mobs_set) {
+	// filter a set of mobs by those not currently assigned to this directive
+
 	std::unordered_set<Mob*> filtered;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
 		[this](Mob* m) { 
@@ -1233,6 +1272,8 @@ std::unordered_set<Mob*> Directive::filterNotAssignedToThis(std::unordered_set<M
 }
 
 Mob* Directive::getRandomMobFromSet(std::unordered_set<Mob*> mob_set) {
+	// get a random mob from a set
+
 	int index = rand() % mob_set.size();
 	auto it = mob_set.begin();
 	for (int i = 0; i < index; ++i)
@@ -1243,6 +1284,8 @@ Mob* Directive::getRandomMobFromSet(std::unordered_set<Mob*> mob_set) {
 }
 
 void Directive::setDebug(bool is_true) {
+	// enable debug outputs on this directive
+
 	debug = is_true;
 }
 
@@ -1504,6 +1547,7 @@ bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, c
 bool Directive::setDefault() {
 	// a default directive is something that a unit performs when it has no actions
 	// usually used for workers to return to gathering after building/defending
+
 	if (!locked) {
 		assignee = DEFAULT_DIRECTIVE;
 		allow_multiple = true;
@@ -1512,16 +1556,21 @@ bool Directive::setDefault() {
 }
 
 std::unordered_set<Mob*> Directive::getAssignedMobs() {
+	// return set of mobs that have been assigned to this directive
+
 	return assigned_mobs;
 }
 
 bool Directive::hasAssignedMob() {
+	// return whether this directive has assigned mobs
+
 	return !assigned_mobs.empty();
 }
 
 bool Directive::assignMob(Mob* mob_) {
 	// adds a mob to this directive's assigned mobs
 	// returns false if directive does not allow multiple mobs and already has one
+
 	if (!allow_multiple && !assigned_mobs.empty()) {
 		return false;
 	}
@@ -1540,8 +1589,10 @@ void Directive::unassignMob(Mob* mob_) {
 	
 }
 
-//void Directive::setTargetLocationFunction(std::function<sc2::Point2D(void)> function_) {
 void Directive::setTargetLocationFunction(Strategy* strat_, BasicSc2Bot* agent_, std::function<sc2::Point2D ()> function_) {
+	// set the function to be used to update the target location of this function at execution time.
+	// will overwrite the originally specified value of target location
+
 	strategy_ref = strat_;
 	update_target_location = true;
 	target_location_function = function_;
@@ -1549,12 +1600,17 @@ void Directive::setTargetLocationFunction(Strategy* strat_, BasicSc2Bot* agent_,
 }
 
 void Directive::setAssigneeLocationFunction(BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_) {
+	// set the function to be used to update the assignee location of this function execution time.
+	// will overwrite the originally specified value of assignee location
+
 	update_assignee_location = true;
 	BasicSc2Bot* bot = agent_;
 	assignee_location_function = function_;
 }
 
 void Directive::updateAssigneeLocation(BasicSc2Bot* agent_) {
+	// call the previously set assignee location function to update the assignee location
+
 	static int a_iter_id = 0;
 	sc2::Point2D prev_location = assignee_location;
 	assignee_location = assignee_location_function();
@@ -1564,10 +1620,11 @@ void Directive::updateAssigneeLocation(BasicSc2Bot* agent_) {
 }
 
 void Directive::updateTargetLocation(BasicSc2Bot* agent_) {
+	// call the previously set target location function to update the target location
+
 	static int t_iter_id = 0;
 	sc2::Point2D prev_location = target_location;
 	target_location = target_location_function();
-	//std::cout << "target location updated to be (" << target_location.x << ", " << target_location.y << ")" << std::endl;
 	if (target_location == NO_POINT_FOUND) {
 		target_location == SEND_HOME;
 	}

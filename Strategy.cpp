@@ -164,6 +164,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MAX_TIME, 4000);
 			forge_1.addDirective(d);
 			forge_1.addTrigger(t);
 			Trigger t2(bot);
@@ -171,8 +172,29 @@ void Strategy::loadStrategies() {
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall());
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t2.addCondition(COND::MAX_TIME, 4000);
 			forge_1.addTrigger(t2);
 			bot->addStrat(forge_1);
+		}
+		{	// build forge #1 inside main base if the first forge falls
+			Precept forge_backup(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::BUILD_FORGE, bot->locH->bases[0].getBuildArea(0));
+			Trigger t(bot);
+			t.addCondition(COND::MIN_MINERALS, 150);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[0].getBuildArea(0));
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t.addCondition(COND::MIN_TIME, 4001);
+			forge_backup.addDirective(d);
+			forge_backup.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_MINERALS, 150);
+			t2.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_NEXUS, bot->locH->bases[1].getTownhall());
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t2.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_FORGE);
+			t2.addCondition(COND::MIN_TIME, 4001);
+			forge_backup.addTrigger(t2);
+			bot->addStrat(forge_backup);
 		}
 		{	// build gateway #1 at our pre-defined wall location
 			Precept gateway_1(bot);
@@ -181,12 +203,14 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_MINERALS, 150);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, bot->getStoredLocation("GATEWAY_1"), 0.5F);
+			t.addCondition(COND::MAX_TIME, 4000);
 			gateway_1.addDirective(d);
 			gateway_1.addTrigger(t);
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_MINERALS, 150);
 			t2.addCondition(COND::MIN_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE);
 			t2.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, bot->getStoredLocation("GATEWAY_1"), 0.5F);
+			t2.addCondition(COND::MAX_TIME, 4000);
 			gateway_1.addTrigger(t2);
 			bot->addStrat(gateway_1);
 		}
@@ -521,11 +545,11 @@ void Strategy::loadStrategies() {
 		// all of these being met means the initial buildings are intact, so we won't create a building in their place
 
 		std::vector<Trigger::TriggerCondition> startup_base_conds;
-		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->getStoredLocation("PYLON_1"), 0.5F));
-		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE, bot->getStoredLocation("FORGE_1"), 0.5F));
-		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->getStoredLocation("CANNON_1"), 0.5F));
-		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY, bot->getStoredLocation("GATEWAY_1"), 0.5F));
-		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE, bot->getStoredLocation("CYBER_1"), 0.5F));
+		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->getStoredLocation("PYLON_1"), 12.0F));
+		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_FORGE));
+		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON));
+		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_GATEWAY));
+		startup_base_conds.push_back(Trigger::TriggerCondition(bot, COND::MIN_UNIT_OF_TYPE_TOTAL, 1, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE));
 
 		{	// train collosus
 			Precept train_colossus(bot);
@@ -1218,11 +1242,11 @@ void Strategy::loadStrategies() {
 		bot->storeUnitType("_CHRONOBOOST_TARGET", sc2::UNIT_TYPEID::PROTOSS_GATEWAY);   // special tag to specify a unit that chronoboost will only target
 		if (map_index == 3) { // Proxima
 			if (p_id == 1) { // top
-				bot->storeLocation("PROXY_INITIAL_LOC", sc2::Point2D(92.0, 139.0));
+				bot->storeLocation("PROXY_INITIAL_LOC", sc2::Point2D(45.0, 103.0));
 				bot->storeLocation("DECOY_LOC", sc2::Point2D(78.0, 96.0));
 			}
 			if (p_id == 2) { // bottom
-				bot->storeLocation("PROXY_INITIAL_LOC", sc2::Point2D(108.0, 29.0));
+				bot->storeLocation("PROXY_INITIAL_LOC", sc2::Point2D(155.0, 65.0));
 				bot->storeLocation("DECOY_LOC", sc2::Point2D(122.0, 72.0));
 			}
 		}
@@ -1268,10 +1292,11 @@ void Strategy::loadStrategies() {
 		}
 		{
 			Precept send_proxy(bot);
-			Directive d(Directive::MATCH_FLAGS_NEAR_LOCATION, Directive::EXACT_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_PROXY}, sc2::ABILITY_ID::GENERAL_MOVE, bot->getStoredLocation("PROXY_INITIAL_LOC"), bot->locH->getProxyLocation(), 4.0F, 2.0F);
+			Directive d(Directive::MATCH_FLAGS_NEAR_LOCATION, Directive::EXACT_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_PROXY}, sc2::ABILITY_ID::ATTACK, bot->getStoredLocation("PROXY_INITIAL_LOC"), bot->locH->getProxyLocation(), 4.0F, 2.0F);
 			Trigger t(bot);
 			send_proxy.addTrigger(t);
 			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 1, std::unordered_set<FLAGS>{FLAGS::IS_PROXY});
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PROBE, bot->locH->getProxyLocation(), 8.0F);
 			send_proxy.addDirective(d);
 			bot->addStrat(send_proxy);
 		}
@@ -1467,18 +1492,46 @@ void Strategy::loadStrategies() {
 		}
 
 		{	// start wrecking
+			Precept attack_enemy_base(bot);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->locH->getBestEnemyLocation(), 4.0F);
+			Trigger t(bot);
+			d.excludeFlag(FLAGS::IS_FLYING);
+			t.addCondition(COND::MAX_TIME, 4999);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_ZEALOT, bot->locH->getProxyLocation(), 20.0F);
+			attack_enemy_base.addDirective(d);
+			attack_enemy_base.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::MIN_UNIT_WITH_FLAGS, 5, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t2.addCondition(COND::MAX_TIME, 4999);
+			attack_enemy_base.addTrigger(t2);
+			Trigger t3(bot);
+			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
+			t3.addCondition(COND::MAX_TIME, 4999);
+			attack_enemy_base.addTrigger(t3);
+			bot->addStrat(attack_enemy_base);
+		}
+
+		{	// keep wrecking
 			Precept attack_and_explore(bot);
 			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, sc2::ABILITY_ID::ATTACK, bot->locH->getBestEnemyLocation(), 4.0F);
 			Trigger t(bot);
-			auto func = [this]() { return bot->locH->smartPriorityAttack(); };
+			auto func = [this]() { return bot->locH->smartAttackLocation(); };
 			d.setTargetLocationFunction(this, bot, func);
 			d.excludeFlag(FLAGS::IS_FLYING);
+			d.setContinuous();
+			d.setOverrideOther();
+			t.addCondition(COND::MIN_TIME, 5000);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_ZEALOT, bot->locH->getProxyLocation(), 20.0F);
 			attack_and_explore.addDirective(d);
 			attack_and_explore.addTrigger(t);
 			Trigger t2(bot);
 			t2.addCondition(COND::MIN_UNIT_WITH_FLAGS, 5, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER});
+			t2.addCondition(COND::MIN_TIME, 5000);
 			attack_and_explore.addTrigger(t2);
+			Trigger t3(bot);
+			t3.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_NEXUS);
+			t3.addCondition(COND::MIN_TIME, 5000);
+			attack_and_explore.addTrigger(t3);
 			bot->addStrat(attack_and_explore);
 		}
 		{	// in case things don't end, start building up stuff to clean up
@@ -1504,7 +1557,7 @@ void Strategy::loadStrategies() {
 			t.addCondition(COND::MIN_UNIT_OF_TYPE, 5, sc2::UNIT_TYPEID::PROTOSS_ZEALOT);
 			t.addCondition(COND::MIN_FOOD_USED, 37);
 			t.addCondition(COND::MIN_MINERALS, 200);
-			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE, bot->locH->bases[0].getTownhall(), 10.0F);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION, 0, sc2::UNIT_TYPEID::PROTOSS_CYBERNETICSCORE);
 			cyber_1.addTrigger(t);
 			cyber_1.addDirective(d);
@@ -1553,20 +1606,29 @@ void Strategy::loadStrategies() {
 			bot->addStrat(flyers_search);
 		}
 
-		/* they're gonna die anyway if rushed, may as well get some last resources */
-		/*
+		{	// designate 2 probes to not defend at all times, so our economy still runs
+			Precept assign_non_defender(bot); 
+			Directive d(Directive::UNIT_TYPE_NEAR_LOCATION, bot->locH->bases[0].getTownhall(), Directive::ACTION_TYPE::SET_FLAG, sc2::UNIT_TYPEID::PROTOSS_PROBE, FLAGS::NON_DEFENDER, 20.0F);
+			Trigger t(bot);
+			t.addCondition(COND::MAX_UNIT_WITH_FLAGS, 2, std::unordered_set<FLAGS>{FLAGS::NON_DEFENDER});
+			assign_non_defender.addTrigger(t);
+			assign_non_defender.addDirective(d);
+			bot->addStrat(assign_non_defender);
+		}
+
 		{	// send workers to defend base
 			Precept workers_defend_base(bot);
 			Directive d(Directive::MATCH_FLAGS_NEAR_LOCATION, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_WORKER}, sc2::ABILITY_ID::ATTACK, bot->locH->bases[0].getTownhall(), bot->locH->bases[1].getRallyPoint(), 8.0F, 3.0F);
 			Trigger t(bot);
 			auto func = [this]() { return bot->locH->smartStayHomeAndDefend(); };
 			d.setTargetLocationFunction(this, bot, func);
+			d.excludeFlag(FLAGS::NON_DEFENDER);
 			t.addCondition(COND::MIN_ENEMY_UNITS_NEAR_LOCATION, 1, bot->locH->bases[0].getTownhall());
 			t.addCondition(COND::THREAT_EXISTS_NEAR_LOCATION, bot->locH->bases[0].getTownhall(), 14.0F);
 			workers_defend_base.addTrigger(t);
 			workers_defend_base.addDirective(d);
 			bot->addStrat(workers_defend_base);
 		}
-		*/
+
 	}
 }
