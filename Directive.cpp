@@ -113,6 +113,78 @@ bool Directive::bundleDirective(Directive directive_) {
 	return !locked;
 }
 
+//copy constructor
+Directive::Directive(const Directive& d) {
+	strategy_ref = d.strategy_ref;
+	locked = d.locked;
+	allow_multiple = d.allow_multiple;
+	override_directive = d.override_directive;
+	update_target_location = d.update_target_location;
+	update_assignee_location = d.update_assignee_location;
+	continuous_update = d.continuous_update;
+	target_update_iter_id = d.target_update_iter_id;
+	assignee_update_iter_id = d.assignee_update_iter_id;
+	debug = d.debug;
+	assignee = d.assignee;
+	action_type = d.action_type;
+	unit_type = d.unit_type;
+	ability = d.ability;
+	assignee_location = d.assignee_location;
+	target_location = d.target_location;
+	target_unit = d.target_unit;
+	assignee_proximity = d.assignee_proximity;
+	proximity = d.proximity;
+	ignore_distance = d.ignore_distance;
+	set_flag = d.set_flag;
+	steps = d.steps;
+	flags = d.flags;
+	exclude_flags = d.exclude_flags;
+	directive_bundle = d.directive_bundle;
+	assigned_mobs = d.assigned_mobs;
+	group_name = d.group_name;
+
+}
+
+//assignment operator
+Directive& Directive::operator=(const Directive& d) {
+	//guard against self-assignment
+	if (this == &d) return *this;
+	strategy_ref = d.strategy_ref;
+	locked = d.locked;
+	allow_multiple = d.allow_multiple;
+	override_directive = d.override_directive;
+	update_target_location = d.update_target_location;
+	update_assignee_location = d.update_assignee_location;
+	continuous_update = d.continuous_update;
+	target_update_iter_id = d.target_update_iter_id;
+	assignee_update_iter_id = d.assignee_update_iter_id;
+	debug = d.debug;
+	assignee = d.assignee;
+	action_type = d.action_type;
+	unit_type = d.unit_type;
+	ability = d.ability;
+	assignee_location = d.assignee_location;
+	target_location = d.target_location;
+	target_unit = d.target_unit;
+	assignee_proximity = d.assignee_proximity;
+	proximity = d.proximity;
+	ignore_distance = d.ignore_distance;
+	set_flag = d.set_flag;
+	steps = d.steps;
+	flags = d.flags;
+	exclude_flags = d.exclude_flags;
+	directive_bundle = d.directive_bundle;
+	assigned_mobs = d.assigned_mobs;
+	group_name = d.group_name;
+	return *this;
+}
+
+Directive::~Directive() {
+}
+
+
+
+
 bool Directive::execute(BasicSc2Bot* agent) {
 	// handle execution of a directive
 
