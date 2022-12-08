@@ -41,7 +41,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	}
 	else {
 		allow_multiple = false;
-	}
+	} 
 
 	if (action_type == ACTION_TYPE::GET_MINERALS_NEAR_LOCATION) {
 

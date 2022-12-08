@@ -19,13 +19,11 @@ class Mob;
 class MobHandler;
 
 
-BasicSc2Bot::BasicSc2Bot()
-{
+BasicSc2Bot::BasicSc2Bot() {
 	mobH = nullptr;
 	locH = nullptr;
 	proxy_worker = nullptr;
 	current_strategy = nullptr;
-	special = nullptr;
 	player_start_id = -1;
 	enemy_start_id = -1;
 	map_name = "";
@@ -49,6 +47,106 @@ BasicSc2Bot::BasicSc2Bot()
 	reset_shield_overcharge = 0;
 	threat_in_base = false;
 }
+
+BasicSc2Bot::BasicSc2Bot(const BasicSc2Bot& rhs){
+	player_start_id = rhs.player_start_id;
+	enemy_start_id = rhs.enemy_start_id;
+	map_name = rhs.map_name;
+	enemy_race = rhs.enemy_race;
+	map_index = rhs.map_index;
+	timer_1 = rhs.timer_1;
+	timer_2 = rhs.timer_2;
+	timer_3 = rhs.timer_3;
+	loading_progress = rhs.loading_progress;
+	initialized = rhs.initialized;
+	first_friendly_death = rhs.first_friendly_death;
+	time_of_first_attack = rhs.time_of_first_attack;
+	time_first_attacked = rhs.time_first_attacked;
+	gateways_busy = rhs.gateways_busy;
+	gateways_idle = rhs.gateways_idle;
+	robotics_busy = rhs.robotics_busy;
+	robotics_idle = rhs.robotics_idle;
+	max_minerals = rhs.max_minerals;
+	max_gas = rhs.max_gas;
+	townhalls_built = rhs.townhalls_built;
+	reset_shield_overcharge = rhs.reset_shield_overcharge;
+	proxy_worker = rhs.proxy_worker;
+	current_strategy = rhs.current_strategy;
+	if (!rhs.mobH) {
+		mobH = nullptr;
+ 	} 
+	else {
+		mobH = new MobHandler(this);
+		*mobH = *rhs.mobH;
+	}
+
+	if (!rhs.locH) {
+		locH = nullptr;
+ 	} 
+	else {
+		locH = new LocationHandler(this);
+		*locH = *rhs.locH;
+	}
+}
+BasicSc2Bot& BasicSc2Bot::operator=(const BasicSc2Bot& rhs){
+	if (this == &rhs) return *this;
+	player_start_id = rhs.player_start_id;
+	enemy_start_id = rhs.enemy_start_id;
+	map_name = rhs.map_name;
+	enemy_race = rhs.enemy_race;
+	map_index = rhs.map_index;
+	timer_1 = rhs.timer_1;
+	timer_2 = rhs.timer_2;
+	timer_3 = rhs.timer_3;
+	loading_progress = rhs.loading_progress;
+	initialized = rhs.initialized;
+	first_friendly_death = rhs.first_friendly_death;
+	time_of_first_attack = rhs.time_of_first_attack;
+	time_first_attacked = rhs.time_first_attacked;
+	gateways_busy = rhs.gateways_busy;
+	gateways_idle = rhs.gateways_idle;
+	robotics_busy = rhs.robotics_busy;
+	robotics_idle = rhs.robotics_idle;
+	max_minerals = rhs.max_minerals;
+	max_gas = rhs.max_gas;
+	townhalls_built = rhs.townhalls_built;
+	reset_shield_overcharge = rhs.reset_shield_overcharge;
+	proxy_worker = rhs.proxy_worker;
+	current_strategy = rhs.current_strategy;
+	if (!rhs.mobH) {
+		delete mobH;
+		mobH = nullptr;
+ 	} 
+	else {
+		if (!mobH) { 
+			new MobHandler(this);
+		}
+		*mobH = *rhs.mobH;
+	}
+
+	if (!rhs.locH) {
+		delete locH;
+		locH = nullptr;
+ 	} 
+	else {
+		if (!locH) { 
+			new LocationHandler(this);
+		}
+		*locH = *rhs.locH;
+	}
+	return *this;
+}
+
+BasicSc2Bot::~BasicSc2Bot(){
+	if (locH) {
+		delete locH;
+	}
+
+	if (mobH) {
+		delete mobH;
+	}
+}
+
 
 void BasicSc2Bot::setLoadingProgress(int loaded_) {
 	// for sequential intialization 
@@ -1718,7 +1816,6 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	// determine if unit is a structure
 	bool structure = isStructure(unit);
 	bool is_worker = false;
-	bool make_special = false;	// debug purposes
 	int base_index = locH->getIndexOfClosestBase(unit->pos);
 
 	if (!structure) {
@@ -1772,9 +1869,6 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 		// todo: implement assigning flags for other races and units
 		if (unit_type == sc2::UNIT_TYPEID::PROTOSS_STALKER ||
 			unit_type == sc2::UNIT_TYPEID::PROTOSS_IMMORTAL) {
-			if (special == nullptr) {
-				make_special = true;
-			}
 			new_mob.setFlag(FLAGS::SHORT_RANGE);
 		}
 	}
@@ -1804,9 +1898,6 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 	}
 	mobH->addMob(new_mob);	
 	Mob* mob = &mobH->getMob(*unit);
-	if (make_special) {
-		special = mob;
-	}
 }
 
 void BasicSc2Bot::OnBuildingConstructionComplete(const sc2::Unit* unit) {

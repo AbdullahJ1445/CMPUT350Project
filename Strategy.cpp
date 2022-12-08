@@ -2,7 +2,29 @@
 
 Strategy::Strategy(BasicSc2Bot* bot_) {
 	bot = bot_;
-	strategy_ptr = this;
+}
+
+//copy constructor
+Strategy::Strategy(const Strategy& rhs) {
+	bot = rhs.bot;
+	maps = rhs.maps;
+	map_index = rhs.map_index;
+	p_id = rhs.p_id;
+}
+
+//assignment operator
+Strategy& Strategy::operator=(const Strategy& rhs) {
+	//guard against self-assignment
+	if (this == &rhs) return *this;
+	bot = rhs.bot;
+	maps = rhs.maps;
+	map_index = rhs.map_index;
+	p_id = rhs.p_id;
+	return *this;
+}
+
+//destructor
+Strategy::~Strategy() {
 }
 
 void Strategy::loadGameSettings(int* map_index, sc2::Race* bot_race, sc2::Race* opp_race, sc2::Difficulty* difficulty, bool* human_player, bool* fullscreen, bool* realtime) {

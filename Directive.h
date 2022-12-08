@@ -80,12 +80,7 @@ public:
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, FLAGS set_flag_);
 	Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, std::unordered_set<FLAGS> flags_, sc2::Point2D assignee_location_, FLAGS set_flag_, float assignee_proximity_ = DEFAULT_RADIUS);
-
-
-
-	//Directive(const Directive& d);
-	//Directive& operator=(const Directive& d);
-
+	
 	bool execute(BasicSc2Bot* agent);
 	bool executeForMob(BasicSc2Bot* agent, Mob* mob_);
 	static sc2::Point2D uniform_random_point_in_circle(sc2::Point2D center, float radius);
@@ -162,7 +157,6 @@ private:
 
 	std::function<sc2::Point2D(void)> target_location_function;
 	std::function<sc2::Point2D(void)> assignee_location_function;
-	std::function<Strategy* ()> test_function;
 
 	bool debug;
 

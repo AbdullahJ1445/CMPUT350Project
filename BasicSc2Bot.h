@@ -37,6 +37,9 @@ public:
 	// public functions
 
 	BasicSc2Bot();
+	BasicSc2Bot(const BasicSc2Bot& rhs);
+	BasicSc2Bot& operator=(const BasicSc2Bot& rhs);
+	~BasicSc2Bot();
 	void setLoadingProgress(int loaded_);
 	int getLoadingProgress();
 	void setCurrentStrategy(Strategy* strategy_);

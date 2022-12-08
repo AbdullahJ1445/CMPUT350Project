@@ -10,6 +10,20 @@ MobHandler::MobHandler(BasicSc2Bot* agent) {
     this->agent = agent;
 }
 
+MobHandler::MobHandler(const MobHandler& rhs) {
+	this->agent = rhs.agent;
+}
+
+MobHandler& MobHandler::operator=(const MobHandler& rhs) {
+	if (this == &rhs) return *this;
+	this->agent = rhs.agent;
+	return *this;
+}
+
+MobHandler::~MobHandler(){
+	
+}
+
 void MobHandler::setMobIdle(Mob* mob_, bool is_true) {
     // set a mob as idle
 
