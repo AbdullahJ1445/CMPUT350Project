@@ -1316,11 +1316,25 @@ void Strategy::loadStrategies() {
 			assign_proxy.addTrigger(t);
 			bot->addStrat(assign_proxy);
 		}
+		{	// assign new proxy if the first is dead
+			Precept assign_proxy_2(bot);
+			Directive d(Directive::UNIT_TYPE, Directive::ACTION_TYPE::SET_FLAG, sc2::UNIT_TYPEID::PROTOSS_PROBE, FLAGS::IS_PROXY);
+			assign_proxy_2.addDirective(d);
+			Trigger t(bot);
+			t.addCondition(COND::MAX_UNIT_WITH_FLAGS, 0, std::unordered_set<FLAGS>{FLAGS::IS_PROXY});
+			t.addCondition(COND::MIN_TIME, 2000);
+			t.addCondition(COND::MAX_TIME, 2050);
+			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PROBE, bot->getStoredLocation("PROXY_INITIAL_LOC"), 6.0F);
+			assign_proxy_2.addTrigger(t);
+			bot->addStrat(assign_proxy_2);
+		}
+
 		{	// send the proxy probe in with the first wave of zealots
 			Precept send_decoy_home(bot);
 			Directive d(Directive::UNIT_TYPE_NEAR_LOCATION, bot->getStoredLocation("DECOY_LOC"), Directive::NEAR_LOCATION, sc2::UNIT_TYPEID::PROTOSS_PROBE, sc2::ABILITY_ID::ATTACK, bot->locH->bases[0].getTownhall(), 6.0F);
 			Trigger t(bot);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 1, sc2::UNIT_TYPEID::PROTOSS_PROBE, bot->getStoredLocation("DECOY_LOC"), 4.0F);
+			t.addCondition(COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION, 0, std::unordered_set<FLAGS>{FLAGS::IS_PROXY}, bot->getStoredLocation("DECOY_LOC"), 4.0F);
 			send_decoy_home.addDirective(d);
 			send_decoy_home.addTrigger(t);
 			bot->addStrat(send_decoy_home);
@@ -1344,6 +1358,17 @@ void Strategy::loadStrategies() {
 			send_proxy.addTrigger(t);
 			send_proxy.addDirective(d);
 			bot->addStrat(send_proxy);
+		}
+		{
+			Precept send_proxy_if_home(bot);
+			Directive d(Directive::MATCH_FLAGS_NEAR_LOCATION, Directive::EXACT_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_PROXY}, sc2::ABILITY_ID::ATTACK, bot->locH->bases[0].getTownhall(), bot->locH->getProxyLocation(), 24.0F, 2.0F);
+			Trigger t(bot);
+			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 1, std::unordered_set<FLAGS>{FLAGS::IS_PROXY});
+			t.addCondition(COND::MIN_TIME, 1000);
+			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PROBE, bot->locH->getProxyLocation(), 8.0F);
+			send_proxy_if_home.addTrigger(t);
+			send_proxy_if_home.addDirective(d);
+			bot->addStrat(send_proxy_if_home);
 		}
 		{	// build probes at nexus, but only a minimal amount
 			Precept base_probe(bot);
