@@ -45,7 +45,6 @@ BasicSc2Bot::BasicSc2Bot() {
 	max_gas = 0;
 	townhalls_built = 0;
 	reset_shield_overcharge = 0;
-	threat_in_base = false;
 }
 
 BasicSc2Bot::BasicSc2Bot(const BasicSc2Bot& rhs){
@@ -685,7 +684,6 @@ void::BasicSc2Bot::loadStep_04() {
 	int i = 0;
 	for (auto utd : utd_fulldata) {
 		if (utd.mineral_cost > 0 && std::find(utd.attributes.begin(), utd.attributes.end(), sc2::Attribute::Structure) != utd.attributes.end()) {
-			//std::cout << utd.name << " id: " << utd.unit_type_id << "  alias: " << utd.unit_alias << std::endl;
 			data_buildings.push_back(utd.unit_type_id);
 		}
 		if (utd.mineral_cost > 0 || utd.food_required > 0 || utd.vespene_cost > 0) {
@@ -763,9 +761,10 @@ void BasicSc2Bot::OnGameEnd() {
 		//std::cout << std::endl << " * * *   WARNING  TOWNHALL WAS NOT BUILT   * * *" << std::endl << std::endl;
 	}
 
+	/* for evaluating changes in our cactus valley precepts
 	std::cout << "Gateway uptime: " << (int)((float) (gateways_busy * 100) / ((float)gateways_busy + (float)gateways_idle)) << "% "
 			  "\tRobotics uptime: " << (int)((float) (robotics_busy * 100) / ((float)robotics_busy + (float)robotics_idle)) << "% " << std::endl;
-	std::cout << "Max minerals: " << max_minerals << "\tMax gas: " << max_gas << std::endl;
+	std::cout << "Max minerals: " << max_minerals << "\tMax gas: " << max_gas << std::endl; */
 
 	if (results[0].result == sc2::GameResult::Win) {
 		std::cout << "[" << obs->GetGameLoop() << "] The Player has won the match at " << gameTime(obs->GetGameLoop()) << "." << std::endl;
@@ -2062,7 +2061,7 @@ void BasicSc2Bot::OnUnitDestroyed(const sc2::Unit* unit) {
 			if (sc2::DistanceSquared2D(unit->pos, locH->getStartLocation()) <= 50.0F) {
 				int gameloop = Observation()->GetGameLoop();
 				time_first_attacked = gameloop;
-				std::cout << "[" << gameloop << "] First attack by opponent at " << gameTime(gameloop) << "." << std::endl;
+				/*std::cout << "[" << gameloop << "] First attack by opponent at " << gameTime(gameloop) << "." << std::endl; */
 			}
 		}
 	}

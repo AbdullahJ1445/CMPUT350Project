@@ -258,32 +258,6 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 				std::cout << "no-point-found";
 			std::cout << ":" << (int)is_true << ")";
 		}
-
-		// testing stuff
-
-		if (!agent->threat_in_base && location == agent->locH->bases[1].getRallyPoint() && is_true) {
-			if (agent->locH->PathableThreatExistsNearLocation(location, radius)) {
-				std::cout << "<threat in base! (";
-
-				MapChunk* threat_chunk = agent->locH->getHighestPathableThreatChunkNearLocation(location, radius); sc2::Point2D threat_loc = NO_POINT_FOUND;
-				if (threat_chunk != nullptr) {
-					threat_loc = threat_chunk->getLocation();
-				}
-				std::cout << " TE_NL(";
-				if (threat_loc != NO_POINT_FOUND)
-					std::cout << threat_loc.x << "," << threat_loc.y;
-				else
-					std::cout << "no-point-found";
-				std::cout << ":" << (int)is_true << ")>";
-				agent->threat_in_base = true;
-			}
-		}
-		if (agent->threat_in_base && location == agent->locH->bases[1].getRallyPoint() && is_true) {
-			if (!agent->locH->PathableThreatExistsNearLocation(location, radius)) {
-				std::cout << "<threats cleared>";
-				agent->threat_in_base = false;
-			}
-		}
 		
 		return agent->locH->PathableThreatExistsNearLocation(location, radius) == is_true;
 	case COND::MIN_UNITS_USING_ABILITY:
@@ -956,8 +930,6 @@ void Precept::addDirective(Directive directive_) {
 	Directive* dir_ = agent->getLastStoredDirective();
 	directives.push_back(dir_);
 	has_directive = true;
-	//std::cout << "the pointer inside the provided directive at as it's added: " << directive_.strategy_ref << std::endl;
-	//std::cout << "the pointer inside the stored directive at as it's added: " << dir_->strategy_ref << std::endl;
 }
 
 void Precept::addTrigger(Trigger trigger_) {

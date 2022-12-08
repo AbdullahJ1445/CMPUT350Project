@@ -744,9 +744,6 @@ sc2::Point2D LocationHandler::smartAttackLocation(bool pathable_) {
     // which was visited the least recently
 
     sc2::Point2D high_threat = getHighestThreatLocation(pathable_, false);
-    if (agent->Observation()->GetGameLoop() % 200 == 0) {
-        std::cout << "(" << high_threat.x << "," << high_threat.y << ")";
-    }
     if (high_threat != NO_POINT_FOUND)
         return high_threat;
     return getOldestLocation(pathable_);

@@ -701,7 +701,6 @@ bool Directive::executeProtossNexusChronoboost(BasicSc2Bot* agent) {
 		[this](Mob* m) { return (std::find(m->unit.buffs.begin(), m->unit.buffs.end(), sc2::BUFF_ID::CHRONOBOOSTENERGYCOST) == m->unit.buffs.end()); }); 
 
 	if (not_already_chronoboosted.empty()) {
-		//std::cout << "there are no non-chronoboosted structures apparently" << std::endl;
 		return false;
 	}
 
@@ -823,9 +822,6 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 			return false;
 		}
 
-		// debug
-		std::cout << (0);
-
 		/* ORDER IS EXECUTED */
 		return issueOrder(agent, filtered_mobs, closest_unit);
 		/* * * * * * * * * * */
@@ -916,7 +912,6 @@ bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
 		}
 		else {
 			if (!query_interface->Placement(ability, location)) {
-				//std::cout << "%";
 				return false;
 			}
 		}
@@ -1581,8 +1576,7 @@ bool Directive::assignMob(Mob* mob_) {
 
 void Directive::unassignMob(Mob* mob_) {
 	// unassigns the mob from list of assigned mobs
-	
-	//std::cout << " directive ability type: " << (int) ability << "directive id: " << getID() << std::endl;
+
 	if (!assigned_mobs.empty()) {
 		assigned_mobs.erase(mob_);
 	}
