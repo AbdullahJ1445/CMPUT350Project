@@ -2,7 +2,6 @@
 
 Strategy::Strategy(BasicSc2Bot* bot_) {
 	bot = bot_;
-	strategy_ptr = this;
 }
 
 void Strategy::loadGameSettings(int* map_index, sc2::Race* bot_race, sc2::Race* opp_race, sc2::Difficulty* difficulty, bool* human_player, bool* fullscreen, bool* realtime) {

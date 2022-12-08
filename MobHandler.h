@@ -13,6 +13,9 @@ class BasicSc2Bot;
 class MobHandler {
 public:
     MobHandler(BasicSc2Bot* agent);
+    MobHandler(const MobHandler& rhs);
+	MobHandler& operator=(const MobHandler& rhs);
+	~MobHandler();
     void setMobIdle(Mob* mob_, bool is_true=true);
     void setMobBusy(Mob* mob_, bool is_true=true);
     bool addMob(Mob mob_);

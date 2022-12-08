@@ -54,13 +54,12 @@ bool Mob::hasFlag(FLAGS flag) {
 	return (flags.find(flag) != flags.end());
 }
 
-void Mob::assignDefaultDirective(Directive directive_) {
+void Mob::assignDefaultDirective(BasicSc2Bot* agent, Directive* directive_) {
 	if (has_default_directive) {
 		delete default_directive;
 	}
-	directive_.setDefault(); // change directive type to default directive
-	default_directive = new Directive(directive_);
-	default_directive->lock();
+	directive_->setDefault(); // change directive type to default directive
+	default_directive = agent->directive_by_id[directive_->getID()];
 	has_default_directive = true;
 }
 
@@ -358,7 +357,7 @@ bool Mob::harvestNearbyTownhall(BasicSc2Bot* agent)
 			default_directive->unassignMob(this);
 		}
 	}
-	assignDefaultDirective(*dir);
+	assignDefaultDirective(agent, dir);
 	
 	if (isCarryingMinerals()) {
 		agent->Actions()->UnitCommand(&unit, sc2::ABILITY_ID::HARVEST_RETURN, &townhall->unit);
@@ -432,7 +431,7 @@ bool Mob::grabNearbyMineralHarvester(BasicSc2Bot* agent, bool grab_from_gas, boo
 	Directive directive_get_minerals(Directive::DEFAULT_DIRECTIVE, Directive::GET_MINERALS_NEAR_LOCATION, nearest->unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, unit.pos);
 	agent->storeDirective(directive_get_minerals);
 	Directive* dir = agent->getLastStoredDirective();
-	nearest->assignDefaultDirective(*dir);
+	nearest->assignDefaultDirective(agent, dir);
 	const sc2::Unit* mineral_target = agent->locH->getNearestMineralPatch(unit.pos);
 	if (grab_from_other_townhall) {
 		if (nearest->isCarryingMinerals()) {
@@ -478,7 +477,9 @@ bool Mob::grabNearbyGasHarvester(BasicSc2Bot* agent) {
 	nearest->setHarvestingGas(this);
 
 	Directive directive_get_gas(Directive::DEFAULT_DIRECTIVE, Directive::GET_GAS_NEAR_LOCATION, nearest->unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, unit.pos);
-	nearest->assignDefaultDirective(directive_get_gas);
+	agent->storeDirective(directive_get_gas);
+	Directive* dir = agent->getLastStoredDirective();
+	nearest->assignDefaultDirective(agent, dir);
 	agent->Actions()->UnitCommand(&(nearest->unit), sc2::ABILITY_ID::HARVEST_GATHER, &unit);
 	return true;
 }

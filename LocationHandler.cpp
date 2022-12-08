@@ -275,6 +275,47 @@ LocationHandler::LocationHandler(BasicSc2Bot* agent_){
     next_unseen_pathable_chunk = nullptr;
 }
 
+LocationHandler::LocationHandler(const LocationHandler& rhs) {
+	agent = rhs.agent;
+    enemy_start_location_index = rhs.enemy_start_location_index;
+    chunks_initialized = rhs.chunks_initialized;
+    highest_threat = rhs.highest_threat;
+    highest_pathable_threat = rhs.highest_pathable_threat;
+    highest_threat_away_from_start = rhs.highest_pathable_threat_away_from_start;
+    highest_pathable_threat_away_from_start = rhs.highest_pathable_threat_away_from_start;
+    high_threat_chunk = rhs.high_threat_chunk;
+    high_threat_pathable_chunk = rhs.high_threat_pathable_chunk;
+    high_threat_chunk_away_from_start = rhs.high_threat_chunk_away_from_start;
+    high_threat_pathable_chunk_away_from_start = rhs.high_threat_pathable_chunk_away_from_start;
+    map_center = rhs.map_center;
+    center_chunk = rhs.center_chunk;
+    next_unseen_chunk = rhs.next_unseen_chunk;
+    next_unseen_pathable_chunk = rhs.next_unseen_pathable_chunk;
+}
+
+LocationHandler& LocationHandler::operator=(const LocationHandler& rhs) {
+	if (this == &rhs) return *this;
+    agent = rhs.agent;
+    enemy_start_location_index = rhs.enemy_start_location_index;
+    chunks_initialized = rhs.chunks_initialized;
+    highest_threat = rhs.highest_threat;
+    highest_pathable_threat = rhs.highest_pathable_threat;
+    highest_threat_away_from_start = rhs.highest_pathable_threat_away_from_start;
+    highest_pathable_threat_away_from_start = rhs.highest_pathable_threat_away_from_start;
+    high_threat_chunk = rhs.high_threat_chunk;
+    high_threat_pathable_chunk = rhs.high_threat_pathable_chunk;
+    high_threat_chunk_away_from_start = rhs.high_threat_chunk_away_from_start;
+    high_threat_pathable_chunk_away_from_start = rhs.high_threat_pathable_chunk_away_from_start;
+    map_center = rhs.map_center;
+    center_chunk = rhs.center_chunk;
+    next_unseen_chunk = rhs.next_unseen_chunk;
+    next_unseen_pathable_chunk = rhs.next_unseen_pathable_chunk;
+	return *this;
+}
+
+LocationHandler::~LocationHandler(){
+}
+
 sc2::Point2D LocationHandler::getClosestUnseenLocation(bool pathable_) {
     // Gets the closest unseen location to the center of mass of our army.
     // Only changes values once the previous one has been searched.
@@ -703,9 +744,6 @@ sc2::Point2D LocationHandler::smartAttackLocation(bool pathable_) {
     // which was visited the least recently
 
     sc2::Point2D high_threat = getHighestThreatLocation(pathable_, false);
-    if (agent->Observation()->GetGameLoop() % 200 == 0) {
-        std::cout << "(" << high_threat.x << "," << high_threat.y << ")";
-    }
     if (high_threat != NO_POINT_FOUND)
         return high_threat;
     return getOldestLocation(pathable_);
@@ -1877,16 +1915,16 @@ MapChunk* LocationHandler::getHighestPathableThreatChunkNearLocation(sc2::Point2
     double highest_threat = 0;
     MapChunk* hi_chunk = nullptr;
 
-    assert(map_chunk_storage.size() > (j2 * chunk_rows + i2));
-
     for (size_t j = j1; j <= j2; ++j) {
         for (size_t i = i1; i <= i2; ++i) {
-            MapChunk* chunk = map_chunk_storage[j * chunk_rows + i].get();
-            if (chunk->isPathable()) {
-                if (sc2::DistanceSquared2D(chunk->getLocation(), loc_) <= sq_dist) {
-                    if (chunk->getThreat() > highest_threat) {
-                        hi_chunk = chunk;
-                        highest_threat = chunk->getThreat();
+            if ((j * chunk_rows + i) >= 0 && map_chunk_storage.size() > (j * chunk_rows + i)) {
+                MapChunk* chunk = map_chunk_storage[j * chunk_rows + i].get();
+                if (chunk->isPathable()) {
+                    if (sc2::DistanceSquared2D(chunk->getLocation(), loc_) <= sq_dist) {
+                        if (chunk->getThreat() > highest_threat) {
+                            hi_chunk = chunk;
+                            highest_threat = chunk->getThreat();
+                        }
                     }
                 }
             }
