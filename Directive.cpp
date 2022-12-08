@@ -112,7 +112,7 @@ bool Directive::bundleDirective(Directive directive_) {
 		directive_bundle.push_back(directive_);
 	return !locked;
 }
-
+/*
 //copy constructor
 Directive::Directive(const Directive& d) {
 	strategy_ref = d.strategy_ref;
@@ -182,7 +182,7 @@ Directive& Directive::operator=(const Directive& d) {
 Directive::~Directive() {
 }
 
-
+*/
 
 
 bool Directive::execute(BasicSc2Bot* agent) {
