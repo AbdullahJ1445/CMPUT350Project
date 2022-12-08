@@ -629,7 +629,7 @@ void Strategy::loadStrategies() {
 			Trigger t(bot);
 			for (auto tc : startup_base_conds)
 				t.addCondition(tc);
-			t.addCondition(COND::MIN_MINERALS, 150);
+			t.addCondition(COND::MIN_MINERALS, 175);
 			t.addCondition(COND::MIN_UNIT_OF_TYPE_NEAR_LOCATION, 2, sc2::UNIT_TYPEID::PROTOSS_PYLON, bot->locH->bases[1].getDefendPoint(0), 12.0F);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_TOTAL_NEAR_LOCATION, 3, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].getDefendPoint(0), 8.0F);
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_UNDER_CONSTRUCTION_NEAR_LOCATION, 2, sc2::UNIT_TYPEID::PROTOSS_PHOTONCANNON, bot->locH->bases[1].getDefendPoint(0), 6.0F);
@@ -984,14 +984,31 @@ void Strategy::loadStrategies() {
 			defend_home.addDirective(d);
 			bot->addStrat(defend_home);
 		}
+
+
+		{	// designate 4 probes to not defend at all times, so our economy still runs
+			Precept assign_non_defender(bot);
+			Directive d(Directive::UNIT_TYPE_NEAR_LOCATION, bot->locH->bases[0].getTownhall(), Directive::ACTION_TYPE::SET_FLAG, sc2::UNIT_TYPEID::PROTOSS_PROBE, FLAGS::NON_DEFENDER, 20.0F);
+			Trigger t(bot);
+			t.addCondition(COND::MAX_UNIT_WITH_FLAGS, 4, std::unordered_set<FLAGS>{FLAGS::NON_DEFENDER});
+			assign_non_defender.addTrigger(t);
+			assign_non_defender.addDirective(d);
+			bot->addStrat(assign_non_defender);
+		}
+
 		{	// set timer to send workers to defend expansion when army is insufficient
 			Precept workers_defend_init_timer(bot);
 			Directive d(Directive::GAME_VARIABLES, Directive::SET_TIMER_2, 0);
 			Trigger t(bot);
 			t.addCondition(COND::MIN_ENEMY_UNITS_NEAR_LOCATION, 2, bot->locH->bases[1].getTownhall(), 15.0F);
-			t.addCondition(COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION, 3, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].getRallyPoint(), 24.0F);
+			t.addCondition(COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION, 3, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].getRallyPoint(), 50.0F);
 			workers_defend_init_timer.addDirective(d);
 			workers_defend_init_timer.addTrigger(t);
+			Trigger t2(bot);
+			t2.addCondition(COND::THREAT_EXISTS_NEAR_LOCATION, bot->locH->bases[1].getRallyPoint(), 12.0F);
+			t2.addCondition(COND::MAX_TIME, 3999);
+			t2.addCondition(COND::MIN_ENEMY_UNITS_NEAR_LOCATION, 1, bot->locH->bases[1].getRallyPoint(), 12.0F);
+			workers_defend_init_timer.addTrigger(t2);
 			bot->addStrat(workers_defend_init_timer);
 		}
 		{	// reset the defense timer once enemies are cleared or defense army is sufficient
@@ -999,19 +1016,25 @@ void Strategy::loadStrategies() {
 			Directive d(Directive::GAME_VARIABLES, Directive::RESET_TIMER_2);
 			Trigger t(bot);
 			t.addCondition(COND::MAX_ENEMY_UNITS_NEAR_LOCATION, 0, bot->locH->bases[1].getTownhall(), 15.0F);
+			t.addCondition(COND::MIN_TIME, 4000);
 			reset_worker_defense_timer.addTrigger(t);
 			Trigger t2(bot);
-			t2.addCondition(COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION, 6, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].getRallyPoint(), 24.0F);
+			t2.addCondition(COND::MIN_UNIT_WITH_FLAGS_NEAR_LOCATION, 6, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].getRallyPoint(), 50.0F);
 			reset_worker_defense_timer.addTrigger(t2);
 			reset_worker_defense_timer.addDirective(d);
+			Trigger t3(bot);
+			t3.addCondition(COND::MAX_TIME, 3999);
+			t3.addCondition(COND::MAX_ENEMY_UNITS_NEAR_LOCATION, 0, bot->locH->bases[1].getRallyPoint(), 12.0F);
+			reset_worker_defense_timer.addTrigger(t3);
 			bot->addStrat(reset_worker_defense_timer);
 		}
 		{	// send workers to defend expansion when defense timer is initialized
 			Precept workers_defend_expansion(bot);
-			Directive d(Directive::MATCH_FLAGS_NEAR_LOCATION, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_WORKER}, sc2::ABILITY_ID::ATTACK, bot->locH->bases[1].getRallyPoint(), bot->locH->bases[1].getRallyPoint(), 12.0F, 3.0F);
+			Directive d(Directive::MATCH_FLAGS, Directive::ACTION_TYPE::NEAR_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_WORKER}, sc2::ABILITY_ID::ATTACK, bot->locH->bases[1].getRallyPoint(), 3.0F);
 			Trigger t(bot);
 			auto func = [this]() { return bot->locH->smartStayHomeAndDefend(); };
 			d.setTargetLocationFunction(this, bot, func);
+			d.excludeFlag(FLAGS::NON_DEFENDER);
 			t.addCondition(COND::TIMER_2_SET, 0, true);
 			//t.addCondition(COND::MAX_UNIT_WITH_FLAGS_NEAR_LOCATION, 3, std::unordered_set<FLAGS>{FLAGS::IS_ATTACKER}, bot->locH->bases[1].getTownhall(), 16.0F);
 			workers_defend_expansion.addTrigger(t);
@@ -1294,9 +1317,9 @@ void Strategy::loadStrategies() {
 			Precept send_proxy(bot);
 			Directive d(Directive::MATCH_FLAGS_NEAR_LOCATION, Directive::EXACT_LOCATION, std::unordered_set<FLAGS>{FLAGS::IS_PROXY}, sc2::ABILITY_ID::ATTACK, bot->getStoredLocation("PROXY_INITIAL_LOC"), bot->locH->getProxyLocation(), 4.0F, 2.0F);
 			Trigger t(bot);
-			send_proxy.addTrigger(t);
 			t.addCondition(COND::MIN_UNIT_WITH_FLAGS, 1, std::unordered_set<FLAGS>{FLAGS::IS_PROXY});
 			t.addCondition(COND::MAX_UNIT_OF_TYPE_NEAR_LOCATION, 0, sc2::UNIT_TYPEID::PROTOSS_PROBE, bot->locH->getProxyLocation(), 8.0F);
+			send_proxy.addTrigger(t);
 			send_proxy.addDirective(d);
 			bot->addStrat(send_proxy);
 		}
@@ -1623,6 +1646,7 @@ void Strategy::loadStrategies() {
 			auto func = [this]() { return bot->locH->smartStayHomeAndDefend(); };
 			d.setTargetLocationFunction(this, bot, func);
 			d.excludeFlag(FLAGS::NON_DEFENDER);
+			d.excludeFlag(FLAGS::IS_PROXY);
 			t.addCondition(COND::MIN_ENEMY_UNITS_NEAR_LOCATION, 1, bot->locH->bases[0].getTownhall());
 			t.addCondition(COND::THREAT_EXISTS_NEAR_LOCATION, bot->locH->bases[0].getTownhall(), 14.0F);
 			workers_defend_base.addTrigger(t);

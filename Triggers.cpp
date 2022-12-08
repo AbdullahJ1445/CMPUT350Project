@@ -244,9 +244,10 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::MAX_DEAD_MOBS:
 		return (agent->mobH->getNumDeadMobs() <= cond_value) == is_true;
 	case COND::THREAT_EXISTS_NEAR_LOCATION:
+
+
 		if (debug && agent->locH->PathableThreatExistsNearLocation(location, radius) != is_true) {
-			MapChunk* threat_chunk = agent->locH->getHighestPathableThreatChunkNearLocation(location, radius);
-			sc2::Point2D threat_loc = NO_POINT_FOUND;
+			MapChunk* threat_chunk = agent->locH->getHighestPathableThreatChunkNearLocation(location, radius);sc2::Point2D threat_loc = NO_POINT_FOUND;
 			if (threat_chunk != nullptr) {
 				threat_loc = threat_chunk->getLocation();
 			}
@@ -257,6 +258,33 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 				std::cout << "no-point-found";
 			std::cout << ":" << (int)is_true << ")";
 		}
+
+		// testing stuff
+
+		if (!agent->threat_in_base && location == agent->locH->bases[1].getRallyPoint() && is_true) {
+			if (agent->locH->PathableThreatExistsNearLocation(location, radius)) {
+				std::cout << "<threat in base! (";
+
+				MapChunk* threat_chunk = agent->locH->getHighestPathableThreatChunkNearLocation(location, radius); sc2::Point2D threat_loc = NO_POINT_FOUND;
+				if (threat_chunk != nullptr) {
+					threat_loc = threat_chunk->getLocation();
+				}
+				std::cout << " TE_NL(";
+				if (threat_loc != NO_POINT_FOUND)
+					std::cout << threat_loc.x << "," << threat_loc.y;
+				else
+					std::cout << "no-point-found";
+				std::cout << ":" << (int)is_true << ")>";
+				agent->threat_in_base = true;
+			}
+		}
+		if (agent->threat_in_base && location == agent->locH->bases[1].getRallyPoint() && is_true) {
+			if (!agent->locH->PathableThreatExistsNearLocation(location, radius)) {
+				std::cout << "<threats cleared>";
+				agent->threat_in_base = false;
+			}
+		}
+		
 		return agent->locH->PathableThreatExistsNearLocation(location, radius) == is_true;
 	case COND::MIN_UNITS_USING_ABILITY:
 	{

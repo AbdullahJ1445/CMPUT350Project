@@ -90,6 +90,7 @@ public:
 	MobHandler* mobH;
 	LocationHandler* locH;
 	Mob* proxy_worker;
+	bool threat_in_base;
 	std::unordered_map<size_t, Directive*> directive_by_id;
 	Strategy* current_strategy;
 	int time_of_first_attack; // recorded for data gathering purposes

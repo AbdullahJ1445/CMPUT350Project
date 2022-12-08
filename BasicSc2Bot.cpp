@@ -47,6 +47,7 @@ BasicSc2Bot::BasicSc2Bot()
 	max_gas = 0;
 	townhalls_built = 0;
 	reset_shield_overcharge = 0;
+	threat_in_base = false;
 }
 
 void BasicSc2Bot::setLoadingProgress(int loaded_) {
@@ -1785,7 +1786,7 @@ void BasicSc2Bot::OnUnitCreated(const sc2::Unit* unit) {
 			new_mob.unit.unit_type, sc2::ABILITY_ID::HARVEST_GATHER, ASSIGNED_LOCATION);
 		storeDirective(directive_get_minerals_near_birth);
 		Directive* dir = getLastStoredDirective();
-		new_mob.assignDefaultDirective(*dir);
+		new_mob.assignDefaultDirective(this, dir);
 	}
 	else {
 		if (!structure) {

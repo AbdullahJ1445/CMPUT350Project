@@ -48,7 +48,7 @@ public:
 	void initVars();
 	bool isIdle();
 	bool hasFlag(FLAGS flag);
-	void assignDefaultDirective(Directive directive_);
+	void assignDefaultDirective(BasicSc2Bot* agent, Directive* directive_);
 	void assignDirective(Directive* directive_);
 	void unassignDirective();
 	bool hasDefaultDirective();
