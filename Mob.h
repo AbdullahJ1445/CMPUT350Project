@@ -32,6 +32,7 @@ enum class FLAGS {
 	IS_FLYING,
 	IS_INVISIBLE,
 	IS_SCOUT,
+	NON_DEFENDER,
 	BUILDING_GAS,
 	IS_BUILDING_STRUCTURE,
 	IS_IDLE,
@@ -47,7 +48,7 @@ public:
 	void initVars();
 	bool isIdle();
 	bool hasFlag(FLAGS flag);
-	void assignDefaultDirective(Directive directive_);
+	void assignDefaultDirective(BasicSc2Bot* agent, Directive* directive_);
 	void assignDirective(Directive* directive_);
 	void unassignDirective();
 	bool hasDefaultDirective();
@@ -58,8 +59,10 @@ public:
 	Directive popBundledDirective();
 	bool isCarryingMinerals();
 	bool isCarryingGas();
+	bool isOnCooldown(BasicSc2Bot* agent);
 	void setFlag(FLAGS flag);
 	void removeFlag(FLAGS flag);
+	void giveCooldown(BasicSc2Bot* agent, int amt);
 	sc2::Point2D getBirthLocation();
 	sc2::Point2D getHomeLocation();
 	sc2::Point2D getAssignedLocation();
@@ -71,13 +74,20 @@ public:
 	bool setCurrentDirective(Directive* directive_);
 	Directive* getDefaultDirective();
 	Directive* getCurrentDirective();
+	void setHarvestingMinerals(Mob* townhall_);
 	void setHarvestingGas(Mob* gas_structure_);
 	Mob* getGasStructureHarvesting();
+	Mob* getTownhallForMinerals();
 	bool isHarvestingGas();
+	bool isHarvestingMinerals();
 	void addHarvester(Mob* mob_);
 	void removeHarvester(Mob* mob_);
+	std::unordered_set<Mob*> getHarvesters();
 	void stopHarvestingGas();
+	void stopHarvestingMinerals();
 	int getHarvesterCount();
+	bool harvestNearbyTownhall(BasicSc2Bot* agent);
+	bool grabNearbyMineralHarvester(BasicSc2Bot* agent, bool grab_from_gas=true, bool grab_from_other_townhall=false);
 	bool grabNearbyGasHarvester(BasicSc2Bot* agent);
 	bool operator<(const Mob& mob) const { return tag < mob.tag; }
 	const sc2::Unit& unit;
@@ -92,8 +102,11 @@ private:
 	bool has_bundled_directive;
 	bool has_current_directive;
 	bool is_harvesting_gas;
+	bool is_harvesting_minerals;
+	int cooldown;
 	std::unordered_set<Mob*> harvesters;
 	Mob* gas_structure_harvested;
+	Mob* townhall_for_minerals;
 	Directive* default_directive;
 	Directive* bundled_directive;
 	Directive* current_directive;

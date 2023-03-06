@@ -22,6 +22,8 @@ enum class COND {
 	MIN_FOOD,
 	MIN_FOOD_USED,
 	MIN_FOOD_CAP,
+	MIN_FOOD_ARMY,
+	MAX_FOOD_ARMY,
 	MAX_MINERALS,
 	MAX_GAS,
 	MAX_TIME,
@@ -136,6 +138,8 @@ private:
 };
 
 class Precept {
+// Precepts are made up of one or more Directives
+// those of which get executed when all the TriggerConditions of the associated Trigger are satisfied
 public:
 	Precept(BasicSc2Bot* agent_);
 	~Precept();

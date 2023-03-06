@@ -8,7 +8,7 @@
 #include "Base.h"
 
 # define NO_POINT_FOUND sc2::Point2D(-2.5252, -2.5252) // value indicating no point found
-# define CHUNK_SIZE 6.0f // the distance between adjacent chunks
+# define CHUNK_SIZE 5.0f // the distance between adjacent chunks
 # define THREAT_DECAY 0.50 // the amount threat decays for a chunk when in vision
 # define NEARBY_THREAT_MODIFIER 0.05 // how much threat should increase for nearby chunks when enemies near
 
@@ -27,6 +27,7 @@ public:
     float distSquaredFromStart();
     bool isNearStart();
     bool inVision(const sc2::ObservationInterface* obs);
+    void increaseThreat(BasicSc2Bot* agent_, float amount);
     void checkVision(const sc2::ObservationInterface* obs);
     void increaseThreat(BasicSc2Bot* agent_, const sc2::Unit* unit, float modifier_);
     void setThreat(double amt_);
@@ -49,6 +50,12 @@ private:
 class LocationHandler {
 public:
     LocationHandler(BasicSc2Bot* agent_);
+    LocationHandler(const LocationHandler& rhs);
+    LocationHandler& operator=(const LocationHandler& rhs);
+    ~LocationHandler();
+    MapChunk* getNextUnseenChunk(bool pathable_=true);
+    void setNextUnseenChunk(bool pathable_=true);
+    sc2::Point2D getNearestValidRallyLocation(sc2::Point2D spot);
     sc2::Point2D getNearestStartLocation(sc2::Point2D spot);
     int getIndexOfClosestBase(sc2::Point2D location_);
     void scanChunks(const sc2::ObservationInterface* obs);
@@ -76,11 +83,13 @@ public:
     MapChunk* getNearestChunk(sc2::Point2D loc_);
     MapChunk* getNearestPathableChunk(sc2::Point2D loc_);
     MapChunk* getChunkByCoords(std::pair<float, float> coords);
+    sc2::Point2D getAttackingForceLocation();
     sc2::Point2D getCenterOfArmy();
     sc2::Point2D getEnemyLocation();
     sc2::Point2D getProxyLocation();
     sc2::Point2D getStartLocation();
     sc2::Point2D getCenterPathableLocation();
+    sc2::Point2D getRallyPointBeforeRallyPoint();
     bool locationsEqual(sc2::Point2D loc_1, sc2::Point2D loc_2);
 
     sc2::Point2D getRallyPointTowardsThreat();
@@ -148,6 +157,7 @@ private:
     double highest_pathable_threat;
     double highest_threat_away_from_start;
     double highest_pathable_threat_away_from_start;
+    std::vector<sc2::Point2D> rally_locations;
     MapChunk* high_threat_chunk;
     MapChunk* high_threat_pathable_chunk;
     MapChunk* high_threat_chunk_away_from_start;
@@ -155,5 +165,7 @@ private:
     float sq_dist_threshold;
     sc2::Point2D map_center;
     MapChunk* center_chunk;
+    MapChunk* next_unseen_pathable_chunk;
+    MapChunk* next_unseen_chunk;
     
 };

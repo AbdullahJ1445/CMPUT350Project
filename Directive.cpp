@@ -12,7 +12,6 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	locked = false;
 	static size_t id_ = 0;
 	id = id_++;
-	steps = steps_;
 	assignee = assignee_;
 	action_type = action_type_;
 	unit_type = unit_type_;						// default: UNIT_TYPEID::INVALID
@@ -23,11 +22,12 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	proximity = target_proximity_;				// default: INVALID_RADIUS
 	flags = flags_;								// default: empty
 	target_unit = unit_;						// default: nullptr
+	group_name = group_name_;					// default: ""
+	set_flag = set_flag_;						// default: FLAGS::INVALID_FLAG
+	steps = steps_;								// default: 0
 	update_assignee_location = false;
 	update_target_location = false;
 	exclude_flags = std::unordered_set<FLAGS>();
-	group_name = group_name_;
-	set_flag = set_flag_;
 	continuous_update = false;
 	target_update_iter_id = 0;
 	assignee_update_iter_id = 0;
@@ -41,7 +41,7 @@ Directive::Directive(ASSIGNEE assignee_, ACTION_TYPE action_type_, sc2::UNIT_TYP
 	}
 	else {
 		allow_multiple = false;
-	}
+	} 
 
 	if (action_type == ACTION_TYPE::GET_MINERALS_NEAR_LOCATION) {
 
@@ -114,6 +114,8 @@ bool Directive::bundleDirective(Directive directive_) {
 }
 
 bool Directive::execute(BasicSc2Bot* agent) {
+	// handle execution of a directive
+
 	const sc2::ObservationInterface* obs = agent->Observation();
 	bool found_valid_unit = false; // ensure unit has been assigned before issuing order
 	const sc2::AbilityData ability_data = obs->GetAbilityData()[(int)ability]; // various info about the ability
@@ -130,6 +132,7 @@ bool Directive::execute(BasicSc2Bot* agent) {
 	}
 
 	if (debug) {
+		// if a directive has been marked as setDebug(true), output "(exe)" whenever it is executed
 		std::cout << "(exe)";
 	}
 
@@ -137,10 +140,12 @@ bool Directive::execute(BasicSc2Bot* agent) {
 		int time = agent->time_of_first_attack; // recorded for testing purposes
 		if (time == -1) {
 			agent->time_of_first_attack = agent->Observation()->GetGameLoop();
-			std::cout << "First attack sent at gamestep " << agent->time_of_first_attack << " (" << agent->gameTime(agent->time_of_first_attack) << ")" << std::endl;
+			std::cout << "[" << agent->time_of_first_attack << "] First attack sent at " << agent->gameTime(agent->time_of_first_attack) << "." << std::endl;
 		}
 	}
 
+	// use various asserts to ensure the proper constructor was used for the given directive
+	
 	// ensure proper variables are set for the specified ASSIGNEE and ACTION_TYPE
 
 	if (assignee == ASSIGNEE::UNIT_TYPE || assignee == ASSIGNEE::UNIT_TYPE_NEAR_LOCATION) {
@@ -190,7 +195,11 @@ bool Directive::execute(BasicSc2Bot* agent) {
 		}
 
 		if (ability == sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST) {
-			return execute_protoss_nexus_chronoboost(agent);
+			return executeProtossNexusChronoboost(agent);
+		}
+
+		if (ability == (sc2::ABILITY_ID)4107) {
+			return executeProtossNexusBatteryOvercharge(agent);
 		}
 
 		return executeOrderForUnitType(agent);
@@ -211,6 +220,9 @@ bool Directive::execute(BasicSc2Bot* agent) {
 }
 
 bool Directive::executeModifyTimer(BasicSc2Bot* agent) {
+
+	// handle timer modification directives
+
 	if (action_type == SET_TIMER_1) {
 		agent->setTimer1(steps);
 		return true;
@@ -239,9 +251,14 @@ bool Directive::executeModifyTimer(BasicSc2Bot* agent) {
 }
 
 bool Directive::executeForMob(BasicSc2Bot* agent, Mob* mob_) {
-	// used to assign an order to a specific unit
+	// handle executing directives for speicific Mobs
+
 	Mob* mob = &agent->mobH->getMob(mob_->unit);
 	if (!mob) {
+		return false;
+	}
+
+	if (mob->isOnCooldown(agent)) {
 		return false;
 	}
 
@@ -340,6 +357,7 @@ bool Directive::executeSimpleActionForUnitType(BasicSc2Bot* agent) {
 	// filter idle units which match unit_type
 	mobs = filterByUnitType(mobs, unit_type);
 	mobs = filterIdle(mobs);
+	mobs = agent->mobH->filterNotOnCooldown(mobs);
 
 	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
 		assert(assignee_location != INVALID_POINT);
@@ -354,12 +372,27 @@ bool Directive::executeSimpleActionForUnitType(BasicSc2Bot* agent) {
 	if (action_type != DISABLE_DEFAULT_DIRECTIVE && agent->isStructure(unit_type)) {
 		// prevent structures from queuing training
 
+		// allow Nexus to train probes when using chronoboost / overcharge
 		std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
-			[this](Mob* m) { return (m->unit.orders).empty(); });
-		mobs = filtered_mobs;
+			[this](Mob* m) { 
+				auto orders = m->unit.orders;
+				if (orders.empty()) {
+					return true;
+				}
+				bool non_ignorable = false;
+				for (auto o : orders) {
+					auto abil = o.ability_id.ToType();
+					if (abil != sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST &&
+						abil != sc2::ABILITY_ID::EFFECT_CHRONOBOOST &&
+						abil != sc2::ABILITY_ID::NEXUSSHIELDOVERCHARGE) {
+						non_ignorable = true;
+					}
+				}
+				return !non_ignorable;
+			 });
 	}
 
-	if (mobs.size() == 0)
+	if (mobs.empty())
 		return false;
 
 	
@@ -377,6 +410,40 @@ bool Directive::executeSimpleActionForUnitType(BasicSc2Bot* agent) {
 
 	if (mobs.size() == 0)
 		return false;
+
+
+	// prefer workers that aren't carrying resources
+	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_PROBE ||
+		unit_type == sc2::UNIT_TYPEID::TERRAN_SCV ||
+		unit_type == sc2::UNIT_TYPEID::ZERG_DRONE) {
+		std::unordered_set<Mob*> not_carrying_resources;
+		std::copy_if(mobs.begin(), mobs.end(), std::inserter(not_carrying_resources, not_carrying_resources.begin()),
+			[this](Mob* m) {
+
+				// populate resource buff vector
+				std::vector<sc2::BUFF_ID> resources{
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGAS,
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASPROTOSS,
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASZERG,
+					sc2::BUFF_ID::CARRYHIGHYIELDMINERALFIELDMINERALS,
+					sc2::BUFF_ID::CARRYMINERALFIELDMINERALS
+				};
+				auto buffs = m->unit.buffs;
+				if (buffs.empty())
+					return true;
+				for (auto b : buffs) {
+					sc2::BuffID buff = b.ToType();
+					if (std::find(resources.begin(), resources.end(), b.ToType()) != resources.end()) {
+						return false;
+					}
+				}
+				return true;
+			});
+
+		if (!not_carrying_resources.empty()) {
+			mobs = not_carrying_resources;
+		}
+	}
 
 	mob = getRandomMobFromSet(mobs);
 
@@ -399,6 +466,7 @@ bool Directive::executeBuildGasStructure(BasicSc2Bot* agent) {
 	// perform the necessary actions to have a gas structure built closest to the specified target_location
 
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
+	mobs = agent->mobH->filterNotOnCooldown(mobs);
 	Mob* mob; // used to store temporary mob
 	bool found_valid_unit = false;
 
@@ -435,13 +503,133 @@ bool Directive::executeBuildGasStructure(BasicSc2Bot* agent) {
 
 }
 
-bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
+bool Directive::executeProtossNexusBatteryOvercharge(BasicSc2Bot* agent) {
+	// use battery overcharge on the nearest shield_battery within range of a nexus
+
+
+	if (agent->Observation()->GetGameLoop() < agent->reset_shield_overcharge) {
+		return false;
+	}
+
+	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
+	mobs = agent->mobH->filterNotOnCooldown(mobs);
+	Mob* mob; // used to store temporary mob
+	Mob* overcharge_target;
+
+	if (assignee == UNIT_TYPE_NEAR_LOCATION) {
+		mobs = filterNearLocation(mobs, assignee_location, assignee_proximity);
+	}
+
+	// first get list of Mobs matching type
+	mobs = filterByUnitType(mobs, unit_type);
+
+	// then filter by those with ability available
+	std::unordered_set<Mob*> mobs_filter;
+	std::copy_if(mobs.begin(), mobs.end(), std::inserter(mobs_filter, mobs_filter.begin()),
+		[agent, this](Mob* m) { return agent->canUnitUseAbility(m->unit, ability); });
+
+	mobs = mobs_filter;
+
+	if (mobs.empty()) {
+		return false;
+	}
+
+	// then pick the one closest to location
+	mob = getClosestToLocation(mobs, target_location);
+
+	// return false if mob has not been assigned above
+	if (!mob) {
+		return false;
+	}
+
+	// get all structures
+	std::unordered_set<Mob*> structures = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_STRUCTURE);
+
+	std::unordered_set<Mob*> valid_shields;
+	std::copy_if(structures.begin(), structures.end(), std::inserter(valid_shields, valid_shields.begin()),
+		[this](Mob* m) { return (m->unit.unit_type == sc2::UNIT_TYPEID::PROTOSS_SHIELDBATTERY); });
+
+	if (valid_shields.empty()) {
+		return false;
+	}
+
+	std::unordered_set<Mob*> near_a_nexus;
+
+	std::unordered_set<Mob*> townhalls = agent->mobH->filterByFlag(agent->mobH->getMobs(), FLAGS::IS_TOWNHALL);
+
+	for (auto m : valid_shields) {
+		for (auto t : townhalls) {
+			bool found_close_nexus = false;
+			if (t->unit.unit_type == sc2::UNIT_TYPEID::PROTOSS_NEXUS && !found_close_nexus) {
+				if (sc2::DistanceSquared2D(t->unit.pos, m->unit.pos) <= 81.0F) {
+					near_a_nexus.insert(m);
+					found_close_nexus = true;
+				}
+			}
+		}
+	}
+	valid_shields = near_a_nexus;
+
+	std::unordered_set<Mob*> not_already_overcharged;
+	// make sure the target already isn't overcharged
+
+	if (valid_shields.empty()) {
+		return false;
+	}
+
+	// BUFF_ID 299 = AMPLIFIED SHIELDING
+
+	std::copy_if(valid_shields.begin(), valid_shields.end(), std::inserter(not_already_overcharged, not_already_overcharged.begin()),
+		[this](Mob* m) { return (std::find(m->unit.buffs.begin(), m->unit.buffs.end(), (sc2::BUFF_ID)299) == m->unit.buffs.end()); });
+
+	valid_shields = not_already_overcharged;
+
+	if (valid_shields.empty()) {
+		return false;
+	}
+
+	// then pick one of THESE closest to location
+	overcharge_target = getClosestToLocation(not_already_overcharged, target_location);
+
+	// return false if there is nothing worth casting chronoboost on
+	if (!overcharge_target) {
+		return false;
+	}
+
+
+	// ensure a nearby friendly unit is actually missing shields before overcharging
+	std::unordered_set<Mob*> nearby = Directive::filterNearLocation(agent->mobH->getMobs(), mob->unit.pos, 6.0F);
+	bool any_missing_shields = false;
+
+	for (auto n : nearby) {
+		if (n->unit.shield < n->unit.shield_max) {
+			any_missing_shields = true;
+		}
+	}
+
+	if (!any_missing_shields) {
+		return false;
+	}
+
+	agent->reset_shield_overcharge = agent->Observation()->GetGameLoop() + 100;
+	/* ORDER IS EXECUTED */
+	return issueOrder(agent, mob, &overcharge_target->unit);
+	/* * * * * * * * * * */
+
+
+}
+
+bool Directive::executeProtossNexusChronoboost(BasicSc2Bot* agent) {
+	// handle Nexus using Chronoboost
+	// 
 	// this is more complex than it originally seemed
 	// must find the clostest nexus to the given location
 	// that has the chronoboost ability ready
 	// then find a structure that would benefit from it
 
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
+	mobs = agent->mobH->filterNotOnCooldown(mobs);
+
 	Mob* mob; // used to store temporary mob
 	Mob* chrono_target;
 	std::unordered_set<Mob*> mobs_filter1;
@@ -465,6 +653,15 @@ bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 	std::copy_if(mobs.begin(), mobs.end(), std::inserter(mobs_filter, mobs_filter.begin()),
 		[agent, this](Mob* m) { return agent->canUnitUseAbility(m->unit, ability); });
 	mobs = mobs_filter;
+
+	if (agent->getStoredInt("_SAVE_CHRONOBOOST_FOR_BATTERY_OVERCHARGE") == 1 && !mobs.empty()) {
+		std::unordered_set<Mob*> mobs_100_energy;
+		std::copy_if(mobs.begin(), mobs.end(), std::inserter(mobs_100_energy, mobs_100_energy.begin()),
+			[this](Mob* m) { 
+				return m->unit.energy >= 100; 
+			});
+		mobs = mobs_100_energy;
+	}
 	
 	// return false if no structures exist with chronoboost ready to cast
 	int num_units = mobs.size();
@@ -504,7 +701,6 @@ bool Directive::execute_protoss_nexus_chronoboost(BasicSc2Bot* agent) {
 		[this](Mob* m) { return (std::find(m->unit.buffs.begin(), m->unit.buffs.end(), sc2::BUFF_ID::CHRONOBOOSTENERGYCOST) == m->unit.buffs.end()); }); 
 
 	if (not_already_chronoboosted.empty()) {
-		//std::cout << "there are no non-chronoboosted structures apparently" << std::endl;
 		return false;
 	}
 
@@ -527,6 +723,7 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 	
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs(); // vector of all friendly units
 	std::unordered_set<Mob*> matching_mobs = agent->mobH->filterByFlags(mobs, flags);
+	matching_mobs = agent->mobH->filterNotOnCooldown(matching_mobs);
 
 	if (!exclude_flags.empty()) {
 		matching_mobs = agent->mobH->filterByFlags(matching_mobs, exclude_flags, false);
@@ -564,10 +761,33 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 				location = uniform_random_point_in_circle(target_location, proximity);
 			}
 			// Unit has no orders
-			if ((m->unit.orders).size() == 0 || override_directive) {
+			bool has_orders = true;
+			if (!m->unit.orders.empty()) {
+				if (m->unit.orders.size() == 1) {
+					auto o = m->unit.orders.front();
+					auto abil = o.ability_id.ToType();
+					if (abil == sc2::ABILITY_ID::EFFECT_CHRONOBOOSTENERGYCOST ||
+						abil == sc2::ABILITY_ID::EFFECT_CHRONOBOOST ||
+						abil == sc2::ABILITY_ID::NEXUSSHIELDOVERCHARGE) {
+						has_orders = false;
+					}
+				}
+			}
+			else {
+				has_orders = false;
+			}
+			if (!has_orders) {
 				found_valid_unit = true;
 				filtered_mobs.insert(m);
 			}
+			else if (override_directive) {
+					auto order = m->unit.orders.front(); // do not override certain abilties
+					if (order.ability_id != sc2::ABILITY_ID::EFFECT_GRAVITONBEAM &&
+						order.ability_id != sc2::ABILITY_ID::EFFECT_FORCEFIELD) {
+						found_valid_unit = true;
+						filtered_mobs.insert(m);
+					}
+				}
 			// or if unit is performing default directive
 			else if ((m->unit.orders).size() > 0 && m->hasDefaultDirective()) {
 				auto order_ability = m->unit.orders.front().ability_id;
@@ -602,9 +822,6 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 			return false;
 		}
 
-		// debug
-		std::cout << (0);
-
 		/* ORDER IS EXECUTED */
 		return issueOrder(agent, filtered_mobs, closest_unit);
 		/* * * * * * * * * * */
@@ -629,6 +846,9 @@ bool Directive::executeMatchFlags(BasicSc2Bot* agent) {
 }
 
 bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
+	// handle executing an order for a unit type
+	// may also be UNIT_TYPE_NEAR_LOCATION
+
 	sc2::AbilityData ability_data;
 	if (ability != sc2::ABILITY_ID::INVALID) {
 		ability_data = agent->Observation()->GetAbilityData()[(int)ability]; // various info about the ability
@@ -636,6 +856,9 @@ bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
 	sc2::QueryInterface* query_interface = agent->Query(); // used to query data
 	sc2::Point2D location = target_location;
 	std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
+
+	mobs = agent->mobH->filterNotOnCooldown(mobs);
+
 	Mob* mob = nullptr;
 
 	if (!exclude_flags.empty()) {
@@ -680,7 +903,7 @@ bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
 		if (action_type == ACTION_TYPE::NEAR_LOCATION) {
 			while (!query_interface->Placement(ability, location)) {
 				location = uniform_random_point_in_circle(target_location, proximity);
-				i++;
+				++i;
 				if (i > 20) {
 					// can't find a suitable spot to build
 					return false;
@@ -689,7 +912,6 @@ bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
 		}
 		else {
 			if (!query_interface->Placement(ability, location)) {
-				//std::cout << "%";
 				return false;
 			}
 		}
@@ -708,6 +930,39 @@ bool Directive::executeOrderForUnitType(BasicSc2Bot* agent) {
 
 	if (mobs.size() == 0) {
 		return false;
+	}
+
+	// prefer workers that aren't carrying resources
+	if (unit_type == sc2::UNIT_TYPEID::PROTOSS_PROBE ||
+		unit_type == sc2::UNIT_TYPEID::TERRAN_SCV ||
+		unit_type == sc2::UNIT_TYPEID::ZERG_DRONE) {
+		std::unordered_set<Mob*> not_carrying_resources;
+		std::copy_if(mobs.begin(), mobs.end(), std::inserter(not_carrying_resources, not_carrying_resources.begin()),
+			[this](Mob* m) {
+
+				// populate resource buff vector
+				std::vector<sc2::BUFF_ID> resources{
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGAS,
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASPROTOSS,
+					sc2::BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASZERG,
+					sc2::BUFF_ID::CARRYHIGHYIELDMINERALFIELDMINERALS,
+					sc2::BUFF_ID::CARRYMINERALFIELDMINERALS
+				};
+				auto buffs = m->unit.buffs;
+				if (buffs.empty())
+					return true;
+				for (auto b : buffs) {
+					sc2::BuffID buff = b.ToType();
+					if (std::find(resources.begin(), resources.end(), b.ToType()) != resources.end()) {
+						return false;
+					}
+				}
+				return true;
+			});
+
+		if (!not_carrying_resources.empty()) {
+			mobs = not_carrying_resources;
+		}
 	}
 
 	if (action_type == SET_FLAG) {
@@ -798,10 +1053,14 @@ bool Directive::haveBundle() {
 
 size_t Directive::getID()
 {
+	// get the unique ID of this directive
+
 	return id;
 }
 
 bool Directive::ifAnyOnRouteToBuild(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_) {
+	// check if any of our units is on its way to build something
+
 	const sc2::ObservationInterface* obs = agent->Observation();
 
 	for (auto it = mobs_.begin(); it != mobs_.end(); ++it) {
@@ -815,6 +1074,8 @@ bool Directive::ifAnyOnRouteToBuild(BasicSc2Bot* agent, std::unordered_set<Mob*>
 }
 
 bool Directive::isBuildingStructure(BasicSc2Bot* agent, Mob* mob_) {
+	// check if a specific unit is building a structure
+
 	sc2::QueryInterface* query_interface = agent->Query();
 	const sc2::ObservationInterface* obs = agent->Observation();
 	std::vector<sc2::AbilityData> ability_data = obs->GetAbilityData();
@@ -839,7 +1100,7 @@ bool Directive::isBuildingStructure(BasicSc2Bot* agent, Mob* mob_) {
 }
 
 bool Directive::isExecutingOrder(std::unordered_set<Mob*> mobs_set, sc2::ABILITY_ID ability_) {
-	// check if any Mob in the vector is already executing the specified order
+	// check if any Mob in the set is already executing the specified order
 	for (Mob* m : mobs_set) {
 		for (const auto& order : m->unit.orders) {
 			if (order.ability_id == ability_)
@@ -866,14 +1127,21 @@ Mob* Directive::getClosestToLocation(std::unordered_set<Mob*> mobs_set, sc2::Poi
 
 sc2::ABILITY_ID Directive::getAbilityID()
 {
+	// get the ABILITY_ID assigned to this Directive
 	return ability;
 }
 
 int Directive::getTargetUpdateIterationID() {
+	// update the target update iteration ID
+	// used to check if the target location has been altered
+
 	return target_update_iter_id;
 }
 
 int Directive::getAssigneeUpdateIterationID() {
+	// update the assignee update iteration ID
+	// used to check if the assignee location has been altered
+
 	return assignee_update_iter_id;
 }
 
@@ -892,11 +1160,13 @@ bool Directive::isAssignedLocationValue(sc2::Point2D loc_, float range_)
 sc2::Point2D Directive::getOffsetAssignedLocation(sc2::Point2D loc_) {
 	// return the offset value of the difference between loc_ and the ASSIGNED_LOCATION defined value
 	// used so that we can use "Near location" but still interpret it as relative to assigned location
+
 	return loc_ - ASSIGNED_LOCATION;
 }
 
 bool Directive::allowMultiple(bool is_true) {
 	// allow this directive to be assigned to more than one Mob
+
 	if (!locked) {
 		allow_multiple = is_true;
 		return true;
@@ -906,21 +1176,25 @@ bool Directive::allowMultiple(bool is_true) {
 
 void Directive::excludeFlag(FLAGS exclude_flag_) {
 	// set a flag to exclude when choosing mobs to give orders to
+
 	exclude_flags.insert(exclude_flag_);
 }
 
 void Directive::setContinuous(bool is_true) {
 	// when true, this directive will continuously re-issue orders when locations are updated to new values
+
 	continuous_update = is_true;
 }
 
 void Directive::setOverrideOther(bool is_true) {
 	// when true, will apply order even if mob is doing something else
+
 	override_directive = is_true;
 }
 
 std::unordered_set<Mob*> Directive::filterNearLocation(std::unordered_set<Mob*> mobs_set, sc2::Point2D pos_, float radius_) {
 	// filters a vector of Mob* by only those within the specified distance to location
+
 	float sq_dist = pow(radius_, 2);
 
 	std::unordered_set<Mob*> filtered_mobs;
@@ -958,6 +1232,8 @@ std::unordered_set<Mob*> Directive::filterByHasAbility(BasicSc2Bot* agent, std::
 }
 
 std::unordered_set<Mob*> Directive::filterByUnitType(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type_) {
+	// filter a set of mobs by unit_type
+
 	std::unordered_set<Mob*> filtered;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
 		[this](Mob* m) { return m->unit.unit_type == unit_type; });
@@ -965,6 +1241,8 @@ std::unordered_set<Mob*> Directive::filterByUnitType(std::unordered_set<Mob*> mo
 }
 
 std::unordered_set<Mob*> Directive::filterIdle(std::unordered_set<Mob*> mobs_set) {
+	// filter a set of mobs by those with no orders
+
 	std::unordered_set<Mob*> filtered;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
 		[this](Mob* m) { return (m->unit.orders).size() == 0; });
@@ -972,6 +1250,8 @@ std::unordered_set<Mob*> Directive::filterIdle(std::unordered_set<Mob*> mobs_set
 }
 
 std::unordered_set<Mob*> Directive::filterNotAssignedToThis(std::unordered_set<Mob*> mobs_set) {
+	// filter a set of mobs by those not currently assigned to this directive
+
 	std::unordered_set<Mob*> filtered;
 	std::copy_if(mobs_set.begin(), mobs_set.end(), std::inserter(filtered, filtered.begin()),
 		[this](Mob* m) { 
@@ -987,16 +1267,20 @@ std::unordered_set<Mob*> Directive::filterNotAssignedToThis(std::unordered_set<M
 }
 
 Mob* Directive::getRandomMobFromSet(std::unordered_set<Mob*> mob_set) {
+	// get a random mob from a set
+
 	int index = rand() % mob_set.size();
 	auto it = mob_set.begin();
-	for (int i = 0; i < index; i++)
+	for (int i = 0; i < index; ++i)
 	{
-		it++;
+		++it;
 	}
 	return *it;
 }
 
 void Directive::setDebug(bool is_true) {
+	// enable debug outputs on this directive
+
 	debug = is_true;
 }
 
@@ -1063,7 +1347,16 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 			}
 			if (isAssignedLocationValue(target_loc_, proximity)) {
 				sc2::Point2D offset = getOffsetAssignedLocation(target_loc_);
-				target_loc_ = (*mobs_.begin())->getAssignedLocation() + offset;
+				bool any_success = false;
+				for (auto m : mobs_) {
+					target_loc_ = m->getAssignedLocation() + offset;
+					if (_genericIssueOrder(agent, std::unordered_set<Mob*>{m}, target_loc_, target_unit_, queued_, ability_)) {
+						any_success = true;
+					}
+				}
+					return any_success;
+				
+				
 			}
 			if (ignore_distance >= 0) {
 				// when ignore_distance is specified, we must filter out mobs that are within the
@@ -1148,6 +1441,7 @@ bool Directive::_genericIssueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> 
 		// no target is specified
 		if (target_loc_ == INVALID_POINT && target_unit_ == nullptr) {
 			agent->Actions()->UnitCommand(&mob_->unit, ability_, queued_);
+			mob_->giveCooldown(agent, 5);
 			action_success = true;
 		}
 
@@ -1248,6 +1542,7 @@ bool Directive::issueOrder(BasicSc2Bot* agent, std::unordered_set<Mob*> mobs_, c
 bool Directive::setDefault() {
 	// a default directive is something that a unit performs when it has no actions
 	// usually used for workers to return to gathering after building/defending
+
 	if (!locked) {
 		assignee = DEFAULT_DIRECTIVE;
 		allow_multiple = true;
@@ -1256,16 +1551,21 @@ bool Directive::setDefault() {
 }
 
 std::unordered_set<Mob*> Directive::getAssignedMobs() {
+	// return set of mobs that have been assigned to this directive
+
 	return assigned_mobs;
 }
 
 bool Directive::hasAssignedMob() {
+	// return whether this directive has assigned mobs
+
 	return !assigned_mobs.empty();
 }
 
 bool Directive::assignMob(Mob* mob_) {
 	// adds a mob to this directive's assigned mobs
 	// returns false if directive does not allow multiple mobs and already has one
+
 	if (!allow_multiple && !assigned_mobs.empty()) {
 		return false;
 	}
@@ -1276,16 +1576,17 @@ bool Directive::assignMob(Mob* mob_) {
 
 void Directive::unassignMob(Mob* mob_) {
 	// unassigns the mob from list of assigned mobs
-	
-	//std::cout << " directive ability type: " << (int) ability << "directive id: " << getID() << std::endl;
+
 	if (!assigned_mobs.empty()) {
 		assigned_mobs.erase(mob_);
 	}
 	
 }
 
-//void Directive::setTargetLocationFunction(std::function<sc2::Point2D(void)> function_) {
 void Directive::setTargetLocationFunction(Strategy* strat_, BasicSc2Bot* agent_, std::function<sc2::Point2D ()> function_) {
+	// set the function to be used to update the target location of this function at execution time.
+	// will overwrite the originally specified value of target location
+
 	strategy_ref = strat_;
 	update_target_location = true;
 	target_location_function = function_;
@@ -1293,12 +1594,17 @@ void Directive::setTargetLocationFunction(Strategy* strat_, BasicSc2Bot* agent_,
 }
 
 void Directive::setAssigneeLocationFunction(BasicSc2Bot* agent_, std::function<sc2::Point2D()> function_) {
+	// set the function to be used to update the assignee location of this function execution time.
+	// will overwrite the originally specified value of assignee location
+
 	update_assignee_location = true;
 	BasicSc2Bot* bot = agent_;
 	assignee_location_function = function_;
 }
 
 void Directive::updateAssigneeLocation(BasicSc2Bot* agent_) {
+	// call the previously set assignee location function to update the assignee location
+
 	static int a_iter_id = 0;
 	sc2::Point2D prev_location = assignee_location;
 	assignee_location = assignee_location_function();
@@ -1308,10 +1614,11 @@ void Directive::updateAssigneeLocation(BasicSc2Bot* agent_) {
 }
 
 void Directive::updateTargetLocation(BasicSc2Bot* agent_) {
+	// call the previously set target location function to update the target location
+
 	static int t_iter_id = 0;
 	sc2::Point2D prev_location = target_location;
 	target_location = target_location_function();
-	//std::cout << "target location updated to be (" << target_location.x << ", " << target_location.y << ")" << std::endl;
 	if (target_location == NO_POINT_FOUND) {
 		target_location == SEND_HOME;
 	}

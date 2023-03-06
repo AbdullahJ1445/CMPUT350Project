@@ -212,6 +212,10 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 			std::cout << " MIN_FU(" << obs->GetFoodUsed() << ">=" << cond_value << ")";
 		}
 		return (obs->GetFoodUsed() >= cond_value) == is_true;
+	case COND::MIN_FOOD_ARMY:
+		return (obs->GetFoodArmy() >= cond_value) == is_true;
+	case COND::MAX_FOOD_ARMY:
+		return (obs->GetFoodArmy() <= cond_value) == is_true;
 	case COND::MIN_FOOD_CAP:
 		return (obs->GetFoodCap() >= cond_value) == is_true;
 	case COND::MAX_MINERALS:
@@ -240,9 +244,10 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	case COND::MAX_DEAD_MOBS:
 		return (agent->mobH->getNumDeadMobs() <= cond_value) == is_true;
 	case COND::THREAT_EXISTS_NEAR_LOCATION:
+
+
 		if (debug && agent->locH->PathableThreatExistsNearLocation(location, radius) != is_true) {
-			MapChunk* threat_chunk = agent->locH->getHighestPathableThreatChunkNearLocation(location, radius);
-			sc2::Point2D threat_loc = NO_POINT_FOUND;
+			MapChunk* threat_chunk = agent->locH->getHighestPathableThreatChunkNearLocation(location, radius);sc2::Point2D threat_loc = NO_POINT_FOUND;
 			if (threat_chunk != nullptr) {
 				threat_loc = threat_chunk->getLocation();
 			}
@@ -253,10 +258,11 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 				std::cout << "no-point-found";
 			std::cout << ":" << (int)is_true << ")";
 		}
+		
 		return agent->locH->PathableThreatExistsNearLocation(location, radius) == is_true;
 	case COND::MIN_UNITS_USING_ABILITY:
 	{
-		std::unordered_set<Mob*> mobs;
+		std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
 		std::unordered_set<Mob*> filtered_mobs;
 		if (!mobs.empty()) { 
 			std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
@@ -267,8 +273,11 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		if (!filtered_mobs.empty()) {
 			for (auto m : filtered_mobs) {
 				if (!m->unit.orders.empty()) {
-					if (m->unit.orders.front().ability_id == ability_id) {
-						count++;
+					if (m->unit.orders.front().ability_id.ToType() == ability_id) {
+						++count;
+					}
+					else {
+						//std::cout << "(" << (int)m->unit.orders.front().ability_id.ToType() << ")";
 					}
 				}
 			}
@@ -280,7 +289,7 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 	}
 	case COND::MAX_UNITS_USING_ABILITY:
 	{
-		std::unordered_set<Mob*> mobs;
+		std::unordered_set<Mob*> mobs = agent->mobH->getMobs();
 		std::unordered_set<Mob*> filtered_mobs;
 		if (!mobs.empty()) {
 			std::copy_if(mobs.begin(), mobs.end(), std::inserter(filtered_mobs, filtered_mobs.begin()),
@@ -291,8 +300,8 @@ bool Trigger::TriggerCondition::is_met(const sc2::ObservationInterface* obs) {
 		if (!filtered_mobs.empty()) {
 			for (auto m : filtered_mobs) {
 				if (!m->unit.orders.empty()) {
-					if (m->unit.orders.front().ability_id == ability_id) {
-						count++;
+					if (m->unit.orders.front().ability_id.ToType() == ability_id) {
+						++count;
 					}
 				}
 			}
@@ -898,6 +907,9 @@ Precept::~Precept() {
 
 
 bool Precept::execute() {
+	// Execute all valid directives in the precept, will only ever be called if all trigger conditions are also met
+
+	assert(checkTriggerConditions());
 	bool any_executed = false;
 	for (auto d : directives) {
 		if (d->execute(agent))
@@ -918,8 +930,6 @@ void Precept::addDirective(Directive directive_) {
 	Directive* dir_ = agent->getLastStoredDirective();
 	directives.push_back(dir_);
 	has_directive = true;
-	//std::cout << "the pointer inside the provided directive at as it's added: " << directive_.strategy_ref << std::endl;
-	//std::cout << "the pointer inside the stored directive at as it's added: " << dir_->strategy_ref << std::endl;
 }
 
 void Precept::addTrigger(Trigger trigger_) {

@@ -13,6 +13,9 @@ class BasicSc2Bot;
 class MobHandler {
 public:
     MobHandler(BasicSc2Bot* agent);
+    MobHandler(const MobHandler& rhs);
+	MobHandler& operator=(const MobHandler& rhs);
+	~MobHandler();
     void setMobIdle(Mob* mob_, bool is_true=true);
     void setMobBusy(Mob* mob_, bool is_true=true);
     bool addMob(Mob mob_);
@@ -24,6 +27,9 @@ public:
     std::unordered_set<Mob*> getIdleWorkers();
     std::unordered_set<Mob*> filterByFlag(std::unordered_set<Mob*> mobs_set, FLAGS flag, bool is_true=true);
     std::unordered_set<Mob*> filterByFlags(std::unordered_set<Mob*> mobs_set, std::unordered_set<FLAGS> flag_list, bool is_true=true);
+    std::unordered_set<Mob*> filterNotOnCooldown(std::unordered_set<Mob*> mobs_set);
+    std::unordered_set<Mob*> filterByUnitType(std::unordered_set<Mob*> mobs_set, sc2::UNIT_TYPEID unit_type);
+    std::unordered_set<Mob*> filterOnCooldown(std::unordered_set<Mob*> mobs_set);
     std::unordered_set<Mob*> getMobs();
     std::unordered_set<Mob*> getIdleMobs();
     std::unordered_set<Mob*> getBusyMobs();

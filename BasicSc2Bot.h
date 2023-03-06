@@ -20,6 +20,8 @@ class Base;
 class Strategy;
 class MobHandler; 
 
+#define STEP_SIZE 1 // should be 1 when submitted
+
 
 class Human : public sc2::Agent {
 public:
@@ -35,6 +37,9 @@ public:
 	// public functions
 
 	BasicSc2Bot();
+	BasicSc2Bot(const BasicSc2Bot& rhs);
+	BasicSc2Bot& operator=(const BasicSc2Bot& rhs);
+	~BasicSc2Bot();
 	void setLoadingProgress(int loaded_);
 	int getLoadingProgress();
 	void setCurrentStrategy(Strategy* strategy_);
@@ -79,6 +84,8 @@ public:
 	sc2::Point2D getStoredLocation(std::string identifier_);
 	int getStoredInt(std::string identifier_);
 	Directive* getLastStoredDirective();
+	void checkBuildingQueues();
+	void listUnitSummary();
 	sc2::Race getEnemyRace();
 	std::unordered_set<const sc2::Unit*> getEnemyUnits();
 
@@ -88,25 +95,30 @@ public:
 	Mob* proxy_worker;
 	std::unordered_map<size_t, Directive*> directive_by_id;
 	Strategy* current_strategy;
-	int time_of_first_attack; // recorded for testing purposes
+	int time_of_first_attack; // recorded for data gathering purposes
+	int time_first_attacked;   // recorded for data gathering purposes
+	int reset_shield_overcharge;  // used to prevent every nexus from using the ability at the same time
 
 private:
 
 	// private functions
-	void LoadStep_01();
-	void LoadStep_02();
-	void LoadStep_03();
-	void LoadStep_04();
-	void LoadStep_05();
-	void OnStep_100(const sc2::ObservationInterface* obs);
-	void OnStep_1000(const sc2::ObservationInterface* obs);
+	void loadStep_01(); // breaking loading into sequential segments, so that nothing is referenced before it is initialized
+	void loadStep_02();
+	void loadStep_03();
+	void loadStep_04();
+	void loadStep_05();
+	void onStep_100(const sc2::ObservationInterface* obs);
+	void onStep_1000(const sc2::ObservationInterface* obs);
 	bool addEnemyUnit(const sc2::Unit* unit);
 	bool flushOrders();
+	void checkBuildingsStatus();
 	void checkGasStructures();
 
 	// virtual functions 
+	// These functions must use PascalCase instead of camelCase since they must match the sc2 api's function names
 	virtual void OnGameStart();
 	virtual void OnStep();
+	void checkSiegeTanks();
 	virtual void OnGameEnd();
 	virtual void OnBuildingConstructionComplete(const sc2::Unit* unit);
 	virtual void OnUnitCreated(const sc2::Unit* unit);
@@ -130,17 +142,26 @@ private:
 	std::unordered_map<int, int> mineral_cost;
 	std::unordered_map<int, int> gas_cost;
 	std::unordered_map<int, int> food_cost;
+	std::vector<std::pair<int, sc2::UNIT_TYPEID>> units_created;     // record the timestep that each unit was created
 
 	// private variables
 	int player_start_id;
 	int enemy_start_id;
 	std::string map_name;
 	sc2::Race enemy_race;
+	Mob* special; // for testing purposes
 	int timer_1;
 	int timer_2;
 	int timer_3;
+	bool first_friendly_death;
 	int loading_progress;
+	int townhalls_built;
 	bool initialized;
-	
+	int gateways_busy;
+	int gateways_idle;
+	int robotics_busy;
+	int robotics_idle;
+	int max_minerals;
+	int max_gas;	
 	int map_index; // 1 = CactusValleyLE,  2 = BelShirVestigeLE,  3 = ProximaStationLE
 };
